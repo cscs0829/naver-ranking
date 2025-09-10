@@ -143,7 +143,8 @@ export class NaverShoppingRankChecker {
               category1: productInfo.category1,
               category2: productInfo.category2,
               category3: productInfo.category3
-            }
+            },
+            totalSearched: totalSearched
           }
         }
       }
