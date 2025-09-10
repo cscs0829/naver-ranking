@@ -151,7 +151,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             </p>
           </div>
 
-          {/* 타겟 몰명 */}
+          {/* 타겟 */}
           <div className="space-y-3">
             <label htmlFor="targetMallName" className="flex items-center text-sm font-semibold text-gray-800">
               <Building2 className="w-4 h-4 mr-2 text-purple-600" />
