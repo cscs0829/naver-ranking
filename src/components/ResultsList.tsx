@@ -140,23 +140,34 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     <div className="space-y-8 text-[15px] lg:text-[13px] xl:text-[14px]">
       {/* 필터 */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
-        <div className="flex items-center mb-6">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
-            <Filter className="w-4 h-4 text-white" />
-          </div>
-          <div className="flex-1">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+              <Filter className="w-4 h-4 text-white" />
+            </div>
             <h3 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               검색 결과 필터
             </h3>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <a
               href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
-              className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-md text-sm focus:outline-none focus:ring-4 focus:ring-emerald-200"
+              className="px-4 py-2 rounded-xl text-emerald-800 bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-200 hover:shadow-md text-sm focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:bg-emerald-700 dark:text-emerald-50 dark:border-emerald-600"
             >엑셀로 내보내기</a>
+            <button
+              onClick={async () => {
+                if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
+                try {
+                  const res = await fetch('/api/results', { method: 'DELETE' })
+                  const data = await res.json()
+                  if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
+                } catch(e){ toast('전체 삭제 중 오류','error') }
+              }}
+              className="px-4 py-2 rounded-xl text-rose-800 bg-rose-50 border border-rose-200 hover:shadow-md text-sm focus:outline-none focus:ring-4 focus:ring-rose-200 dark:bg-rose-700 dark:text-rose-50 dark:border-rose-600"
+            >전체 삭제</button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-6">
           <div className="space-y-2">
             <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-gray-800">
               <Search className="w-4 h-4 mr-2 text-blue-600" />
@@ -339,17 +350,15 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                             <div className="text-sm font-medium text-gray-900 line-clamp-2" title={result.product_title}>
                               {result.product_title}
                             </div>
-                            {result.product_link && (
-                              <a
-                                href={result.product_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center mt-2 text-xs text-blue-600 hover:text-blue-800 transition-colors duration-200"
-                              >
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                상품 보기
-                              </a>
-                            )}
+                            <a
+                              href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.mall_name || result.search_query)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center mt-2 text-xs text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              가격비교에서 보기
+                            </a>
                           </div>
                         </td>
                         <td className="px-6 py-6 whitespace-nowrap">
@@ -360,30 +369,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                             <span className="text-sm font-medium text-gray-900">{result.mall_name}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {result.brand ? (
-                              <>
-                                <div className="w-8 h-8 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-full flex items-center justify-center mr-2">
-                                  <Sparkles className="w-4 h-4 text-orange-600" />
-                                </div>
-                                <span className="text-sm font-medium text-gray-700">{result.brand}</span>
-                              </>
-                            ) : (
-                              <span className="text-sm text-gray-400">-</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mr-2">
-                              <TrendingUp className="w-4 h-4 text-indigo-600" />
-                            </div>
-                            <span className="text-sm font-bold text-gray-900">
-                              {result.price ? `${parseInt(result.price).toLocaleString()}원` : '-'}
-                            </span>
-                          </div>
-                        </td>
+                        {/* 브랜드/가격 컬럼 제거 */}
                         <td className="px-6 py-6 whitespace-nowrap">
                           <div className="flex items-center text-sm text-gray-500">
                             <Clock className="w-4 h-4 mr-2 text-gray-400" />
@@ -455,18 +441,13 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                         <div className="flex items-center">
                           <Award className="w-4 h-4 mr-1 text-green-600" />{result.mall_name}
                         </div>
-                        <div className="flex items-center">
-                          <TrendingUp className="w-4 h-4 mr-1 text-indigo-600" />{result.price ? `${parseInt(result.price).toLocaleString()}원` : '-'}
-                        </div>
                         <div className="flex items-center col-span-2">
                           <Clock className="w-4 h-4 mr-1 text-gray-400" />{result.created_at ? formatDate(result.created_at) : '-'}
                         </div>
                       </div>
-                      {result.product_link && (
-                        <a href={result.product_link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
-                          <ExternalLink className="w-3 h-3 mr-1" />상품 보기
-                        </a>
-                      )}
+                      <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.mall_name || result.search_query)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
+                        <ExternalLink className="w-3 h-3 mr-1" />가격비교에서 보기
+                      </a>
                     </div>
                   ))}
                 </div>

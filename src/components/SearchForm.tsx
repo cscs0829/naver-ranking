@@ -292,7 +292,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             사용법 안내
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-3">
             <div className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
