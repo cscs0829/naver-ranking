@@ -169,6 +169,10 @@ export class NaverShoppingRankChecker {
 
       if (result.found && result.data) {
         // 데이터베이스에 저장
+        if (!supabase) {
+          throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+        }
+        
         const { error } = await supabase
           .from('search_results')
           .insert([result.data])
