@@ -10,6 +10,7 @@ interface SearchData {
   targetProductName?: string
   maxPages: number
   profileId?: number
+  save?: boolean
 }
 
 interface SearchFormProps {
@@ -24,7 +25,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     targetBrand: '',
     targetProductName: '',
     maxPages: 10,
-    profileId: undefined
+    profileId: undefined,
+    save: false
   })
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
@@ -57,6 +59,16 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     if (formData.searchQuery.trim()) {
       onSearch(formData)
     }
+  }
+
+  const handleAnalyzeOnly = () => {
+    if (!formData.searchQuery.trim()) return
+    onSearch({ ...formData, save: false })
+  }
+
+  const handleAnalyzeAndSave = () => {
+    if (!formData.searchQuery.trim()) return
+    onSearch({ ...formData, save: true })
   }
 
   const handleInputChange = (field: keyof SearchData, value: string | number | undefined) => {
@@ -238,27 +250,33 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         </div>
 
         {/* 검색 버튼 */}
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center pt-4 gap-3 flex-wrap">
           <button
-            type="submit"
+            type="button"
+            onClick={handleAnalyzeOnly}
             disabled={isLoading || !formData.searchQuery.trim()}
-            className="group relative flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100"
+            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-            <div className="relative flex items-center">
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-                  <span>검색 중...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-6 h-6 mr-3 group-hover:rotate-12 transition-transform duration-300" />
-                  <span>순위 검색 시작</span>
-                  <Sparkles className="w-5 h-5 ml-3 group-hover:animate-pulse" />
-                </>
-              )}
-            </div>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <span>분석 중...</span>
+              </>
+            ) : (
+              <>
+                <Search className="w-5 h-5 mr-2" />
+                <span>순위 분석</span>
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={handleAnalyzeAndSave}
+            disabled={isLoading || !formData.searchQuery.trim()}
+            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Database className="w-5 h-5 mr-2" />
+            <span>데이터 저장</span>
           </button>
         </div>
       </form>

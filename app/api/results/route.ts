@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, checkSupabaseConfig } from '@/utils/supabase'
+import * as XLSX from 'xlsx'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const searchQuery = searchParams.get('searchQuery')
     const targetMallName = searchParams.get('targetMallName')
+    const exportExcel = searchParams.get('export') === 'excel'
 
     let query = supabase
       .from('search_results')
@@ -33,6 +35,32 @@ export async function GET(request: NextRequest) {
         { error: '데이터 조회 중 오류가 발생했습니다.' },
         { status: 500 }
       )
+    }
+
+    if (exportExcel) {
+      const exportRows = (data || []).map((r: any) => ({
+        검색어: r.search_query,
+        상품명: (r.product_title || '').replaceAll('\n',' '),
+        몰명: r.mall_name,
+        브랜드: r.brand || '',
+        가격: r.price || '',
+        페이지: r.page,
+        페이지내순위: r.rank_in_page,
+        전체순위: r.total_rank,
+        링크: r.product_link || '',
+        생성일시: r.created_at || ''
+      }))
+      const ws = XLSX.utils.json_to_sheet(exportRows, { header: ['검색어','상품명','몰명','브랜드','가격','페이지','페이지내순위','전체순위','링크','생성일시'] })
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'results')
+      const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' })
+      return new NextResponse(buffer, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': 'attachment; filename="results.xlsx"'
+        }
+      })
     }
 
     return NextResponse.json({

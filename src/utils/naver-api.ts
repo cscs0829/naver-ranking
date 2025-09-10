@@ -169,22 +169,26 @@ export class NaverShoppingRankChecker {
     targetProductName?: string,
     targetMallName?: string,
     targetBrand?: string,
-    maxPages: number = 10
+    maxPages: number = 10,
+    save: boolean = false
   ): Promise<{ success: boolean; items?: SearchResult[]; count?: number; error?: string }> {
     try {
       const result = await this.findAllMatches(searchQuery, targetProductName, targetMallName, targetBrand, maxPages)
 
-      if (!supabase) {
-        throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
-      }
-
-      if (result.items.length > 0) {
-        const { error } = await supabase
-          .from('search_results')
-          .insert(result.items)
-        if (error) {
-          console.error('데이터베이스 저장 오류:', error)
-          return { success: false, error: '데이터베이스 저장에 실패했습니다.' }
+      if (save) {
+        if (!supabase) {
+          throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+        }
+        // 같은 검색어 기존 데이터 삭제 후 저장
+        await supabase.from('search_results').delete().eq('search_query', searchQuery)
+        if (result.items.length > 0) {
+          const { error } = await supabase
+            .from('search_results')
+            .insert(result.items)
+          if (error) {
+            console.error('데이터베이스 저장 오류:', error)
+            return { success: false, error: '데이터베이스 저장에 실패했습니다.' }
+          }
         }
       }
 

@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
       targetBrand,
       targetProductName,
       maxPages = 10,
-      profileId
+      profileId,
+      save = false
     } = body
 
     if (!searchQuery) {
@@ -38,33 +39,18 @@ export async function POST(request: NextRequest) {
       naverKeys.clientSecret
     )
 
-    // Supabase 클라이언트 null 체크
-    if (!supabase) {
-      throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
-    }
-
-    // 기존 검색 결과 삭제 (같은 검색어)
-    const { error: deleteError } = await supabase
-      .from('search_results')
-      .delete()
-      .eq('search_query', searchQuery)
-
-    if (deleteError) {
-      console.error('기존 검색 결과 삭제 중 오류:', deleteError)
-      // 오류가 발생해도 검색은 계속 진행
-    }
-
     // 상품 순위 검색 및 저장 (다건)
     const result = await checker.searchAllProductsAndSave(
       searchQuery,
       targetProductName,
       targetMallName,
       targetBrand,
-      maxPages
+      maxPages,
+      save
     )
 
     if (result.success) {
-      return NextResponse.json({ success: true, count: result.count, items: result.items }, { status: 200 })
+      return NextResponse.json({ success: true, count: result.count, items: result.items, top: result.items?.[0] || null }, { status: 200 })
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }
