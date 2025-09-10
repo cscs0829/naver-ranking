@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllApiKeys, upsertApiKey, deactivateApiKey } from '@/utils/api-keys'
+import { getAllApiKeys, upsertApiKey, deactivateApiKey, getAllProfiles, upsertProfile, setDefaultProfile, deactivateProfile } from '@/utils/api-keys'
 import { checkSupabaseConfig } from '@/utils/supabase'
 
 // GET: 모든 API 키 조회
@@ -7,7 +7,8 @@ export async function GET() {
   try {
     checkSupabaseConfig()
     const keys = await getAllApiKeys()
-    return NextResponse.json({ keys }, { status: 200 })
+    const profiles = await getAllProfiles()
+    return NextResponse.json({ keys, profiles }, { status: 200 })
   } catch (error) {
     console.error('API 키 조회 오류:', error)
     return NextResponse.json(
@@ -22,13 +23,26 @@ export async function POST(request: NextRequest) {
   try {
     checkSupabaseConfig()
     const body = await request.json()
-    const { keyName, keyValue, description } = body
+    const { keyName, keyValue, description, profile, setDefaultProfileId } = body
+
+    if (setDefaultProfileId) {
+      const ok = await setDefaultProfile(Number(setDefaultProfileId))
+      if (ok) return NextResponse.json({ message: '기본 프로필이 설정되었습니다.' }, { status: 200 })
+      return NextResponse.json({ error: '기본 프로필 설정에 실패했습니다.' }, { status: 500 })
+    }
+
+    if (profile) {
+      const { name, clientId, clientSecret, makeDefault, id } = profile
+      if (!name || !clientId || !clientSecret) {
+        return NextResponse.json({ error: '프로필 name, clientId, clientSecret는 필수입니다.' }, { status: 400 })
+      }
+      const success = await upsertProfile(name, clientId, clientSecret, makeDefault, id)
+      if (success) return NextResponse.json({ message: '프로필이 저장되었습니다.' }, { status: 200 })
+      return NextResponse.json({ error: '프로필 저장에 실패했습니다.' }, { status: 500 })
+    }
 
     if (!keyName || !keyValue) {
-      return NextResponse.json(
-        { error: '키 이름과 값은 필수입니다.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '키 이름과 값은 필수입니다.' }, { status: 400 })
     }
 
     const success = await upsertApiKey(keyName, keyValue, description)
@@ -59,12 +73,16 @@ export async function DELETE(request: NextRequest) {
     checkSupabaseConfig()
     const { searchParams } = new URL(request.url)
     const keyName = searchParams.get('keyName')
+    const profileId = searchParams.get('profileId')
+
+    if (profileId) {
+      const success = await deactivateProfile(Number(profileId))
+      if (success) return NextResponse.json({ message: '프로필이 비활성화되었습니다.' }, { status: 200 })
+      return NextResponse.json({ error: '프로필 비활성화에 실패했습니다.' }, { status: 500 })
+    }
 
     if (!keyName) {
-      return NextResponse.json(
-        { error: '키 이름이 필요합니다.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: '키 이름이 필요합니다.' }, { status: 400 })
     }
 
     const success = await deactivateApiKey(keyName)

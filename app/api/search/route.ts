@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { NaverShoppingRankChecker } from '@/utils/naver-api'
 import { supabase, SearchResult, checkSupabaseConfig } from '@/utils/supabase'
-import { getNaverApiKeys } from '@/utils/api-keys'
+import { getNaverApiKeys, getActiveProfile } from '@/utils/api-keys'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,8 @@ export async function POST(request: NextRequest) {
       targetMallName,
       targetBrand,
       targetProductName,
-      maxPages = 10
+      maxPages = 10,
+      profileId
     } = body
 
     if (!searchQuery) {
@@ -22,8 +23,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 데이터베이스에서 네이버 API 키 가져오기
-    const naverKeys = await getNaverApiKeys()
+    // 프로필ID가 있으면 프로필 기반, 없으면 기존 키 기반
+    const naverKeys = profileId ? await getActiveProfile(Number(profileId)) : await getNaverApiKeys()
     if (!naverKeys) {
       return NextResponse.json(
         { error: '네이버 API 키를 데이터베이스에서 가져올 수 없습니다.' },

@@ -83,3 +83,27 @@ INSERT INTO api_keys (key_name, key_value, description) VALUES
 ON CONFLICT (key_name) DO UPDATE SET 
   key_value = EXCLUDED.key_value,
   updated_at = NOW();
+
+-- =============================================
+-- Naver API 키 프로필 (클라이언트ID/시크릿을 하나로 관리)
+-- =============================================
+CREATE TABLE IF NOT EXISTS api_key_profiles (
+  id SERIAL PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  client_id TEXT NOT NULL,
+  client_secret TEXT NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  is_default BOOLEAN DEFAULT FALSE
+);
+
+ALTER TABLE api_key_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all operations for all users" ON api_key_profiles
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER update_api_key_profiles_updated_at
+  BEFORE UPDATE ON api_key_profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();

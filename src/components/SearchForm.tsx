@@ -9,6 +9,7 @@ interface SearchData {
   targetBrand?: string
   targetProductName?: string
   maxPages: number
+  profileId?: number
 }
 
 interface SearchFormProps {
@@ -22,8 +23,34 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     targetMallName: '',
     targetBrand: '',
     targetProductName: '',
-    maxPages: 10
+    maxPages: 10,
+    profileId: undefined
   })
+  const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
+  const [loadingProfiles, setLoadingProfiles] = useState(false)
+
+  // 프로필 목록 로드
+  React.useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingProfiles(true)
+        const res = await fetch('/api/keys')
+        const data = await res.json()
+        if (res.ok && data.profiles) {
+          setProfiles(data.profiles)
+          const def = data.profiles.find((p: any) => p.is_default)
+          if (def) {
+            setFormData(prev => ({ ...prev, profileId: def.id }))
+          }
+        }
+      } catch (e) {
+        // noop
+      } finally {
+        setLoadingProfiles(false)
+      }
+    }
+    load()
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,6 +94,37 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
 
         {/* 검색 옵션들 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* API 키 프로필 */}
+          <div className="space-y-3">
+            <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-gray-800">
+              <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
+              사용할 API 키 프로필
+            </label>
+            <div className="relative">
+              <select
+                id="profileId"
+                value={formData.profileId ?? ''}
+                onChange={(e) => handleInputChange('profileId', e.target.value ? parseInt(e.target.value) : undefined)}
+                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none"
+              >
+                <option value="">기본 프로필(설정 시)</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}{p.is_default ? ' (기본)' : ''}</option>
+                ))}
+              </select>
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <Sparkles className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+            {loadingProfiles && (
+              <p className="text-xs text-gray-500">프로필 불러오는 중...</p>
+            )}
+          </div>
           {/* 타겟 상품명 */}
           <div className="space-y-3">
             <label htmlFor="targetProductName" className="flex items-center text-sm font-semibold text-gray-800">
