@@ -1,28 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Trash2, ExternalLink, Calendar, MapPin, Tag } from 'lucide-react'
-
-interface SearchResult {
-  id: number
-  search_query: string
-  target_mall_name?: string
-  target_brand?: string
-  target_product_name?: string
-  page: number
-  rank_in_page: number
-  total_rank: number
-  product_title: string
-  mall_name: string
-  brand?: string
-  price: string
-  product_link: string
-  product_id: string
-  category1?: string
-  category2?: string
-  category3?: string
-  created_at: string
-}
+import { SearchResult } from '@/lib/supabase'
+import { Trash2, Search, ExternalLink, Calendar, BarChart3 } from 'lucide-react'
 
 interface ResultsListProps {
   refreshTrigger: number
@@ -31,50 +11,69 @@ interface ResultsListProps {
 export default function ResultsList({ refreshTrigger }: ResultsListProps) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(true)
-  const [groupedResults, setGroupedResults] = useState<Record<string, SearchResult[]>>({})
+  const [error, setError] = useState('')
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    targetMallName: ''
+  })
 
+  // 결과 목록 가져오기
   const fetchResults = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/results')
+      const params = new URLSearchParams()
+      if (filters.searchQuery) params.append('searchQuery', filters.searchQuery)
+      if (filters.targetMallName) params.append('targetMallName', filters.targetMallName)
+
+      const response = await fetch(`/api/results?${params.toString()}`)
       const data = await response.json()
-      
-      if (data.success) {
-        setResults(data.data)
-        
-        // 검색어별로 그룹화
-        const grouped = data.data.reduce((acc: Record<string, SearchResult[]>, result: SearchResult) => {
-          const key = `${result.search_query}_${result.target_mall_name || '전체'}_${result.target_brand || '전체'}_${result.target_product_name || '전체'}`
-          if (!acc[key]) {
-            acc[key] = []
-          }
-          acc[key].push(result)
-          return acc
-        }, {})
-        
-        setGroupedResults(grouped)
+
+      if (response.ok) {
+        setResults(data.data || [])
+        setError('')
+      } else {
+        setError(data.error || '결과를 가져올 수 없습니다.')
       }
-    } catch (error) {
-      console.error('결과 조회 중 오류:', error)
+    } catch (err) {
+      setError('결과를 가져오는 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
-  const deleteResult = async (id: number) => {
+  // 개별 결과 삭제
+  const handleDelete = async (id: number) => {
+    if (!confirm('정말로 이 결과를 삭제하시겠습니까?')) {
+      return
+    }
+
     try {
       const response = await fetch(`/api/results?id=${id}`, {
         method: 'DELETE'
       })
-      
+      const data = await response.json()
+
       if (response.ok) {
-        await fetchResults()
+        setResults(prev => prev.filter(result => result.id !== id))
+      } else {
+        alert(data.error || '삭제에 실패했습니다.')
       }
-    } catch (error) {
-      console.error('삭제 중 오류:', error)
+    } catch (err) {
+      alert('삭제 중 오류가 발생했습니다.')
     }
   }
 
+  // 검색어별 그룹화
+  const groupedResults = results.reduce((acc, result) => {
+    const key = result.search_query
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(result)
+    return acc
+  }, {} as Record<string, SearchResult[]>)
+
+  // 날짜 포맷팅
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('ko-KR', {
       year: 'numeric',
@@ -85,146 +84,174 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     })
   }
 
-  const formatPrice = (price: string) => {
-    return parseInt(price).toLocaleString('ko-KR') + '원'
-  }
-
   useEffect(() => {
     fetchResults()
-  }, [refreshTrigger])
+  }, [refreshTrigger, filters])
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-gray-600">결과를 불러오는 중...</span>
-        </div>
-      </div>
-    )
-  }
-
-  if (results.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="text-center py-8">
-          <div className="text-gray-400 mb-2">
-            <MapPin className="w-12 h-12 mx-auto" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-600 mb-2">검색 결과가 없습니다</h3>
-          <p className="text-gray-500">위에서 검색어를 입력하여 상품 순위를 확인해보세요.</p>
-        </div>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2">로딩 중...</span>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {Object.entries(groupedResults).map(([groupKey, groupResults]) => {
-        const firstResult = groupResults[0]
-        const searchInfo = groupKey.split('_')
-        
-        return (
-          <div key={groupKey} className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800">
-                  검색어: {firstResult.search_query}
-                </h3>
-                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                  {firstResult.target_mall_name && (
-                    <span className="flex items-center">
-                      <Tag className="w-4 h-4 mr-1" />
-                      쇼핑몰: {firstResult.target_mall_name}
-                    </span>
-                  )}
-                  {firstResult.target_brand && (
-                    <span className="flex items-center">
-                      <Tag className="w-4 h-4 mr-1" />
-                      브랜드: {firstResult.target_brand}
-                    </span>
-                  )}
-                  {firstResult.target_product_name && (
-                    <span className="flex items-center">
-                      <Tag className="w-4 h-4 mr-1" />
-                      상품: {firstResult.target_product_name}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <Calendar className="w-4 h-4 mr-1" />
-                {formatDate(firstResult.created_at)}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {groupResults.map((result) => (
-                <div key={result.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4 mb-2">
-                        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                          {result.total_rank}위
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {result.page}페이지 {result.rank_in_page}번째
-                        </span>
-                        <span className="text-sm text-gray-600">
-                          {result.mall_name}
-                        </span>
-                        {result.brand && (
-                          <span className="text-sm text-gray-600">
-                            {result.brand}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <h4 className="font-medium text-gray-800 mb-1 line-clamp-2">
-                        {result.product_title}
-                      </h4>
-                      
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span className="font-medium text-green-600">
-                          {formatPrice(result.price)}
-                        </span>
-                        {result.category1 && (
-                          <span>{result.category1}</span>
-                        )}
-                        {result.category2 && (
-                          <span>→ {result.category2}</span>
-                        )}
-                        {result.category3 && (
-                          <span>→ {result.category3}</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      <a
-                        href={result.product_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 p-1"
-                        title="상품 보기"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
-                      <button
-                        onClick={() => deleteResult(result.id)}
-                        className="text-red-600 hover:text-red-800 p-1"
-                        title="삭제"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* 필터 */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">필터</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="searchQueryFilter" className="block text-sm font-medium text-gray-700 mb-1">
+              검색어
+            </label>
+            <input
+              type="text"
+              id="searchQueryFilter"
+              value={filters.searchQuery}
+              onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="검색어로 필터링"
+            />
           </div>
-        )
-      })}
+          <div>
+            <label htmlFor="mallNameFilter" className="block text-sm font-medium text-gray-700 mb-1">
+              몰명
+            </label>
+            <input
+              type="text"
+              id="mallNameFilter"
+              value={filters.targetMallName}
+              onChange={(e) => setFilters(prev => ({ ...prev, targetMallName: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="몰명으로 필터링"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 결과 목록 */}
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">오류:</strong>
+          <span className="block sm:inline"> {error}</span>
+        </div>
+      )}
+
+      {Object.keys(groupedResults).length === 0 ? (
+        <div className="text-center py-12">
+          <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">검색 결과가 없습니다</h3>
+          <p className="text-gray-500">검색을 실행하면 결과가 여기에 표시됩니다.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(groupedResults).map(([searchQuery, queryResults]) => (
+            <div key={searchQuery} className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="px-6 py-4 bg-gray-50 border-b">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Search className="w-5 h-5 mr-2 text-blue-600" />
+                  "{searchQuery}" 검색 결과
+                  <span className="ml-2 text-sm font-normal text-gray-500">
+                    ({queryResults.length}개 결과)
+                  </span>
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        순위
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        상품명
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        몰명
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        브랜드
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        가격
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        검색일시
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        액션
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {queryResults.map((result) => (
+                      <tr key={result.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <BarChart3 className="w-4 h-4 text-blue-600 mr-2" />
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {result.total_rank}위
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {result.page}페이지 {result.rank_in_page}번째
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs truncate" title={result.product_title}>
+                            {result.product_title}
+                          </div>
+                          {result.product_link && (
+                            <a
+                              href={result.product_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 flex items-center mt-1"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              상품 보기
+                            </a>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.mall_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {result.brand || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {result.price ? `${parseInt(result.price).toLocaleString()}원` : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            {result.created_at ? formatDate(result.created_at) : '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleDelete(result.id!)}
+                            className="text-red-600 hover:text-red-900"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
