@@ -79,7 +79,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-[15px] lg:text-[13px] xl:text-[14px]">
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* 검색어 */}
         <div className="space-y-3">

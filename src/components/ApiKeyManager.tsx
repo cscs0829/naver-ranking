@@ -205,7 +205,7 @@ export default function ApiKeyManager() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 text-[15px] lg:text-[13px] xl:text-[14px]">
       {/* 헤더 섹션 */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">

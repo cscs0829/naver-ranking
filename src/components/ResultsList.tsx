@@ -104,7 +104,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 text-[15px] lg:text-[13px] xl:text-[14px]">
       {/* 필터 */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
         <div className="flex items-center mb-6">

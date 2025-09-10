@@ -110,41 +110,41 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
           {/* 검색 패널 */}
-          <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col">
+          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-xs font-medium">
                 <Sparkles className="w-4 h-4 mr-2" /> 순위 분석
               </div>
               <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">네이버 쇼핑 순위 분석</h2>
             </div>
-            <div className="p-5 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+            <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
               <SearchForm onSearch={handleSearch} isLoading={isLoading} />
             </div>
           </section>
 
           {/* 결과 패널 */}
-          <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col lg:col-span-1 xl:col-span-1">
+          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col lg:col-span-1 xl:col-span-1 text-[15px] lg:text-[13px] xl:text-[14px]">
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-green-100 to-blue-100 text-green-800 text-xs font-medium">
                 <TrendingUp className="w-4 h-4 mr-2" /> 저장된 결과
               </div>
               <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">검색 결과</h2>
             </div>
-            <div className="p-5 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+            <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
               <ResultsList refreshTrigger={refreshTrigger} />
             </div>
           </section>
 
           {/* API 키 패널 (표시 토글) */}
           {showKeysPanel && (
-            <section className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col">
+            <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
               <div className="px-5 pt-5 pb-3 border-b border-gray-100">
                 <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 text-xs font-medium">
                   <Zap className="w-4 h-4 mr-2" /> API 키 관리
                 </div>
                 <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">API 키 관리</h2>
               </div>
-              <div className="p-5 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+              <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
                 <ApiKeyManager />
               </div>
             </section>
