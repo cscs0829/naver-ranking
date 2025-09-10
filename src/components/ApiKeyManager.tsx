@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PlusCircle, Edit, Trash2, Database } from 'lucide-react'
+import { PlusCircle, Edit, Trash2, Database, Key, Shield, Settings, CheckCircle, AlertCircle, Sparkles, Zap } from 'lucide-react'
 import { ApiKey } from '@/utils/api-keys'
 
 export default function ApiKeyManager() {
@@ -115,20 +115,37 @@ export default function ApiKeyManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">로딩 중...</span>
+      <div className="flex flex-col items-center justify-center p-12">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-lg font-semibold text-gray-800 animate-pulse">API 키를 불러오는 중...</p>
+          <p className="text-sm text-gray-500 mt-1">잠시만 기다려주세요</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-          <Database className="w-6 h-6 mr-2 text-blue-600" />
+    <div className="max-w-6xl mx-auto p-6">
+      {/* 헤더 섹션 */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center mb-4">
+          <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg">
+            <Settings className="w-8 h-8 text-white" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold gradient-text mb-2 flex items-center justify-center">
+          <Sparkles className="w-8 h-8 mr-3 animate-pulse" />
           API 키 관리
         </h2>
+        <p className="text-gray-600 text-lg">네이버 쇼핑 API 키를 안전하게 관리하세요</p>
+      </div>
+
+      {/* 액션 버튼 */}
+      <div className="flex justify-center mb-8">
         <button
           onClick={() => {
             setShowAddForm(!showAddForm)
@@ -137,167 +154,244 @@ export default function ApiKeyManager() {
             setError('')
             setSuccess('')
           }}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="group flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105"
         >
-          <PlusCircle className="w-5 h-5 mr-2" />
-          새 API 키 추가
+          <PlusCircle className="w-6 h-6 mr-3 group-hover:animate-pulse" />
+          <span className="text-lg font-semibold">새 API 키 추가</span>
+          <Zap className="w-5 h-5 ml-2 group-hover:rotate-12 transition-transform duration-300" />
         </button>
       </div>
 
+      {/* 알림 메시지 */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <strong className="font-bold">오류:</strong>
-          <span className="block sm:inline"> {error}</span>
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 text-red-800 px-6 py-4 rounded-2xl mb-6 animate-fade-in" role="alert">
+          <div className="flex items-center">
+            <AlertCircle className="w-6 h-6 mr-3 text-red-600" />
+            <div>
+              <strong className="font-bold text-lg">오류가 발생했습니다</strong>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
         </div>
       )}
       {success && (
-        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <strong className="font-bold">성공:</strong>
-          <span className="block sm:inline"> {success}</span>
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-green-800 px-6 py-4 rounded-2xl mb-6 animate-fade-in" role="alert">
+          <div className="flex items-center">
+            <CheckCircle className="w-6 h-6 mr-3 text-green-600" />
+            <div>
+              <strong className="font-bold text-lg">성공!</strong>
+              <p className="text-sm mt-1">{success}</p>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* API 키 추가/수정 폼 */}
       {showAddForm && (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            {editingKeyId ? 'API 키 수정' : '새 API 키 추가'}
-          </h3>
-          <form onSubmit={handleSaveKey} className="space-y-4">
-            <div>
-              <label htmlFor="keyName" className="block text-sm font-medium text-gray-700 mb-1">
-                키 이름
-              </label>
-              <input
-                type="text"
-                id="keyName"
-                value={newKey.keyName}
-                onChange={(e) => setNewKey({ ...newKey, keyName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="예: NAVER_CLIENT_ID"
-                disabled={!!editingKeyId} // 수정 중에는 키 이름 변경 불가
-              />
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20 mb-8 animate-fade-in">
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-3">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl">
+                <Key className="w-6 h-6 text-white" />
+              </div>
             </div>
-            <div>
-              <label htmlFor="keyValue" className="block text-sm font-medium text-gray-700 mb-1">
-                키 값
-              </label>
-              <input
-                type="text"
-                id="keyValue"
-                value={newKey.keyValue}
-                onChange={(e) => setNewKey({ ...newKey, keyValue: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="API 키 값을 입력하세요"
-              />
+            <h3 className="text-2xl font-bold gradient-text">
+              {editingKeyId ? 'API 키 수정' : '새 API 키 추가'}
+            </h3>
+            <p className="text-gray-600 mt-2">네이버 쇼핑 API 키 정보를 입력하세요</p>
+          </div>
+          
+          <form onSubmit={handleSaveKey} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="keyName" className="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                  <Database className="w-4 h-4 mr-2 text-blue-600" />
+                  키 이름
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="keyName"
+                    value={newKey.keyName}
+                    onChange={(e) => setNewKey({ ...newKey, keyName: e.target.value })}
+                    className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                    placeholder="예: NAVER_CLIENT_ID"
+                    disabled={!!editingKeyId}
+                  />
+                  <Key className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
+              </div>
+              
+              <div>
+                <label htmlFor="keyValue" className="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                  <Shield className="w-4 h-4 mr-2 text-green-600" />
+                  키 값
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="keyValue"
+                    value={newKey.keyValue}
+                    onChange={(e) => setNewKey({ ...newKey, keyValue: e.target.value })}
+                    className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                    placeholder="API 키 값을 입력하세요"
+                  />
+                  <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                </div>
+              </div>
             </div>
+            
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="description" className="block text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                <Settings className="w-4 h-4 mr-2 text-purple-600" />
                 설명 (선택사항)
               </label>
               <textarea
                 id="description"
                 value={newKey.description}
                 onChange={(e) => setNewKey({ ...newKey, description: e.target.value })}
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="이 키에 대한 설명을 입력하세요"
+                rows={3}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm resize-none"
+                placeholder="이 키에 대한 설명을 입력하세요 (예: 메인 계정, 테스트용 등)"
               ></textarea>
             </div>
-            <div className="flex justify-end space-x-3">
+            
+            <div className="flex justify-center space-x-4 pt-4">
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-8 py-3 border-2 border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-300 font-semibold"
               >
                 취소
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="group px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform transition-all duration-300 hover:scale-105 font-semibold"
               >
-                {editingKeyId ? '수정' : '저장'}
+                <span className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                  {editingKeyId ? '수정하기' : '저장하기'}
+                </span>
               </button>
             </div>
           </form>
         </div>
       )}
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                키 이름
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                키 값
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                설명
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                상태
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                액션
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {keys.map((key) => (
-              <tr key={key.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {key.key_name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {maskKeyValue(key.key_value)}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  {key.description || '-'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {key.is_active ? (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      활성
-                    </span>
-                  ) : (
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      비활성
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => {
-                      setEditingKeyId(key.id)
-                      setNewKey({
-                        keyName: key.key_name,
-                        keyValue: key.key_value,
-                        description: key.description || ''
-                      })
-                      setShowAddForm(true)
-                      setError('')
-                      setSuccess('')
-                    }}
-                    className="text-blue-600 hover:text-blue-900 mr-3"
-                    title="수정"
-                  >
-                    <Edit className="w-5 h-5" />
-                  </button>
-                  {key.is_active && (
-                    <button
-                      onClick={() => handleDeactivateKey(key.key_name)}
-                      className="text-red-600 hover:text-red-900"
-                      title="비활성화"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* API 키 목록 */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center">
+            <Database className="w-5 h-5 mr-2 text-blue-600" />
+            등록된 API 키 목록
+          </h3>
+        </div>
+        
+        {keys.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-gradient-to-r from-gray-100 to-gray-200 rounded-2xl">
+                <Key className="w-12 h-12 text-gray-400" />
+              </div>
+            </div>
+            <h4 className="text-xl font-semibold text-gray-600 mb-2">등록된 API 키가 없습니다</h4>
+            <p className="text-gray-500">새 API 키를 추가하여 시작하세요</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
+                <tr>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center">
+                    <Key className="w-4 h-4 mr-2" />
+                    키 이름
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center">
+                    <Shield className="w-4 h-4 mr-2" />
+                    키 값
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center">
+                    <Settings className="w-4 h-4 mr-2" />
+                    설명
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    상태
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    액션
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {keys.map((key, index) => (
+                  <tr key={key.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 group">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg mr-3">
+                          <Key className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">{key.key_name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <Shield className="w-4 h-4 text-gray-400 mr-2" />
+                        <span className="text-sm text-gray-600 font-mono">{maskKeyValue(key.key_value)}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-600">{key.description || '-'}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {key.is_active ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          활성
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                          <AlertCircle className="w-3 h-3 mr-1" />
+                          비활성
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end space-x-2">
+                        <button
+                          onClick={() => {
+                            setEditingKeyId(key.id)
+                            setNewKey({
+                              keyName: key.key_name,
+                              keyValue: key.key_value,
+                              description: key.description || ''
+                            })
+                            setShowAddForm(true)
+                            setError('')
+                            setSuccess('')
+                          }}
+                          className="group p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                          title="수정"
+                        >
+                          <Edit className="w-4 h-4 group-hover:scale-110" />
+                        </button>
+                        {key.is_active && (
+                          <button
+                            onClick={() => handleDeactivateKey(key.key_name)}
+                            className="group p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="비활성화"
+                          >
+                            <Trash2 className="w-4 h-4 group-hover:scale-110" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
