@@ -4,6 +4,10 @@ import { supabase, checkSupabaseConfig } from '@/utils/supabase'
 export async function GET(request: NextRequest) {
   try {
     checkSupabaseConfig()
+    if (!supabase) {
+      throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+    }
+    
     const { searchParams } = new URL(request.url)
     const searchQuery = searchParams.get('searchQuery')
     const targetMallName = searchParams.get('targetMallName')
@@ -48,6 +52,10 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     checkSupabaseConfig()
+    if (!supabase) {
+      throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+    }
+    
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

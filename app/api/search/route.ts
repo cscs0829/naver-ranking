@@ -37,6 +37,11 @@ export async function POST(request: NextRequest) {
       naverKeys.clientSecret
     )
 
+    // Supabase 클라이언트 null 체크
+    if (!supabase) {
+      throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+    }
+
     // 기존 검색 결과 삭제 (같은 검색어)
     const { error: deleteError } = await supabase
       .from('search_results')
