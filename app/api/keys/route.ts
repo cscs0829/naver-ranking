@@ -11,7 +11,7 @@ export async function GET() {
   } catch (error) {
     console.error('API 키 조회 오류:', error)
     return NextResponse.json(
-      { error: 'API 키 조회 중 오류가 발생했습니다.' },
+      { error: 'API 키 조회 중 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('API 키 저장 오류:', error)
     return NextResponse.json(
-      { error: 'API 키 저장 중 오류가 발생했습니다.' },
+      { error: 'API 키 저장 중 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('API 키 비활성화 오류:', error)
     return NextResponse.json(
-      { error: 'API 키 비활성화 중 오류가 발생했습니다.' },
+      { error: 'API 키 비활성화 중 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

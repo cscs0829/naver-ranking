@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('결과 조회 API 오류:', error)
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '서버 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }
@@ -87,7 +87,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('삭제 API 오류:', error)
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '서버 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

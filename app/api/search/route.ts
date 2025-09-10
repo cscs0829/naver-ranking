@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('검색 API 오류:', error)
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.' },
+      { error: '서버 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     )
   }

@@ -83,13 +83,3 @@ INSERT INTO api_keys (key_name, key_value, description) VALUES
 ON CONFLICT (key_name) DO UPDATE SET 
   key_value = EXCLUDED.key_value,
   updated_at = NOW();
-
--- 샘플 데이터 (선택사항)
--- INSERT INTO search_results (
---   search_query, target_mall_name, page, rank_in_page, total_rank,
---   product_title, mall_name, price, product_link, product_id
--- ) VALUES (
---   '베트남 여행', '하나투어', 1, 1, 1,
---   '베트남 다낭 3박4일 패키지', '하나투어', '299000',
---   'https://example.com', 'sample_product_1'
--- );
