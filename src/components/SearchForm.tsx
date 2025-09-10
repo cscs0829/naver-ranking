@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { Search, Loader2, Target, Building2, Tag, BarChart3, Sparkles, Zap } from 'lucide-react'
+import { Search, Loader2, Target, Building2, Tag, BarChart3, Sparkles, Zap, Database } from 'lucide-react'
 
 interface SearchData {
   searchQuery: string
