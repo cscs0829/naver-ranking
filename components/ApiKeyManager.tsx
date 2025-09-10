@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { PlusCircle, Edit, Trash2, Database } from 'lucide-react'
-import { ApiKey } from '../lib/api-keys'
+import { ApiKey } from '../utils/api-keys'
 
 export default function ApiKeyManager() {
   const [keys, setKeys] = useState<ApiKey[]>([])

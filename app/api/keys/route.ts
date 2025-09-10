@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllApiKeys, upsertApiKey, deactivateApiKey } from '../../lib/api-keys'
+import { getAllApiKeys, upsertApiKey, deactivateApiKey } from '../../utils/api-keys'
 
 // GET: 모든 API 키 조회
 export async function GET() {

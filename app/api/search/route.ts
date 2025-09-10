@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NaverShoppingRankChecker } from '../../lib/naver-api'
-import { supabase, SearchResult } from '../../lib/supabase'
-import { getNaverApiKeys } from '../../lib/api-keys'
+import { NaverShoppingRankChecker } from '../../utils/naver-api'
+import { supabase, SearchResult } from '../../utils/supabase'
+import { getNaverApiKeys } from '../../utils/api-keys'
 
 export async function POST(request: NextRequest) {
   try {
