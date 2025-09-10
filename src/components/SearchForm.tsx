@@ -27,7 +27,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     targetProductName: '',
     maxPages: 10,
     profileId: undefined,
-    save: false
+    save: true
   })
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
@@ -62,11 +62,6 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     }
   }
 
-  const handleAnalyzeOnly = () => {
-    if (!formData.searchQuery.trim()) return
-    onSearch({ ...formData, save: false })
-  }
-
   const handleAnalyzeAndSave = () => {
     if (!formData.searchQuery.trim()) return
     onSearch({ ...formData, save: true })
@@ -80,8 +75,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   }
 
   return (
-    <div className="space-y-8 text-[15px] lg:text-[13px] xl:text-[14px]">
-      <form onSubmit={handleSubmit} className="space-y-8" aria-busy={isLoading} aria-live="polite">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-[15px] lg:text-[13px] xl:text-[14px]">
+      <form onSubmit={handleSubmit} className="space-y-8 order-1" aria-busy={isLoading} aria-live="polite">
         {/* 검색어 */}
         <div className="space-y-3">
           <label htmlFor="searchQuery" className="flex items-center text-sm font-semibold text-gray-800">
@@ -266,28 +261,6 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="button"
-            onClick={handleAnalyzeOnly}
-            disabled={isLoading || !formData.searchQuery.trim()}
-            title="DB 저장 없이 순위만 분석합니다"
-            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-disabled={isLoading || !formData.searchQuery.trim()}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                <span>분석 중...</span>
-              </>
-            ) : (
-              <>
-                <Search className="w-5 h-5 mr-2" />
-                <span>순위 분석 (미저장)</span>
-              </>
-            )}
-          </motion.button>
-          <motion.button
-            whileHover={{ y: -2, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
             onClick={handleAnalyzeAndSave}
             disabled={isLoading || !formData.searchQuery.trim()}
             title="결과를 DB에 저장하고 '결과' 화면으로 이동합니다"
@@ -302,15 +275,15 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             ) : (
               <>
                 <Database className="w-5 h-5 mr-2" />
-                <span>데이터 저장 및 이동</span>
+                <span>검색 실행</span>
               </>
             )}
           </motion.button>
         </div>
       </form>
 
-      {/* 사용법 안내 */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100">
+      {/* 사용법 안내 (우측 컬럼) */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-100 order-2">
         <div className="flex items-center mb-4">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
             <Sparkles className="w-4 h-4 text-white" />
