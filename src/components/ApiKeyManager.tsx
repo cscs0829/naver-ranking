@@ -154,13 +154,13 @@ export default function ApiKeyManager() {
   }
 
   // API 키 비활성화
-  const handleDeactivateKey = async (keyName: string) => {
-    if (!confirm(`정말로 '${keyName}' API 키를 비활성화하시겠습니까?`)) {
+  const handleDeactivateKey = async (keyName: string, hard = false) => {
+    if (!confirm(`정말로 '${keyName}' API 키를 ${hard ? '삭제' : '비활성화'}하시겠습니까?`)) {
       return
     }
 
     try {
-      const response = await fetch(`/api/keys?keyName=${keyName}`, {
+      const response = await fetch(`/api/keys?keyName=${keyName}&hard=${hard}`, {
         method: 'DELETE'
       })
       const data = await response.json()
@@ -572,15 +572,13 @@ export default function ApiKeyManager() {
                         >
                           <Edit className="w-4 h-4 group-hover:scale-110" />
                         </button>
-                        {key.is_active && (
-                          <button
-                            onClick={() => handleDeactivateKey(key.key_name)}
-                            className="group p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="비활성화"
-                          >
-                            <Trash2 className="w-4 h-4 group-hover:scale-110" />
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleDeactivateKey(key.key_name, true)}
+                          className="group p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-4 h-4 group-hover:scale-110" />
+                        </button>
                       </div>
                     </td>
                   </tr>

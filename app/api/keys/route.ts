@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAllApiKeys, upsertApiKey, deactivateApiKey, getAllProfiles, upsertProfile, setDefaultProfile, deactivateProfile } from '@/utils/api-keys'
+import { getAllApiKeys, upsertApiKey, deactivateApiKey, getAllProfiles, upsertProfile, setDefaultProfile, deactivateProfile, deleteApiKey, deleteProfile } from '@/utils/api-keys'
 import { checkSupabaseConfig } from '@/utils/supabase'
 
 // GET: 모든 API 키 조회
@@ -74,24 +74,22 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const keyName = searchParams.get('keyName')
     const profileId = searchParams.get('profileId')
+    const hard = searchParams.get('hard') === 'true'
 
     if (profileId) {
-      const success = await deactivateProfile(Number(profileId))
-      if (success) return NextResponse.json({ message: '프로필이 비활성화되었습니다.' }, { status: 200 })
-      return NextResponse.json({ error: '프로필 비활성화에 실패했습니다.' }, { status: 500 })
+      const success = hard ? await deleteProfile(Number(profileId)) : await deactivateProfile(Number(profileId))
+      if (success) return NextResponse.json({ message: hard ? '프로필이 삭제되었습니다.' : '프로필이 비활성화되었습니다.' }, { status: 200 })
+      return NextResponse.json({ error: hard ? '프로필 삭제에 실패했습니다.' : '프로필 비활성화에 실패했습니다.' }, { status: 500 })
     }
 
     if (!keyName) {
       return NextResponse.json({ error: '키 이름이 필요합니다.' }, { status: 400 })
     }
 
-    const success = await deactivateApiKey(keyName)
+    const success = hard ? await deleteApiKey(keyName) : await deactivateApiKey(keyName)
     
     if (success) {
-      return NextResponse.json(
-        { message: 'API 키가 비활성화되었습니다.' },
-        { status: 200 }
-      )
+      return NextResponse.json({ message: hard ? 'API 키가 삭제되었습니다.' : 'API 키가 비활성화되었습니다.' }, { status: 200 })
     } else {
       return NextResponse.json(
         { error: 'API 키 비활성화에 실패했습니다.' },

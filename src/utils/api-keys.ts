@@ -123,6 +123,28 @@ export async function deactivateProfile(id: number): Promise<boolean> {
   return true
 }
 
+export async function deleteApiKey(keyName: string): Promise<boolean> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  const { error } = await supabase.from('api_keys').delete().eq('key_name', keyName)
+  if (error) {
+    console.error('Error deleting api key:', error)
+    return false
+  }
+  return true
+}
+
+export async function deleteProfile(id: number): Promise<boolean> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  const { error } = await supabase.from('api_key_profiles').delete().eq('id', id)
+  if (error) {
+    console.error('Error deleting profile:', error)
+    return false
+  }
+  return true
+}
+
 export async function getAllApiKeys(): Promise<ApiKey[]> {
   checkSupabaseConfig()
   if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
