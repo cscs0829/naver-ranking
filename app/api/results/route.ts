@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/utils/supabase'
+import { supabase, checkSupabaseConfig } from '@/utils/supabase'
 
 export async function GET(request: NextRequest) {
   try {
+    checkSupabaseConfig()
     const { searchParams } = new URL(request.url)
     const searchQuery = searchParams.get('searchQuery')
     const targetMallName = searchParams.get('targetMallName')
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    checkSupabaseConfig()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

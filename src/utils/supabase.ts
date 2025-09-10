@@ -4,11 +4,18 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase 환경변수가 설정되지 않았습니다. Vercel에서 Supabase 통합을 확인해주세요.')
-}
+// 빌드 시점에는 환경변수가 없을 수 있으므로 런타임에 체크
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// 환경변수 체크 함수
+export function checkSupabaseConfig() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase 환경변수가 설정되지 않았습니다. Vercel에서 Supabase 통합을 확인해주세요.')
+  }
+  return true
+}
 
 // 데이터베이스 타입 정의
 export interface SearchResult {

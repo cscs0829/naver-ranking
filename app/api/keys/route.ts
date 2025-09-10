@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllApiKeys, upsertApiKey, deactivateApiKey } from '@/utils/api-keys'
+import { checkSupabaseConfig } from '@/utils/supabase'
 
 // GET: 모든 API 키 조회
 export async function GET() {
   try {
+    checkSupabaseConfig()
     const keys = await getAllApiKeys()
     return NextResponse.json({ keys }, { status: 200 })
   } catch (error) {
@@ -18,6 +20,7 @@ export async function GET() {
 // POST: API 키 추가/수정
 export async function POST(request: NextRequest) {
   try {
+    checkSupabaseConfig()
     const body = await request.json()
     const { keyName, keyValue, description } = body
 
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
 // DELETE: API 키 비활성화
 export async function DELETE(request: NextRequest) {
   try {
+    checkSupabaseConfig()
     const { searchParams } = new URL(request.url)
     const keyName = searchParams.get('keyName')
 

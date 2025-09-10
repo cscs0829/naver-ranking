@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase, checkSupabaseConfig } from './supabase'
 
 export interface ApiKey {
   id: number
@@ -11,6 +11,9 @@ export interface ApiKey {
 }
 
 export async function getNaverApiKeys(): Promise<{ clientId: string; clientSecret: string } | null> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  
   const { data, error } = await supabase
     .from('api_keys')
     .select('key_name, key_value')
@@ -34,6 +37,9 @@ export async function getNaverApiKeys(): Promise<{ clientId: string; clientSecre
 }
 
 export async function getAllApiKeys(): Promise<ApiKey[]> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  
   const { data, error } = await supabase
     .from('api_keys')
     .select('*')
@@ -47,6 +53,9 @@ export async function getAllApiKeys(): Promise<ApiKey[]> {
 }
 
 export async function upsertApiKey(keyName: string, keyValue: string, description?: string): Promise<boolean> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  
   const { error } = await supabase
     .from('api_keys')
     .upsert({ key_name: keyName, key_value: keyValue, description, is_active: true }, { onConflict: 'key_name' })
@@ -59,6 +68,9 @@ export async function upsertApiKey(keyName: string, keyValue: string, descriptio
 }
 
 export async function deactivateApiKey(keyName: string): Promise<boolean> {
+  checkSupabaseConfig()
+  if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  
   const { error } = await supabase
     .from('api_keys')
     .update({ is_active: false })
