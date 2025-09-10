@@ -264,7 +264,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             onClick={handleAnalyzeAndSave}
             disabled={isLoading || !formData.searchQuery.trim()}
             title="결과를 DB에 저장하고 '결과' 화면으로 이동합니다"
-            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 border border-emerald-200 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-emerald-700 dark:text-emerald-50 dark:border-emerald-600"
             aria-disabled={isLoading || !formData.searchQuery.trim()}
           >
             {isLoading ? (

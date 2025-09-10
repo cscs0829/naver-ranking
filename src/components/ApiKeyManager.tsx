@@ -191,7 +191,7 @@ export default function ApiKeyManager() {
             setError('')
             setSuccess('')
           }}
-          className="ml-4 group flex items-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105"
+          className="ml-4 group flex items-center px-8 py-4 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-800 border border-emerald-200 rounded-2xl shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 dark:bg-emerald-700 dark:text-emerald-50 dark:border-emerald-600"
         >
           <Key className="w-6 h-6 mr-3 group-hover:animate-pulse" />
           <span className="text-lg font-semibold">프로필(아이디+시크릿) 추가</span>
