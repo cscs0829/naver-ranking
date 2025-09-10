@@ -26,6 +26,15 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/* 모션 감축 환경 지원: 애니메이션/트랜지션 최소화 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import React from 'react'
+import ToastContainer from '../src/components/Toast'
+import ProgressBar from '../src/components/ProgressBar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,9 +18,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko">
+    <html lang="ko" suppressHydrationWarning>
       <body className={inter.className}>
         <div className="min-h-screen bg-gray-50">
+          <ProgressBar />
+          <ToastContainer />
           {children}
         </div>
       </body>

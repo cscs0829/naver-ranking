@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SearchResult } from '@/utils/supabase'
 import { Trash2, Search, ExternalLink, Calendar, BarChart3, Filter, TrendingUp, Award, Clock, Sparkles, Zap } from 'lucide-react'
+import { toast } from '@/utils/toast'
+import Lottie from 'lottie-react'
+import emptyAnim from '@/components/empty-state.json'
 
 interface ResultsListProps {
   refreshTrigger: number
@@ -55,11 +60,12 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
 
       if (response.ok) {
         setResults(prev => prev.filter(result => result.id !== id))
+        toast('삭제되었습니다', 'success')
       } else {
-        alert(data.error || '삭제에 실패했습니다.')
+        toast(data.error || '삭제에 실패했습니다.', 'error')
       }
     } catch (err) {
-      alert('삭제 중 오류가 발생했습니다.')
+      toast('삭제 중 오류가 발생했습니다.', 'error')
     }
   }
 
@@ -72,6 +78,9 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     acc[key].push(result)
     return acc
   }, {} as Record<string, SearchResult[]>)
+
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({})
+  const toggleExpanded = (id: number) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
@@ -88,16 +97,40 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     fetchResults()
   }, [refreshTrigger, filters])
 
+  useEffect(() => {
+    gsap.registerPlugin(ScrollTrigger)
+    const ctx = gsap.context(() => {
+      gsap.utils.toArray<HTMLElement>('.hover-lift').forEach((el) => {
+        gsap.from(el, {
+          opacity: 0,
+          y: 16,
+          duration: 0.35,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            once: true
+          }
+        })
+      })
+    })
+    return () => ctx.revert()
+  }, [results])
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200"></div>
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
+      <div className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+          <div className="h-6 w-40 rounded-md animate-shimmer" />
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 rounded-xl animate-shimmer" />
+            ))}
+          </div>
         </div>
-        <div className="mt-4 text-center">
-          <p className="text-lg font-medium text-gray-700">결과를 불러오는 중...</p>
-          <p className="text-sm text-gray-500 mt-1">잠시만 기다려주세요</p>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+          <div className="h-6 w-48 rounded-md animate-shimmer" />
+          <div className="mt-4 h-40 rounded-xl animate-shimmer" />
         </div>
       </div>
     )
@@ -119,7 +152,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
           <div>
             <a
               href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
-              className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-md text-sm"
+              className="px-4 py-2 rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:shadow-md text-sm focus:outline-none focus:ring-4 focus:ring-emerald-200"
             >엑셀로 내보내기</a>
           </div>
         </div>
@@ -172,6 +205,9 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
 
       {Object.keys(groupedResults).length === 0 ? (
         <div className="text-center py-16">
+          <div className="w-40 mx-auto mb-4">
+            <Lottie animationData={emptyAnim} loop autoplay />
+          </div>
           <div className="relative">
             <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-10 h-10 text-blue-500" />
@@ -188,6 +224,15 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
             <br />
             <span className="text-blue-600 font-medium">위의 검색 폼을 사용해서 상품 순위를 검색해보세요!</span>
           </p>
+          <div className="mt-6">
+            <a
+              href="#panel-search"
+              className="inline-flex items-center px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
+            >
+              <Search className="w-4 h-4 mr-2" />
+              검색하러 가기
+            </a>
+          </div>
         </div>
       ) : (
         <div className="space-y-8">
@@ -226,7 +271,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 hidden @md:table">
                   <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -350,18 +395,81 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                           </div>
                         </td>
                         <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => handleDelete(result.id!)}
-                            className="group relative p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="삭제"
-                          >
-                            <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                          </button>
+                          <div className="inline-flex items-center gap-1">
+                            <button
+                              onClick={() => toggleExpanded(result.id!)}
+                              className="px-2 py-1 rounded-lg text-blue-600 hover:bg-blue-50"
+                              title="상세"
+                            >
+                              상세
+                            </button>
+                            <button
+                              onClick={() => handleDelete(result.id!)}
+                              className="group relative p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              title="삭제"
+                            >
+                              <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                            </button>
+                          </div>
+                          {expanded[result.id!] && (
+                            <div className="mt-3 text-left bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-100 rounded-xl p-4">
+                              <div className="text-xs text-gray-600">상세 정보</div>
+                              <ul className="mt-2 text-sm text-gray-800 space-y-1">
+                                <li>검색어: {result.search_query}</li>
+                                <li>브랜드: {result.brand || '-'}</li>
+                                <li>링크: {result.product_link ? <a className="text-blue-600" href={result.product_link} target="_blank" rel="noreferrer">열기</a> : '-'}</li>
+                              </ul>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {/* 모바일 카드 리스트 */}
+                <div className="@md:hidden space-y-4 p-4">
+                  {queryResults.map((result) => (
+                    <div key={result.id} className="rounded-xl border border-gray-100 bg-white/80 backdrop-blur-sm p-4 shadow hover-lift will-change-transform">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white font-bold text-sm">{result.total_rank}</span>
+                          </div>
+                          <div>
+                            <div className="text-sm font-bold text-gray-900">{result.total_rank}위</div>
+                            <div className="text-xs text-gray-500">{result.page}페이지 {result.rank_in_page}번째</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDelete(result.id!)}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="mt-3 text-sm font-medium text-gray-900 line-clamp-3" title={result.product_title}>
+                        {result.product_title}
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-3 text-xs text-gray-700">
+                        <div className="flex items-center">
+                          <Award className="w-4 h-4 mr-1 text-green-600" />{result.mall_name}
+                        </div>
+                        <div className="flex items-center">
+                          <TrendingUp className="w-4 h-4 mr-1 text-indigo-600" />{result.price ? `${parseInt(result.price).toLocaleString()}원` : '-'}
+                        </div>
+                        <div className="flex items-center col-span-2">
+                          <Clock className="w-4 h-4 mr-1 text-gray-400" />{result.created_at ? formatDate(result.created_at) : '-'}
+                        </div>
+                      </div>
+                      {result.product_link && (
+                        <a href={result.product_link} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-xs text-blue-600 hover:text-blue-800">
+                          <ExternalLink className="w-3 h-3 mr-1" />상품 보기
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ))}

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Search, Loader2, Target, Building2, Tag, BarChart3, Sparkles, Zap, Database } from 'lucide-react'
 
 interface SearchData {
@@ -80,7 +81,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
 
   return (
     <div className="space-y-8 text-[15px] lg:text-[13px] xl:text-[14px]">
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8" aria-busy={isLoading} aria-live="polite">
         {/* 검색어 */}
         <div className="space-y-3">
           <label htmlFor="searchQuery" className="flex items-center text-sm font-semibold text-gray-800">
@@ -97,15 +98,18 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
               placeholder="예: 베트남 여행, 아이폰 케이스"
               required
+              aria-describedby="searchQueryHelp"
+              disabled={isLoading}
             />
             <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
               <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
             </div>
           </div>
+          <p id="searchQueryHelp" className="text-xs text-gray-500">최소 1자 이상 입력하세요.</p>
         </div>
 
         {/* 검색 옵션들 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 @md:grid-cols-2 gap-8">
           {/* API 키 프로필 */}
           <div className="space-y-3">
             <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-gray-800">
@@ -118,6 +122,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 value={formData.profileId ?? ''}
                 onChange={(e) => handleInputChange('profileId', e.target.value ? parseInt(e.target.value) : undefined)}
                 className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none"
+                aria-describedby="profileHelp"
+                disabled={isLoading}
               >
                 <option value="">기본 프로필(설정 시)</option>
                 {profiles.map((p) => (
@@ -136,6 +142,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             {loadingProfiles && (
               <p className="text-xs text-gray-500">프로필 불러오는 중...</p>
             )}
+            <p id="profileHelp" className="text-xs text-gray-500">선택하지 않으면 기본 프로필이 사용됩니다.</p>
           </div>
           {/* 타겟 상품명 */}
           <div className="space-y-3">
@@ -152,6 +159,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 onChange={(e) => handleInputChange('targetProductName', e.target.value)}
                 className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 베트남 다낭 패키지"
+                disabled={isLoading}
               />
               <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
                 <Target className="w-5 h-5 text-gray-400" aria-hidden="true" />
@@ -178,6 +186,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 onChange={(e) => handleInputChange('targetMallName', e.target.value)}
                 className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 하나투어, 트리플클럽"
+                disabled={isLoading}
               />
               <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
                 <Building2 className="w-5 h-5 text-gray-400" aria-hidden="true" />
@@ -204,6 +213,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 onChange={(e) => handleInputChange('targetBrand', e.target.value)}
                 className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 삼성, 애플"
+                disabled={isLoading}
               />
               <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
                 <Tag className="w-5 h-5 text-gray-400" aria-hidden="true" />
@@ -227,6 +237,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 value={formData.maxPages}
                 onChange={(e) => handleInputChange('maxPages', parseInt(e.target.value))}
                 className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-300 bg-white/80 backdrop-blur-sm appearance-none"
+                disabled={isLoading}
               >
                 <option value={5}>5페이지 (500개 상품)</option>
                 <option value={10}>10페이지 (1,000개 상품)</option>
@@ -251,11 +262,15 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
 
         {/* 검색 버튼 */}
         <div className="flex justify-center pt-4 gap-3 flex-wrap">
-          <button
+          <motion.button
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="button"
             onClick={handleAnalyzeOnly}
             disabled={isLoading || !formData.searchQuery.trim()}
-            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="DB 저장 없이 순위만 분석합니다"
+            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={isLoading || !formData.searchQuery.trim()}
           >
             {isLoading ? (
               <>
@@ -265,19 +280,32 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
             ) : (
               <>
                 <Search className="w-5 h-5 mr-2" />
-                <span>순위 분석</span>
+                <span>순위 분석 (미저장)</span>
               </>
             )}
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ y: -2, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="button"
             onClick={handleAnalyzeAndSave}
             disabled={isLoading || !formData.searchQuery.trim()}
-            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="결과를 DB에 저장하고 '결과' 화면으로 이동합니다"
+            className="group relative flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-disabled={isLoading || !formData.searchQuery.trim()}
           >
-            <Database className="w-5 h-5 mr-2" />
-            <span>데이터 저장</span>
-          </button>
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <span>저장 중...</span>
+              </>
+            ) : (
+              <>
+                <Database className="w-5 h-5 mr-2" />
+                <span>데이터 저장 및 이동</span>
+              </>
+            )}
+          </motion.button>
         </div>
       </form>
 

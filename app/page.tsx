@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import SearchForm from '@/components/SearchForm'
 import ResultsList from '@/components/ResultsList'
 import ApiKeyManager from '@/components/ApiKeyManager'
-import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap } from 'lucide-react'
+import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from '@/utils/toast'
 
 interface SearchData {
   searchQuery: string
@@ -21,10 +23,64 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keys'>('search')
   const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const searchTabRef = React.useRef<HTMLButtonElement | null>(null)
+  const resultsTabRef = React.useRef<HTMLButtonElement | null>(null)
+  const keysTabRef = React.useRef<HTMLButtonElement | null>(null)
+  const [underline, setUnderline] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
+  const tabs: Array<{ id: 'search' | 'results' | 'keys'; label: string }> = [
+    { id: 'search', label: '검색' },
+    { id: 'results', label: '결과' },
+    { id: 'keys', label: 'API 키' },
+  ]
 
   useEffect(() => {
     setMounted(true)
+    // theme init
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
+    const preferredDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const next = (stored as any) || 'system'
+    setTheme(next)
+    const isDark = next === 'dark' || (next === 'system' && preferredDark)
+    document.documentElement.classList.toggle('dark', isDark)
   }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const map: Record<typeof activeTab, HTMLButtonElement | null> = {
+      search: searchTabRef.current,
+      results: resultsTabRef.current,
+      keys: keysTabRef.current
+    }
+    const el = map[activeTab]
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      const parentRect = el.parentElement?.getBoundingClientRect()
+      const left = parentRect ? rect.left - parentRect.left : rect.left
+      setUnderline({ left, width: rect.width })
+    }
+    const onResize = () => {
+      const el2 = map[activeTab]
+      if (el2) {
+        const rect2 = el2.getBoundingClientRect()
+        const parentRect2 = el2.parentElement?.getBoundingClientRect()
+        const left2 = parentRect2 ? rect2.left - parentRect2.left : rect2.left
+        setUnderline({ left: left2, width: rect2.width })
+      }
+    }
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [activeTab, mounted])
+
+  const toggleTheme = () => {
+    const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
+    const next = order[(order.indexOf(theme) + 1) % order.length]
+    setTheme(next)
+    localStorage.setItem('theme', next)
+    const preferredDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isDark = next === 'dark' || (next === 'system' && preferredDark)
+    document.documentElement.classList.toggle('dark', isDark)
+  }
 
   const handleSearch = async (searchData: SearchData) => {
     try {
@@ -44,22 +100,19 @@ export default function Home() {
         // 분석 모드: 최상단 1등 정보 안내
         if (!searchData.save) {
           const top = result.top
-          if (top) {
-            alert(`1등 상품: ${top.product_title}\n링크: ${top.product_link || '-'}\n페이지: ${top.page} / 순위: ${top.rank_in_page} (전체 ${top.total_rank})`)
-          } else {
-            alert('조건에 맞는 결과가 없습니다.')
-          }
+          if (top) toast(`1등: ${top.product_title}`, 'success')
+          else toast('조건에 맞는 결과 없음', 'info')
         } else {
           // 저장 모드: 결과 탭으로 이동해 관리
           setActiveTab('results')
-          setRefreshTrigger(prev => prev + 1)
+          setRefreshTrigger((prev: number) => prev + 1)
         }
       } else {
-        alert(`검색 중 오류가 발생했습니다: ${result.error}`)
+        toast(`오류: ${result.error}`, 'error')
       }
     } catch (error) {
       console.error('검색 오류:', error)
-      alert('검색 중 오류가 발생했습니다.')
+      toast('검색 중 오류 발생', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -92,15 +145,76 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm">
-              <button onClick={() => setActiveTab('search')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='search' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 hover:scale-105'}`}>
+            <div
+              className="flex items-center space-x-2 text-sm"
+              role="tablist"
+              aria-label="메인 탭"
+              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                const order = tabs.map(t => t.id)
+                const currentIndex = order.indexOf(activeTab)
+                if (e.key === 'ArrowRight') {
+                  const next = order[(currentIndex + 1) % order.length]
+                  setActiveTab(next as typeof activeTab)
+                } else if (e.key === 'ArrowLeft') {
+                  const prev = order[(currentIndex - 1 + order.length) % order.length]
+                  setActiveTab(prev as typeof activeTab)
+                } else if (e.key === 'Home') {
+                  setActiveTab(order[0] as typeof activeTab)
+                } else if (e.key === 'End') {
+                  setActiveTab(order[order.length - 1] as typeof activeTab)
+                }
+              }}
+            >
+              <button
+                id="tab-search"
+                role="tab"
+                aria-selected={activeTab === 'search'}
+                aria-controls="panel-search"
+                tabIndex={activeTab === 'search' ? 0 : -1}
+                onClick={() => setActiveTab('search')}
+                ref={searchTabRef}
+                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='search' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 hover:scale-105'}`}
+              >
                 <Search className="w-4 h-4 mr-2" /> 검색
               </button>
-              <button onClick={() => setActiveTab('results')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='results' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 hover:scale-105'}`}>
+              <button
+                id="tab-results"
+                role="tab"
+                aria-selected={activeTab === 'results'}
+                aria-controls="panel-results"
+                tabIndex={activeTab === 'results' ? 0 : -1}
+                onClick={() => setActiveTab('results')}
+                ref={resultsTabRef}
+                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='results' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 hover:scale-105'}`}
+              >
                 <BarChart3 className="w-4 h-4 mr-2" /> 결과
               </button>
-              <button onClick={() => setActiveTab('keys')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='keys' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700 hover:scale-105'}`}>
+              <button
+                id="tab-keys"
+                role="tab"
+                aria-selected={activeTab === 'keys'}
+                aria-controls="panel-keys"
+                tabIndex={activeTab === 'keys' ? 0 : -1}
+                onClick={() => setActiveTab('keys')}
+                ref={keysTabRef}
+                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='keys' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700 hover:scale-105'}`}
+              >
                 <Database className="w-4 h-4 mr-2" /> API 키
+              </button>
+              <div className="relative h-1 mt-1">
+                <motion.div
+                  className="absolute bottom-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"
+                  animate={{ x: underline.left, width: underline.width }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="ml-2 inline-flex items-center px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
+                title={`테마: ${theme}`}
+              >
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
             </div>
           </div>
@@ -108,9 +222,19 @@ export default function Home() {
       </header>
 
       {/* 메인 컨텐츠: 한 화면에 하나의 패널만 표시, 상단 버튼으로 이동 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 container-query">
+        <AnimatePresence mode="wait">
         {activeTab === 'search' && (
-          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
+          <motion.section
+            id="panel-search"
+            role="tabpanel"
+            aria-labelledby="tab-search"
+            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-xs font-medium">
                 <Sparkles className="w-4 h-4 mr-2" /> 순위 분석
@@ -120,11 +244,20 @@ export default function Home() {
             <div className="p-5 lg:p-4">
               <SearchForm onSearch={handleSearch} isLoading={isLoading} />
             </div>
-          </section>
+          </motion.section>
         )}
 
         {activeTab === 'results' && (
-          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
+          <motion.section
+            id="panel-results"
+            role="tabpanel"
+            aria-labelledby="tab-results"
+            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
+            initial={{ opacity: 0, x: 16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -16 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-green-100 to-blue-100 text-green-800 text-xs font-medium">
                 <TrendingUp className="w-4 h-4 mr-2" /> 저장된 결과
@@ -134,11 +267,20 @@ export default function Home() {
             <div className="p-5 lg:p-4">
               <ResultsList refreshTrigger={refreshTrigger} />
             </div>
-          </section>
+          </motion.section>
         )}
 
         {activeTab === 'keys' && (
-          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
+          <motion.section
+            id="panel-keys"
+            role="tabpanel"
+            aria-labelledby="tab-keys"
+            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 16 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 text-xs font-medium">
                 <Zap className="w-4 h-4 mr-2" /> API 키 관리
@@ -148,8 +290,9 @@ export default function Home() {
             <div className="p-5 lg:p-4">
               <ApiKeyManager />
             </div>
-          </section>
+          </motion.section>
         )}
+        </AnimatePresence>
       </main>
 
       {/* 푸터 */}
