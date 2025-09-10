@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       // 오류가 발생해도 검색은 계속 진행
     }
 
-    // 상품 순위 검색 및 저장
+    // 상품 순위 검색 및 저장 (다건)
     const result = await checker.searchAllProductsAndSave(
       searchQuery,
       targetProductName,
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     )
 
     if (result.success) {
-      return NextResponse.json({ success: true, data: result.data }, { status: 200 })
+      return NextResponse.json({ success: true, count: result.count, items: result.items }, { status: 200 })
     } else {
       return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }

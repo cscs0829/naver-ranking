@@ -82,12 +82,12 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               id="searchQuery"
               value={formData.searchQuery}
               onChange={(e) => handleInputChange('searchQuery', e.target.value)}
-              className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+              className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
               placeholder="예: 베트남 여행, 아이폰 케이스"
               required
             />
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <Search className="w-5 h-5 text-gray-400" />
+            <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
+              <Search className="w-5 h-5 text-gray-400" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -138,11 +138,11 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 id="targetProductName"
                 value={formData.targetProductName}
                 onChange={(e) => handleInputChange('targetProductName', e.target.value)}
-                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-green-100 focus:border-green-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 베트남 다낭 패키지"
               />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <Target className="w-5 h-5 text-gray-400" />
+              <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
+                <Target className="w-5 h-5 text-gray-400" aria-hidden="true" />
               </div>
             </div>
             <p className="text-xs text-gray-500 flex items-center">
@@ -164,11 +164,11 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 id="targetMallName"
                 value={formData.targetMallName}
                 onChange={(e) => handleInputChange('targetMallName', e.target.value)}
-                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 하나투어, 트리플클럽"
               />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <Building2 className="w-5 h-5 text-gray-400" />
+              <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
+                <Building2 className="w-5 h-5 text-gray-400" aria-hidden="true" />
               </div>
             </div>
             <p className="text-xs text-gray-500 flex items-center">
@@ -190,11 +190,11 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 id="targetBrand"
                 value={formData.targetBrand}
                 onChange={(e) => handleInputChange('targetBrand', e.target.value)}
-                className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
+                className="w-full px-4 py-3 pl-12 pr-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-orange-100 focus:border-orange-500 transition-all duration-300 bg-white/80 backdrop-blur-sm"
                 placeholder="예: 삼성, 애플"
               />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <Tag className="w-5 h-5 text-gray-400" />
+              <div className="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2">
+                <Tag className="w-5 h-5 text-gray-400" aria-hidden="true" />
               </div>
             </div>
             <p className="text-xs text-gray-500 flex items-center">
