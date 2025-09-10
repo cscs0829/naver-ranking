@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Search, Loader2, Target, Building2, Tag, BarChart3, Sparkles, Zap } from 'lucide-react'
 
 interface SearchData {
@@ -30,7 +30,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [loadingProfiles, setLoadingProfiles] = useState(false)
 
   // 프로필 목록 로드
-  React.useEffect(() => {
+  useEffect(() => {
     const load = async () => {
       try {
         setLoadingProfiles(true)
