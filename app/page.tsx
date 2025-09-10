@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import SearchForm from '@/components/SearchForm'
 import ResultsList from '@/components/ResultsList'
 import ApiKeyManager from '@/components/ApiKeyManager'
-import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, KeyRound } from 'lucide-react'
+import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap } from 'lucide-react'
 
 interface SearchData {
   searchQuery: string
@@ -20,7 +20,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keys'>('search')
-  const [showKeysPanel, setShowKeysPanel] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -94,22 +93,23 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center space-x-2 text-sm">
-              <button
-                onClick={() => setShowKeysPanel(v => !v)}
-                className="flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700 transition-all duration-300 hover:scale-105"
-              >
-                <KeyRound className="w-4 h-4 mr-2 text-purple-600" />
-                <span className="font-medium">API 키 패널 {showKeysPanel ? '숨기기' : '보이기'}</span>
+              <button onClick={() => setActiveTab('search')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='search' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 hover:scale-105'}`}>
+                <Search className="w-4 h-4 mr-2" /> 검색
+              </button>
+              <button onClick={() => setActiveTab('results')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='results' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 hover:scale-105'}`}>
+                <BarChart3 className="w-4 h-4 mr-2" /> 결과
+              </button>
+              <button onClick={() => setActiveTab('keys')} className={`flex items-center px-3 py-1.5 rounded-full transition-all duration-300 ${activeTab==='keys' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700 hover:scale-105'}`}>
+                <Database className="w-4 h-4 mr-2" /> API 키
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* 메인 컨텐츠: 반응형 그리드 (모바일 1열, lg 2열, xl 3열), 패널 내부 스크롤 */}
+      {/* 메인 컨텐츠: 한 화면에 하나의 패널만 표시, 상단 버튼으로 이동 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch">
-          {/* 검색 패널 */}
+        {activeTab === 'search' && (
           <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-xs font-medium">
@@ -117,39 +117,39 @@ export default function Home() {
               </div>
               <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">네이버 쇼핑 순위 분석</h2>
             </div>
-            <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+            <div className="p-5 lg:p-4">
               <SearchForm onSearch={handleSearch} isLoading={isLoading} />
             </div>
           </section>
+        )}
 
-          {/* 결과 패널 */}
-          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col lg:col-span-1 xl:col-span-1 text-[15px] lg:text-[13px] xl:text-[14px]">
+        {activeTab === 'results' && (
+          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
             <div className="px-5 pt-5 pb-3 border-b border-gray-100">
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-green-100 to-blue-100 text-green-800 text-xs font-medium">
                 <TrendingUp className="w-4 h-4 mr-2" /> 저장된 결과
               </div>
               <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">검색 결과</h2>
             </div>
-            <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+            <div className="p-5 lg:p-4">
               <ResultsList refreshTrigger={refreshTrigger} />
             </div>
           </section>
+        )}
 
-          {/* API 키 패널 (표시 토글) */}
-          {showKeysPanel && (
-            <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
-              <div className="px-5 pt-5 pb-3 border-b border-gray-100">
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 text-xs font-medium">
-                  <Zap className="w-4 h-4 mr-2" /> API 키 관리
-                </div>
-                <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">API 키 관리</h2>
+        {activeTab === 'keys' && (
+          <section className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]">
+            <div className="px-5 pt-5 pb-3 border-b border-gray-100">
+              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 text-xs font-medium">
+                <Zap className="w-4 h-4 mr-2" /> API 키 관리
               </div>
-              <div className="p-5 lg:p-4 overflow-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-                <ApiKeyManager />
-              </div>
-            </section>
-          )}
-        </div>
+              <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">API 키 관리</h2>
+            </div>
+            <div className="p-5 lg:p-4">
+              <ApiKeyManager />
+            </div>
+          </section>
+        )}
       </main>
 
       {/* 푸터 */}
