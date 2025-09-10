@@ -75,8 +75,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-[15px] lg:text-[13px] xl:text-[14px]">
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8 order-1" aria-busy={isLoading} aria-live="polite">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[15px] lg:text-[13px] xl:text-[14px]">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8 order-1" aria-busy={isLoading} aria-live="polite">
         {/* 검색어 */}
         <div className="space-y-3 lg:col-span-2">
           <label htmlFor="searchQuery" className="flex items-center text-sm font-semibold text-gray-800">
