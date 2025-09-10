@@ -167,7 +167,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
             >전체 삭제</button>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-gray-800">
               <Search className="w-4 h-4 mr-2 text-blue-600" />
@@ -282,7 +282,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 hidden @md:table">
+                <table className="min-w-full divide-y divide-gray-200 hidden md:table">
                   <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -413,7 +413,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                   </tbody>
                 </table>
                 {/* 모바일 카드 리스트 */}
-                <div className="@md:hidden space-y-4 p-4">
+                <div className="md:hidden space-y-4 p-4">
                   {queryResults.map((result) => (
                     <div key={result.id} className="rounded-xl border border-gray-100 bg-white/80 backdrop-blur-sm p-4 shadow hover-lift will-change-transform">
                       <div className="flex items-center justify-between">
