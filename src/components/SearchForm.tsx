@@ -76,9 +76,9 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 text-[15px] lg:text-[13px] xl:text-[14px]">
-      <form onSubmit={handleSubmit} className="space-y-8 order-1" aria-busy={isLoading} aria-live="polite">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-8 order-1" aria-busy={isLoading} aria-live="polite">
         {/* 검색어 */}
-        <div className="space-y-3">
+        <div className="space-y-3 lg:col-span-2">
           <label htmlFor="searchQuery" className="flex items-center text-sm font-semibold text-gray-800">
             <Search className="w-4 h-4 mr-2 text-blue-600" />
             검색어 
@@ -103,8 +103,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
           <p id="searchQueryHelp" className="text-xs text-gray-500">최소 1자 이상 입력하세요.</p>
         </div>
 
-        {/* 검색 옵션들 */}
-        <div className="grid grid-cols-1 @md:grid-cols-2 gap-8">
+        {/* 검색 옵션들: 2열 배치 */}
+        <div className="contents">
           {/* API 키 프로필 */}
           <div className="space-y-3">
             <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-gray-800">
@@ -221,7 +221,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
           </div>
 
           {/* 최대 검색 페이지 */}
-          <div className="space-y-3">
+          <div className="space-y-3 lg:col-span-2">
             <label htmlFor="maxPages" className="flex items-center text-sm font-semibold text-gray-800">
               <BarChart3 className="w-4 h-4 mr-2 text-indigo-600" />
               최대 검색 페이지
@@ -256,7 +256,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         </div>
 
         {/* 검색 버튼 */}
-        <div className="flex justify-center pt-4 gap-3 flex-wrap">
+        <div className="flex justify-center pt-4 gap-3 flex-wrap lg:col-span-2">
           <motion.button
             whileHover={{ y: -2, scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
