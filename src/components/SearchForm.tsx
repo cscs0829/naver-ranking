@@ -59,7 +59,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
     }
   }
 
-  const handleInputChange = (field: keyof SearchData, value: string | number) => {
+  const handleInputChange = (field: keyof SearchData, value: string | number | undefined) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
