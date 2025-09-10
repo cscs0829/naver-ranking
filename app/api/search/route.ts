@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NaverShoppingRankChecker } from '@/lib/naver-api'
-import { supabase, SearchResult } from '@/lib/supabase'
-import { getNaverApiKeys } from '@/lib/api-keys'
+import { NaverShoppingRankChecker } from '../../lib/naver-api'
+import { supabase, SearchResult } from '../../lib/supabase'
+import { getNaverApiKeys } from '../../lib/api-keys'
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,16 +41,14 @@ export async function POST(request: NextRequest) {
       .from('search_results')
       .delete()
       .eq('search_query', searchQuery)
-      .eq('target_mall_name', targetMallName || '')
-      .eq('target_brand', targetBrand || '')
-      .eq('target_product_name', targetProductName || '')
 
     if (deleteError) {
-      console.error('기존 데이터 삭제 중 오류:', deleteError)
+      console.error('기존 검색 결과 삭제 중 오류:', deleteError)
+      // 오류가 발생해도 검색은 계속 진행
     }
 
-    // 상품 순위 검색
-    const searchResult = await checker.findProductRank(
+    // 상품 순위 검색 및 저장
+    const result = await checker.searchAllProductsAndSave(
       searchQuery,
       targetProductName,
       targetMallName,
@@ -58,53 +56,11 @@ export async function POST(request: NextRequest) {
       maxPages
     )
 
-    if (searchResult.found) {
-      // 검색 결과를 데이터베이스에 저장
-      const resultData: Omit<SearchResult, 'id' | 'created_at' | 'updated_at'> = {
-        search_query: searchResult.search_query,
-        target_mall_name: targetMallName || null,
-        target_brand: targetBrand || null,
-        target_product_name: targetProductName || null,
-        page: searchResult.page!,
-        rank_in_page: searchResult.rank_in_page!,
-        total_rank: searchResult.total_rank!,
-        product_title: searchResult.product_info!.title,
-        mall_name: searchResult.product_info!.mallName,
-        brand: searchResult.product_info!.brand || searchResult.product_info!.maker,
-        price: searchResult.product_info!.lprice,
-        product_link: searchResult.product_info!.link,
-        product_id: searchResult.product_info!.productId,
-        category1: searchResult.product_info!.category1,
-        category2: searchResult.product_info!.category2,
-        category3: searchResult.product_info!.category3
-      }
-
-      const { data, error } = await supabase
-        .from('search_results')
-        .insert([resultData])
-        .select()
-
-      if (error) {
-        console.error('데이터베이스 저장 중 오류:', error)
-        return NextResponse.json(
-          { error: '데이터베이스 저장 중 오류가 발생했습니다.' },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: searchResult,
-        saved: data
-      })
+    if (result.success) {
+      return NextResponse.json({ success: true, data: result.data }, { status: 200 })
     } else {
-      return NextResponse.json({
-        success: true,
-        data: searchResult,
-        message: '검색 결과에서 상품을 찾을 수 없습니다.'
-      })
+      return NextResponse.json({ success: false, error: result.error }, { status: 500 })
     }
-
   } catch (error) {
     console.error('검색 API 오류:', error)
     return NextResponse.json(

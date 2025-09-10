@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { SearchResult } from '@/lib/supabase'
+import { SearchResult } from '../lib/supabase'
 import { Trash2, Search, ExternalLink, Calendar, BarChart3 } from 'lucide-react'
 
 interface ResultsListProps {
