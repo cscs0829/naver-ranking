@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SearchResult } from '@/utils/supabase'
-import { Trash2, Search, ExternalLink, Calendar, BarChart3, Filter, TrendingUp, Award, Clock, Sparkles, Zap, ArrowUpDown, ArrowUp, ArrowDown, Target, Users, Download, AlertTriangle, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
-import { toast } from '@/utils/toast'
-import Lottie from 'lottie-react'
-import emptyAnim from '@/components/empty-state.json'
+import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Lottie from 'lottie-react'
+import emptyAnim from './empty-state.json'
+import { toast } from '@/utils/toast'
 
 interface ResultsListProps {
   refreshTrigger: number
@@ -28,6 +26,11 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
   })
   const [showFilters, setShowFilters] = useState(false)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({})
+
+  // HTML 태그 제거 함수
+  const stripHtmlTags = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '')
+  }
 
   // 결과 목록 가져오기
   const fetchResults = async () => {
@@ -65,49 +68,18 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
       const response = await fetch(`/api/results?id=${id}`, {
         method: 'DELETE'
       })
-      const data = await response.json()
 
       if (response.ok) {
         setResults(prev => prev.filter(result => result.id !== id))
-        toast('삭제되었습니다', 'success')
+        toast('결과가 삭제되었습니다.', 'success')
       } else {
+        const data = await response.json()
         toast(data.error || '삭제에 실패했습니다.', 'error')
       }
     } catch (err) {
       toast('삭제 중 오류가 발생했습니다.', 'error')
     }
   }
-
-  // 검색어별 그룹화
-  const groupedResults = results.reduce((acc, result) => {
-    const key = result.search_query
-    if (!acc[key]) {
-      acc[key] = []
-    }
-    acc[key].push(result)
-    return acc
-  }, {} as Record<string, SearchResult[]>)
-
-  // 검색어별 통계 정보 계산
-  const getSearchQueryStats = (queryResults: SearchResult[]) => {
-    const ranks = queryResults.map(r => r.total_rank).sort((a, b) => a - b)
-    const bestRank = ranks[0] || 0
-    const worstRank = ranks[ranks.length - 1] || 0
-    const averageRank = ranks.length > 0 ? Math.round(ranks.reduce((sum, rank) => sum + rank, 0) / ranks.length) : 0
-    const uniqueMalls = new Set(queryResults.map(r => r.mall_name)).size
-    const lastSearch = queryResults[0]?.created_at
-
-    return {
-      totalResults: queryResults.length,
-      bestRank,
-      worstRank,
-      averageRank,
-      uniqueMalls,
-      lastSearch
-    }
-  }
-
-  const toggleExpanded = (id: number) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
@@ -124,25 +96,15 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     fetchResults()
   }, [refreshTrigger, filters, sortOptions])
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger)
-    const ctx = gsap.context(() => {
-      gsap.utils.toArray<HTMLElement>('.hover-lift').forEach((el) => {
-        gsap.from(el, {
-          opacity: 0,
-          y: 16,
-          duration: 0.35,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: el,
-            start: 'top 85%',
-            once: true
-          }
-        })
-      })
-    })
-    return () => ctx.revert()
-  }, [results])
+  // 결과 그룹화
+  const groupedResults = results.reduce((acc, result) => {
+    const key = result.search_query
+    if (!acc[key]) {
+      acc[key] = []
+    }
+    acc[key].push(result)
+    return acc
+  }, {} as Record<string, SearchResult[]>)
 
   if (loading) {
     return (
@@ -226,7 +188,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="space-y-6 overflow-hidden"
+              className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 space-y-6 overflow-hidden"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -258,12 +220,10 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                   />
                 </div>
               </div>
-
-              {/* 정렬 옵션 */}
-              <div className="pt-6 border-t border-slate-200 dark:border-slate-600">
-                <div className="flex items-center mb-4">
-                  <div className="w-6 h-6 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mr-3">
-                    <ArrowUpDown className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mr-3">
+                    <BarChart3 className="w-4 h-4 text-white" />
                   </div>
                   <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">정렬 옵션</h4>
                 </div>
@@ -287,7 +247,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="sortOrder" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {sortOptions.sortOrder === 'asc' ? <ArrowUp className="w-4 h-4 mr-2 text-emerald-600" /> : <ArrowDown className="w-4 h-4 mr-2 text-red-600" />}
+                      <TrendingUp className="w-4 h-4 mr-2 text-indigo-600" />
                       정렬 순서
                     </label>
                     <select
@@ -340,9 +300,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
             검색 결과가 없습니다
           </h3>
           <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-            검색을 실행하면 결과가 여기에 표시됩니다. 
-            <br />
-            <span className="text-blue-600 dark:text-blue-400 font-medium">위의 검색 폼을 사용해서 상품 순위를 검색해보세요!</span>
+            아직 검색한 결과가 없습니다. 검색 탭에서 새로운 검색을 시작해보세요.
           </p>
           <div className="mt-6">
             <a
@@ -364,255 +322,139 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               transition={{ duration: 0.3, delay: index * 0.1 }}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover-lift"
             >
-              <div className="px-8 py-6 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 border-b border-slate-200 dark:border-slate-600">
+              {/* 검색어 헤더 */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 px-6 py-4 border-b border-slate-200 dark:border-slate-600">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-4">
-                      <Search className="w-5 h-5 text-white" />
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-3">
+                      <Search className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                        "{searchQuery}" 검색 결과
+                      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                        {searchQuery}
                       </h3>
-                      <div className="flex items-center mt-1">
-                        <TrendingUp className="w-4 h-4 text-emerald-500 mr-1" />
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                          {queryResults.length}개 결과
-                        </span>
-                        <div className="ml-3 flex items-center text-xs text-slate-500 dark:text-slate-400">
-                          <Clock className="w-3 h-3 mr-1" />
-                          최근 검색: {queryResults[0]?.created_at ? formatDate(queryResults[0].created_at) : '-'}
-                        </div>
-                      </div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        {queryResults.length}개의 결과
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-blue-100 dark:from-emerald-900/50 dark:to-blue-900/50 rounded-full">
-                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                        {queryResults.length}개 상품
-                      </span>
-                    </div>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      {formatDate(queryResults[0].created_at || '')}
+                    </span>
                   </div>
                 </div>
-
-                {/* 통계 정보 카드 */}
-                {(() => {
-                  const stats = getSearchQueryStats(queryResults)
-                  return (
-                    <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <div className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 rounded-full flex items-center justify-center mr-2">
-                            <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">최고 순위</div>
-                            <div className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{stats.bestRank}위</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/50 dark:to-indigo-900/50 rounded-full flex items-center justify-center mr-2">
-                            <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">평균 순위</div>
-                            <div className="text-sm font-bold text-blue-700 dark:text-blue-300">{stats.averageRank}위</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full flex items-center justify-center mr-2">
-                            <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">참여 몰 수</div>
-                            <div className="text-sm font-bold text-purple-700 dark:text-purple-300">{stats.uniqueMalls}개</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-white/60 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200 dark:border-slate-600">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/50 dark:to-red-900/50 rounded-full flex items-center justify-center mr-2">
-                            <TrendingUp className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                          </div>
-                          <div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">최저 순위</div>
-                            <div className="text-sm font-bold text-orange-700 dark:text-orange-300">{stats.worstRank}위</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })()}
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-600 hidden md:table">
-                  <thead className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <div className="flex items-center">
-                          <Award className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
-                          순위
-                        </div>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <div className="flex items-center">
-                          <Zap className="w-4 h-4 mr-2 text-emerald-600 dark:text-emerald-400" />
-                          상품명
-                        </div>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <div className="flex items-center">
-                          <BarChart3 className="w-4 h-4 mr-2 text-purple-600 dark:text-purple-400" />
-                          몰명
-                        </div>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />
-                          검색일시
-                        </div>
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-                        액션
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-100 dark:divide-slate-700">
-                    {queryResults.map((result, idx) => (
-                      <tr key={result.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-slate-700 dark:hover:to-slate-600 transition-all duration-300 group">
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-white font-bold text-sm">{result.total_rank}</span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-bold text-slate-900 dark:text-white">
-                                {result.total_rank}위
-                              </div>
-                              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
-                                <BarChart3 className="w-3 h-3 mr-1" />
-                                {result.page}페이지 {result.rank_in_page}번째
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-6">
-                          <div className="max-w-xs">
-                            <div className="text-sm font-medium text-slate-900 dark:text-white line-clamp-2" title={result.product_title}>
-                              {result.product_title}
-                            </div>
-                            <a
-                              href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.mall_name || result.search_query)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center mt-2 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200"
-                            >
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              가격비교에서 보기
-                            </a>
-                          </div>
-                        </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-emerald-100 to-blue-100 dark:from-emerald-900/50 dark:to-blue-900/50 rounded-full flex items-center justify-center mr-2">
-                              <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <span className="text-sm font-medium text-slate-900 dark:text-white">{result.mall_name}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-6 whitespace-nowrap">
-                          <div className="flex items-center text-sm text-slate-500 dark:text-slate-400">
-                            <Clock className="w-4 h-4 mr-2 text-slate-400" />
-                            <div>
-                              <div className="font-medium">
-                                {result.created_at ? formatDate(result.created_at) : '-'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-6 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              onClick={() => toggleExpanded(result.id!)}
-                              className="px-2 py-1 rounded-lg text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/50 transition-colors"
-                              title="상세"
-                            >
-                              {expanded[result.id!] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                            <button
-                              onClick={() => handleDelete(result.id!)}
-                              className="group relative p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-all duration-200"
-                              title="삭제"
-                            >
-                              <Trash2 className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
-                            </button>
-                          </div>
-                          <AnimatePresence>
-                            {expanded[result.id!] && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                transition={{ duration: 0.3 }}
-                                className="mt-3 text-left bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 border border-slate-200 dark:border-slate-600 rounded-xl p-4"
-                              >
-                                <div className="text-xs text-slate-600 dark:text-slate-400">상세 정보</div>
-                                <ul className="mt-2 text-sm text-slate-800 dark:text-slate-200 space-y-1">
-                                  <li>검색어: {result.search_query}</li>
-                                  <li>브랜드: {result.brand || '-'}</li>
-                                  <li>링크: {result.product_link ? <a className="text-blue-600 dark:text-blue-400" href={result.product_link} target="_blank" rel="noreferrer">열기</a> : '-'}</li>
-                                </ul>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                
-                {/* 모바일 카드 리스트 */}
-                <div className="md:hidden space-y-4 p-4">
-                  {queryResults.map((result) => (
-                    <div key={result.id} className="rounded-xl border border-slate-200 dark:border-slate-600 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-4 shadow hover-lift will-change-transform">
+              {/* 결과 목록 */}
+              <div className="p-6">
+                <div className="space-y-4">
+                  {queryResults.map((result, resultIndex) => (
+                    <motion.div
+                      key={result.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: resultIndex * 0.05 }}
+                      className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-4 border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-300"
+                    >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mr-3">
-                            <span className="text-white font-bold text-sm">{result.total_rank}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
+                              #{resultIndex + 1}
+                            </span>
+                            <span className="text-sm text-slate-600 dark:text-slate-400">
+                              {result.mall_name}
+                            </span>
                           </div>
-                          <div>
-                            <div className="text-sm font-bold text-slate-900 dark:text-white">{result.total_rank}위</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">{result.page}페이지 {result.rank_in_page}번째</div>
+                          <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                            {stripHtmlTags(result.product_title || '')}
+                          </h4>
+                          <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-400">
+                            <span>순위: {result.total_rank}</span>
+                            <span>가격: {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}</span>
+                            <span>브랜드: {result.brand || 'N/A'}</span>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDelete(result.id!)}
-                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/50 rounded-lg transition-colors"
-                          title="삭제"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div className="mt-3 text-sm font-medium text-slate-900 dark:text-white line-clamp-3" title={result.product_title}>
-                        {result.product_title}
-                      </div>
-                      <div className="mt-2 grid grid-cols-2 gap-3 text-xs text-slate-700 dark:text-slate-300">
-                        <div className="flex items-center">
-                          <Award className="w-4 h-4 mr-1 text-emerald-600 dark:text-emerald-400" />{result.mall_name}
+                        <div className="flex items-center space-x-2">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setExpanded(prev => ({ ...prev, [result.id!]: !prev[result.id!] }))}
+                            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200"
+                            title="상세 정보"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(result.id!)}
+                            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200"
+                            title="삭제"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
                         </div>
-                        <div className="flex items-center col-span-2">
-                          <Clock className="w-4 h-4 mr-1 text-slate-400" />{result.created_at ? formatDate(result.created_at) : '-'}
-                        </div>
                       </div>
-                      <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.mall_name || result.search_query)}`} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
-                        <ExternalLink className="w-3 h-3 mr-1" />가격비교에서 보기
-                      </a>
-                    </div>
+
+                      {/* 상세 정보 */}
+                      <AnimatePresence>
+                        {expanded[result.id!] && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">검색어:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.search_query}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">상품 ID:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.product_id}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">브랜드:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.brand || 'N/A'}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">가격:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">
+                                  {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">쇼핑몰:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.mall_name}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">카테고리:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">
+                                  {result.category1} {result.category2 && `> ${result.category2}`}
+                                </span>
+                              </div>
+                            </div>
+                            {result.product_link && (
+                              <div className="mt-4">
+                                <a
+                                  href={result.product_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors duration-200"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  상품 페이지 보기
+                                </a>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
                   ))}
                 </div>
               </div>
