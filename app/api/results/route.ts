@@ -103,7 +103,30 @@ export async function DELETE(request: NextRequest) {
     
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
+    const deleteAll = searchParams.get('deleteAll') === 'true'
 
+    // 전체 삭제인 경우
+    if (deleteAll) {
+      const { error } = await supabase
+        .from('search_results')
+        .delete()
+        .neq('id', 0) // 모든 데이터 삭제
+
+      if (error) {
+        console.error('전체 데이터 삭제 중 오류:', error)
+        return NextResponse.json(
+          { error: '전체 데이터 삭제 중 오류가 발생했습니다.' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: '모든 데이터가 삭제되었습니다.'
+      })
+    }
+
+    // 개별 삭제인 경우
     if (!id) {
       return NextResponse.json(
         { error: 'ID는 필수입니다.' },

@@ -168,7 +168,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               onClick={async () => {
                 if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
                 try {
-                  const res = await fetch('/api/results', { method: 'DELETE' })
+                  const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
                   const data = await res.json()
                   if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
                 } catch(e){ toast('전체 삭제 중 오류','error') }
