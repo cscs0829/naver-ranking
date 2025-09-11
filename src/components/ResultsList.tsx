@@ -229,43 +229,63 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
               className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 space-y-6 overflow-hidden"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
                     <Search className="w-4 h-4 mr-2 text-blue-600" />
                     검색어
                   </label>
-                  <input
-                    type="text"
-                    id="searchQueryFilter"
-                    value={filters.searchQuery}
-                    onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        fetchResults()
-                      }
-                    }}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="검색어로 필터링"
-                  />
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      id="searchQueryFilter"
+                      value={filters.searchQuery}
+                      onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          fetchResults()
+                        }
+                      }}
+                      className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                      placeholder="검색어로 필터링"
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={fetchResults}
+                      className="px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                    >
+                      <Search className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <label htmlFor="mallNameFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
                     <Award className="w-4 h-4 mr-2 text-purple-600" />
                     몰명
                   </label>
-                  <input
-                    type="text"
-                    id="mallNameFilter"
-                    value={filters.targetMallName}
-                    onChange={(e) => setFilters(prev => ({ ...prev, targetMallName: e.target.value }))}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        fetchResults()
-                      }
-                    }}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="몰명으로 필터링"
-                  />
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      id="mallNameFilter"
+                      value={filters.targetMallName}
+                      onChange={(e) => setFilters(prev => ({ ...prev, targetMallName: e.target.value }))}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          fetchResults()
+                        }
+                      }}
+                      className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                      placeholder="몰명으로 필터링"
+                    />
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={fetchResults}
+                      className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                    >
+                      <Search className="w-4 h-4" />
+                    </motion.button>
+                  </div>
                 </div>
               </div>
               
