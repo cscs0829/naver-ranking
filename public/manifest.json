@@ -1,0 +1,17 @@
+{
+  "name": "네이버 쇼핑 순위 체커",
+  "short_name": "네이버 순위",
+  "description": "네이버 쇼핑에서 상품의 순위를 확인하는 도구",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
