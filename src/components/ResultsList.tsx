@@ -5,6 +5,7 @@ import { SearchResult } from '@/utils/supabase'
 import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Lottie from 'lottie-react'
+import { orderBy } from 'lodash'
 import emptyAnim from './empty-state.json'
 import { toast } from '@/utils/toast'
 
@@ -25,6 +26,11 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     sortOrder: 'desc'
   })
   const [rankSortOrder, setRankSortOrder] = useState<'asc' | 'desc'>('asc') // 순위 정렬 순서 (asc: 1등부터, desc: 뒤에서부터)
+  const [advancedSortOptions, setAdvancedSortOptions] = useState({
+    sortBy: 'total_rank', // total_rank, price, mall_name, brand
+    secondarySortBy: 'price', // price, mall_name, brand
+    tertiarySortBy: 'mall_name' // mall_name, brand
+  })
   const [showFilters, setShowFilters] = useState(false)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({})
 
@@ -100,9 +106,9 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
 
   useEffect(() => {
     fetchResults()
-  }, [refreshTrigger, filters, sortOptions, rankSortOrder])
+  }, [refreshTrigger, filters, sortOptions, rankSortOrder, advancedSortOptions])
 
-  // 결과 그룹화 및 순위별 정렬
+  // 결과 그룹화 및 고급 정렬
   const groupedResults = results.reduce((acc, result) => {
     const key = result.search_query
     if (!acc[key]) {
@@ -112,13 +118,30 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     return acc
   }, {} as Record<string, SearchResult[]>)
 
-  // 각 그룹 내에서 순위별로 정렬
+  // 각 그룹 내에서 lodash orderBy를 사용한 고급 정렬
   Object.keys(groupedResults).forEach(key => {
-    groupedResults[key].sort((a, b) => {
-      const rankA = a.total_rank || 0
-      const rankB = b.total_rank || 0
-      return rankSortOrder === 'asc' ? rankA - rankB : rankB - rankA
-    })
+    const sortFields = [advancedSortOptions.sortBy]
+    const sortOrders = [rankSortOrder]
+    
+    // 보조 정렬 기준 추가
+    if (advancedSortOptions.secondarySortBy && advancedSortOptions.secondarySortBy !== advancedSortOptions.sortBy) {
+      sortFields.push(advancedSortOptions.secondarySortBy)
+      sortOrders.push('asc')
+    }
+    
+    // 3차 정렬 기준 추가
+    if (advancedSortOptions.tertiarySortBy && 
+        advancedSortOptions.tertiarySortBy !== advancedSortOptions.sortBy && 
+        advancedSortOptions.tertiarySortBy !== advancedSortOptions.secondarySortBy) {
+      sortFields.push(advancedSortOptions.tertiarySortBy)
+      sortOrders.push('asc')
+    }
+    
+    groupedResults[key] = orderBy(
+      groupedResults[key],
+      sortFields,
+      sortOrders
+    )
   })
 
   if (loading) {
@@ -352,6 +375,72 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                   <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
                     <Sparkles className="w-3 h-3 mr-1" />
                     각 검색어 그룹 내에서 상품들을 순위별로 정렬합니다
+                  </p>
+                </div>
+                
+                {/* 고급 정렬 옵션 */}
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mr-3">
+                      <BarChart3 className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">고급 정렬 설정</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label htmlFor="primarySort" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <Award className="w-4 h-4 mr-2 text-purple-600" />
+                        1차 정렬
+                      </label>
+                      <select
+                        id="primarySort"
+                        value={advancedSortOptions.sortBy}
+                        onChange={(e) => setAdvancedSortOptions(prev => ({ ...prev, sortBy: e.target.value as any }))}
+                        className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                      >
+                        <option value="total_rank">순위</option>
+                        <option value="price">가격</option>
+                        <option value="mall_name">몰명</option>
+                        <option value="brand">브랜드</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="secondarySort" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <TrendingUp className="w-4 h-4 mr-2 text-purple-600" />
+                        2차 정렬
+                      </label>
+                      <select
+                        id="secondarySort"
+                        value={advancedSortOptions.secondarySortBy}
+                        onChange={(e) => setAdvancedSortOptions(prev => ({ ...prev, secondarySortBy: e.target.value as any }))}
+                        className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                      >
+                        <option value="">선택안함</option>
+                        <option value="price">가격</option>
+                        <option value="mall_name">몰명</option>
+                        <option value="brand">브랜드</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="tertiarySort" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                        <BarChart3 className="w-4 h-4 mr-2 text-purple-600" />
+                        3차 정렬
+                      </label>
+                      <select
+                        id="tertiarySort"
+                        value={advancedSortOptions.tertiarySortBy}
+                        onChange={(e) => setAdvancedSortOptions(prev => ({ ...prev, tertiarySortBy: e.target.value as any }))}
+                        className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                      >
+                        <option value="">선택안함</option>
+                        <option value="mall_name">몰명</option>
+                        <option value="brand">브랜드</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Context7의 Lodash orderBy를 사용한 다중 기준 정렬
                   </p>
                 </div>
               </div>
