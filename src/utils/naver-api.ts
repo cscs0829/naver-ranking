@@ -93,7 +93,48 @@ export class NaverShoppingRankChecker {
     targetMallName?: string,
     targetBrand?: string
   ): boolean {
-    if (targetProductName && !product.title.toLowerCase().includes(targetProductName.toLowerCase())) {
+    // 상품명 매칭 로직 개선
+    if (targetProductName) {
+      const productTitle = product.title.toLowerCase()
+      const targetName = targetProductName.toLowerCase()
+      
+      // 1. 정확한 매칭 시도
+      if (productTitle === targetName) {
+        return true
+      }
+      
+      // 2. 타겟 상품명이 상품 제목에 포함되는지 확인
+      if (productTitle.includes(targetName)) {
+        return true
+      }
+      
+      // 3. 상품 제목이 타겟 상품명에 포함되는지 확인 (긴 상품명의 경우)
+      if (targetName.includes(productTitle)) {
+        return true
+      }
+      
+      // 4. 키워드 기반 매칭 (공백으로 분리하여 주요 키워드들이 모두 포함되는지 확인)
+      const targetKeywords = targetName.split(/\s+/).filter(keyword => keyword.length > 1)
+      const productKeywords = productTitle.split(/\s+/).filter(keyword => keyword.length > 1)
+      
+      if (targetKeywords.length > 0) {
+        const matchedKeywords = targetKeywords.filter(keyword => 
+          productKeywords.some(productKeyword => 
+            productKeyword.includes(keyword) || keyword.includes(productKeyword)
+          )
+        )
+        
+        // 70% 이상의 키워드가 매칭되면 일치로 판단
+        if (matchedKeywords.length / targetKeywords.length >= 0.7) {
+          console.log(`키워드 매칭 성공: ${matchedKeywords.length}/${targetKeywords.length} (${(matchedKeywords.length / targetKeywords.length * 100).toFixed(1)}%)`)
+          console.log(`타겟: "${targetProductName}"`)
+          console.log(`상품: "${product.title}"`)
+          console.log(`매칭된 키워드: ${matchedKeywords.join(', ')}`)
+          return true
+        }
+      }
+      
+      console.log(`상품명 매칭 실패: "${product.title}" vs "${targetProductName}"`)
       return false
     }
 
@@ -142,6 +183,9 @@ export class NaverShoppingRankChecker {
     const maxItems = actualMaxPages * itemsPerApiPage
 
     console.log(`검색 시작: "${searchQuery}"`)
+    console.log(`타겟 상품명: "${targetProductName || '없음'}"`)
+    console.log(`타겟 몰명: "${targetMallName || '없음'}"`)
+    console.log(`타겟 브랜드: "${targetBrand || '없음'}"`)
     if (isSearchUntilFound) {
       console.log(`끝까지 검색 모드: 타겟 상품을 찾을 때까지 최대 ${actualMaxPages}페이지 검색`)
     } else {
@@ -165,13 +209,23 @@ export class NaverShoppingRankChecker {
       // API에서 가져온 100개를 실제 웹페이지 기준 40개씩 나누어 처리
       for (let i = 0; i < response.items.length; i++) {
         const product = response.items[i]
+        console.log(`상품 ${i + 1} 검사 중: "${product.title}"`)
+        
         if (this.isTargetProduct(product, targetProductName, targetMallName, targetBrand)) {
+          console.log(`✅ 매칭된 상품 발견!`)
           const productInfo = this.extractProductInfo(product)
           
           // 실제 네이버 쇼핑 웹페이지 기준으로 페이지와 순위 계산
           const totalRank = (currentApiPage - 1) * itemsPerApiPage + i + 1
           const webPage = Math.floor(totalRank / itemsPerWebPage) + 1
           const rankInWebPage = ((totalRank - 1) % itemsPerWebPage) + 1
+          
+          console.log(`상품 정보: ${productInfo.product_title}`)
+          console.log(`몰명: ${productInfo.mall_name}`)
+          console.log(`브랜드: ${productInfo.brand}`)
+          console.log(`가격: ${productInfo.price}`)
+          console.log(`전체 순위: ${totalRank}위`)
+          console.log(`웹페이지: ${webPage}페이지 ${rankInWebPage}번째`)
           
           items.push({
             search_query: searchQuery,
