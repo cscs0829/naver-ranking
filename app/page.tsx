@@ -318,7 +318,10 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
               >
-                <ResultsList refreshTrigger={refreshTrigger} />
+                <ResultsList 
+                  refreshTrigger={refreshTrigger} 
+                  onNavigateToSearch={() => setActiveTab('search')}
+                />
               </motion.div>
             </motion.div>
           )}

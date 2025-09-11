@@ -11,9 +11,10 @@ import { toast } from '@/utils/toast'
 
 interface ResultsListProps {
   refreshTrigger: number
+  onNavigateToSearch?: () => void
 }
 
-export default function ResultsList({ refreshTrigger }: ResultsListProps) {
+export default function ResultsList({ refreshTrigger, onNavigateToSearch }: ResultsListProps) {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -528,13 +529,13 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
             아직 검색한 결과가 없습니다. 검색 탭에서 새로운 검색을 시작해보세요.
           </p>
           <div className="mt-6">
-            <a
-              href="#panel-search"
+            <button
+              onClick={onNavigateToSearch}
               className="inline-flex items-center px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900/50 transition-all"
             >
               <Search className="w-4 h-4 mr-2" />
               검색하러 가기
-            </a>
+            </button>
           </div>
         </div>
       ) : (
