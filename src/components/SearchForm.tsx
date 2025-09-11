@@ -257,10 +257,13 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                     className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
                     disabled={isLoading}
                   >
-                    <option value={1}>1페이지 (100개 상품)</option>
-                    <option value={2}>2페이지 (200개 상품)</option>
-                    <option value={5}>5페이지 (500개 상품)</option>
-                    <option value={10}>10페이지 (1,000개 상품) - 최대</option>
+                    <option value={1}>1페이지 (40개 상품)</option>
+                    <option value={2}>2페이지 (80개 상품)</option>
+                    <option value={3}>3페이지 (120개 상품)</option>
+                    <option value={5}>5페이지 (200개 상품)</option>
+                    <option value={10}>10페이지 (400개 상품)</option>
+                    <option value={25}>25페이지 (1,000개 상품) - API 최대</option>
+                    <option value={-1}>끝까지 검색 (타겟 상품 찾을 때까지)</option>
                   </select>
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                     <BarChart3 className="w-5 h-5 text-slate-400" />
@@ -271,7 +274,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
                   <Zap className="w-3 h-3 mr-1" />
-                  네이버 API 제한으로 최대 10페이지(1,000개)까지 검색 가능합니다. 실제 웹페이지는 40개씩 표시됩니다.
+                  실제 네이버 쇼핑은 한 페이지에 40개씩 표시됩니다. API 최대 25페이지(1,000개)까지 검색 가능합니다.
                 </p>
               </div>
             </motion.div>

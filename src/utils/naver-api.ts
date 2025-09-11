@@ -136,11 +136,17 @@ export class NaverShoppingRankChecker {
     const itemsPerApiPage = 100 // API에서 한 번에 가져오는 상품 수
     const itemsPerWebPage = 40  // 실제 네이버 쇼핑 웹페이지에서 표시하는 상품 수
     
-    // 네이버 API 제한: 최대 1000개 (10페이지)
-    const actualMaxPages = Math.min(maxPages, 10)
+    // 끝까지 검색 옵션 처리
+    const isSearchUntilFound = maxPages === -1
+    const actualMaxPages = isSearchUntilFound ? 25 : Math.min(maxPages, 25) // API 최대 25페이지(1000개)
     const maxItems = actualMaxPages * itemsPerApiPage
 
-    console.log(`검색 시작: "${searchQuery}", 최대 ${actualMaxPages}페이지 (${maxItems}개 상품)`)
+    console.log(`검색 시작: "${searchQuery}"`)
+    if (isSearchUntilFound) {
+      console.log(`끝까지 검색 모드: 타겟 상품을 찾을 때까지 최대 ${actualMaxPages}페이지 검색`)
+    } else {
+      console.log(`제한 검색 모드: 최대 ${actualMaxPages}페이지 (${maxItems}개 상품)`)
+    }
     console.log(`실제 네이버 쇼핑 웹페이지: 한 페이지당 ${itemsPerWebPage}개 상품 표시`)
 
     while (currentApiPage <= actualMaxPages) {
@@ -188,6 +194,12 @@ export class NaverShoppingRankChecker {
           
           console.log(`매칭 상품 발견: 전체 ${totalRank}위, 웹페이지 ${webPage}페이지 ${rankInWebPage}번째`)
         }
+      }
+
+      // 끝까지 검색 모드에서 타겟 상품을 찾았고, 더 이상 검색할 필요가 없는 경우
+      if (isSearchUntilFound && items.length > 0) {
+        console.log(`타겟 상품을 찾았습니다! ${items.length}개 상품 발견, 검색 종료`)
+        break
       }
 
       // 더 이상 상품이 없으면 중단
