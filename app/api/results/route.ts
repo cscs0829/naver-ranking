@@ -13,11 +13,28 @@ export async function GET(request: NextRequest) {
     const searchQuery = searchParams.get('searchQuery')
     const targetMallName = searchParams.get('targetMallName')
     const exportExcel = searchParams.get('export') === 'excel'
+    const sortBy = searchParams.get('sortBy') || 'created_at'
+    const sortOrder = searchParams.get('sortOrder') || 'desc'
 
     let query = supabase
       .from('search_results')
       .select('*')
-      .order('created_at', { ascending: false })
+
+    // 정렬 옵션에 따른 쿼리 변경
+    switch (sortBy) {
+      case 'search_query':
+        query = query.order('search_query', { ascending: sortOrder === 'asc' })
+        break
+      case 'total_rank':
+        query = query.order('total_rank', { ascending: sortOrder === 'asc' })
+        break
+      case 'mall_name':
+        query = query.order('mall_name', { ascending: sortOrder === 'asc' })
+        break
+      case 'created_at':
+      default:
+        query = query.order('created_at', { ascending: sortOrder === 'asc' })
+    }
 
     if (searchQuery) {
       query = query.eq('search_query', searchQuery)

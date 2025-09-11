@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import SearchForm from '@/components/SearchForm'
 import ResultsList from '@/components/ResultsList'
 import ApiKeyManager from '@/components/ApiKeyManager'
-import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun } from 'lucide-react'
+import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun, Menu, X, Settings, FileText, Key } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/utils/toast'
 
@@ -24,14 +24,12 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keys'>('search')
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
-  const searchTabRef = React.useRef<HTMLButtonElement | null>(null)
-  const resultsTabRef = React.useRef<HTMLButtonElement | null>(null)
-  const keysTabRef = React.useRef<HTMLButtonElement | null>(null)
-  const [underline, setUnderline] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
-  const tabs: Array<{ id: 'search' | 'results' | 'keys'; label: string }> = [
-    { id: 'search', label: '검색' },
-    { id: 'results', label: '결과' },
-    { id: 'keys', label: 'API 키' },
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const tabs: Array<{ id: 'search' | 'results' | 'keys'; label: string; icon: React.ReactNode; description: string }> = [
+    { id: 'search', label: '검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
+    { id: 'results', label: '결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
+    { id: 'keys', label: 'API 키', icon: <Key className="w-5 h-5" />, description: 'API 키 관리' },
   ]
 
   useEffect(() => {
@@ -44,33 +42,6 @@ export default function Home() {
     const isDark = next === 'dark' || (next === 'system' && preferredDark)
     document.documentElement.classList.toggle('dark', isDark)
   }, [])
-
-  useEffect(() => {
-    if (!mounted) return
-    const map: Record<typeof activeTab, HTMLButtonElement | null> = {
-      search: searchTabRef.current,
-      results: resultsTabRef.current,
-      keys: keysTabRef.current
-    }
-    const el = map[activeTab]
-    if (el) {
-      const rect = el.getBoundingClientRect()
-      const parentRect = el.parentElement?.getBoundingClientRect()
-      const left = parentRect ? rect.left - parentRect.left : rect.left
-      setUnderline({ left, width: rect.width })
-    }
-    const onResize = () => {
-      const el2 = map[activeTab]
-      if (el2) {
-        const rect2 = el2.getBoundingClientRect()
-        const parentRect2 = el2.parentElement?.getBoundingClientRect()
-        const left2 = parentRect2 ? rect2.left - parentRect2.left : rect2.left
-        setUnderline({ left: left2, width: rect2.width })
-      }
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [activeTab, mounted])
 
   const toggleTheme = () => {
     const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
@@ -120,199 +91,246 @@ export default function Home() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin"></div>
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">로딩 중...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      {/* 모바일 사이드바 오버레이 */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 lg:hidden"
+          >
+            <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="fixed left-0 top-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">메뉴</h2>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <nav className="p-6 space-y-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id)
+                      setSidebarOpen(false)
+                    }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {tab.icon}
+                    <div>
+                      <div className="font-medium">{tab.label}</div>
+                      <div className="text-sm opacity-75">{tab.description}</div>
+                    </div>
+                  </button>
+                ))}
+              </nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 헤더 */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="flex items-center group">
-                  <div className="relative">
-                    <Search className="w-8 h-8 text-blue-600 mr-3 transition-transform duration-300 group-hover:scale-110" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
+            {/* 로고 및 제목 */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <Search className="w-6 h-6 text-white" />
                   </div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse"></div>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
                     네이버 쇼핑 순위 검색기
                   </h1>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">실시간 상품 순위 분석</p>
                 </div>
               </div>
             </div>
-            <div
-              className="flex items-center space-x-2 text-sm"
-              role="tablist"
-              aria-label="메인 탭"
-              onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                const order = tabs.map(t => t.id)
-                const currentIndex = order.indexOf(activeTab)
-                if (e.key === 'ArrowRight') {
-                  const next = order[(currentIndex + 1) % order.length]
-                  setActiveTab(next as typeof activeTab)
-                } else if (e.key === 'ArrowLeft') {
-                  const prev = order[(currentIndex - 1 + order.length) % order.length]
-                  setActiveTab(prev as typeof activeTab)
-                } else if (e.key === 'Home') {
-                  setActiveTab(order[0] as typeof activeTab)
-                } else if (e.key === 'End') {
-                  setActiveTab(order[order.length - 1] as typeof activeTab)
-                }
-              }}
-            >
+
+            {/* 데스크톱 네비게이션 */}
+            <div className="hidden lg:flex items-center space-x-1">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* 테마 토글 */}
+            <div className="flex items-center space-x-2">
               <button
-                id="tab-search"
-                role="tab"
-                aria-selected={activeTab === 'search'}
-                aria-controls="panel-search"
-                tabIndex={activeTab === 'search' ? 0 : -1}
-                onClick={() => setActiveTab('search')}
-                ref={searchTabRef}
-                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='search' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-blue-100 to-purple-100 text-gray-700 hover:scale-105'}`}
-              >
-                <Search className="w-4 h-4 mr-2" /> 검색
-              </button>
-              <button
-                id="tab-results"
-                role="tab"
-                aria-selected={activeTab === 'results'}
-                aria-controls="panel-results"
-                tabIndex={activeTab === 'results' ? 0 : -1}
-                onClick={() => setActiveTab('results')}
-                ref={resultsTabRef}
-                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='results' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-green-100 to-blue-100 text-gray-700 hover:scale-105'}`}
-              >
-                <BarChart3 className="w-4 h-4 mr-2" /> 결과
-              </button>
-              <button
-                id="tab-keys"
-                role="tab"
-                aria-selected={activeTab === 'keys'}
-                aria-controls="panel-keys"
-                tabIndex={activeTab === 'keys' ? 0 : -1}
-                onClick={() => setActiveTab('keys')}
-                ref={keysTabRef}
-                className={`flex items-center px-3 py-1.5 rounded-full focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all duration-300 ${activeTab==='keys' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow' : 'bg-gradient-to-r from-purple-100 to-pink-100 text-gray-700 hover:scale-105'}`}
-              >
-                <Database className="w-4 h-4 mr-2" /> API 키
-              </button>
-              <div className="relative h-1 mt-1">
-                <motion.div
-                  className="absolute bottom-0 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"
-                  animate={{ x: underline.left, width: underline.width }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              </div>
-              <button
-                type="button"
                 onClick={toggleTheme}
-                className="ml-2 inline-flex items-center px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-white/70 dark:bg-gray-900/60 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-200 transition-all"
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title={`테마: ${theme}`}
               >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* 메인 컨텐츠: 한 화면에 하나의 패널만 표시, 상단 버튼으로 이동 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 container-query">
+      {/* 메인 컨텐츠 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AnimatePresence mode="wait">
-        {activeTab === 'search' && (
-          <motion.section
-            id="panel-search"
-            role="tabpanel"
-            aria-labelledby="tab-search"
-            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -16 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-          >
-            <div className="px-5 pt-5 pb-3 border-b border-gray-100">
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 text-xs font-medium">
-                <Sparkles className="w-4 h-4 mr-2" /> 순위 분석
+          {activeTab === 'search' && (
+            <motion.div
+              key="search"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="space-y-8"
+            >
+              {/* 검색 섹션 헤더 */}
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                  <Sparkles className="w-4 h-4" />
+                  <span>순위 분석</span>
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                  네이버 쇼핑 순위 분석
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                  검색어를 입력하고 상품의 순위를 실시간으로 분석해보세요
+                </p>
               </div>
-              <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">네이버 쇼핑 순위 분석</h2>
-            </div>
-            <div className="p-5 lg:p-4">
-              <SearchForm onSearch={handleSearch} isLoading={isLoading} />
-            </div>
-          </motion.section>
-        )}
 
-        {activeTab === 'results' && (
-          <motion.section
-            id="panel-results"
-            role="tabpanel"
-            aria-labelledby="tab-results"
-            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
-            initial={{ opacity: 0, x: 16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -16 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-          >
-            <div className="px-5 pt-5 pb-3 border-b border-gray-100">
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-green-100 to-blue-100 text-green-800 text-xs font-medium">
-                <TrendingUp className="w-4 h-4 mr-2" /> 저장된 결과
+              {/* 검색 폼 */}
+              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+                <SearchForm onSearch={handleSearch} isLoading={isLoading} />
               </div>
-              <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">검색 결과</h2>
-            </div>
-            <div className="p-5 lg:p-4">
-              <ResultsList refreshTrigger={refreshTrigger} />
-            </div>
-          </motion.section>
-        )}
+            </motion.div>
+          )}
 
-        {activeTab === 'keys' && (
-          <motion.section
-            id="panel-keys"
-            role="tabpanel"
-            aria-labelledby="tab-keys"
-            className="panel bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 flex flex-col text-[15px] lg:text-[13px] xl:text-[14px]"
-            initial={{ opacity: 0, x: -16 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 16 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-          >
-            <div className="px-5 pt-5 pb-3 border-b border-gray-100">
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 text-xs font-medium">
-                <Zap className="w-4 h-4 mr-2" /> API 키 관리
+          {activeTab === 'results' && (
+            <motion.div
+              key="results"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="space-y-8"
+            >
+              {/* 결과 섹션 헤더 */}
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-medium">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>저장된 결과</span>
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                  검색 결과
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                  이전에 검색한 결과들을 확인하고 분석해보세요
+                </p>
               </div>
-              <h2 className="mt-3 text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">API 키 관리</h2>
-            </div>
-            <div className="p-5 lg:p-4">
-              <ApiKeyManager />
-            </div>
-          </motion.section>
-        )}
+
+              {/* 결과 리스트 */}
+              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+                <ResultsList refreshTrigger={refreshTrigger} />
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'keys' && (
+            <motion.div
+              key="keys"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="space-y-8"
+            >
+              {/* API 키 섹션 헤더 */}
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
+                  <Settings className="w-4 h-4" />
+                  <span>API 키 관리</span>
+                </div>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                  API 키 관리
+                </h2>
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                  네이버 쇼핑 API 키를 안전하게 관리하세요
+                </p>
+              </div>
+
+              {/* API 키 매니저 */}
+              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+                <ApiKeyManager />
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </main>
 
       {/* 푸터 */}
-      <footer className="bg-white/60 backdrop-blur-md border-t border-white/20 mt-16">
+      <footer className="mt-16 border-t border-slate-200/60 dark:border-slate-700/60 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-4">
-              <div className="flex items-center space-x-2">
-                <Search className="w-5 h-5 text-blue-600" />
-                <span className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  네이버 쇼핑 순위 검색기
-                </span>
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Search className="w-5 h-5 text-white" />
               </div>
+              <span className="text-lg font-semibold text-slate-900 dark:text-white">
+                네이버 쇼핑 순위 검색기
+              </span>
             </div>
-            <div className="text-gray-600 text-sm space-y-1">
+            <div className="text-slate-600 dark:text-slate-400 space-y-1">
               <p>네이버 쇼핑 API를 사용하여 상품 순위를 검색합니다.</p>
               <p>검색 결과는 데이터베이스에 저장되어 비교 분석이 가능합니다.</p>
             </div>
-            <div className="mt-6 pt-6 border-t border-gray-200/50">
-              <p className="text-xs text-gray-500">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-sm text-slate-500 dark:text-slate-500">
                 © 2024 네이버 쇼핑 순위 검색기. All rights reserved.
               </p>
             </div>
