@@ -609,6 +609,15 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                             <span>순위: {result.total_rank}</span>
                             <span>가격: {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}</span>
                             <span>브랜드: {result.brand || 'N/A'}</span>
+                            {result.target_product_name && (
+                              <span>타겟 상품명: {result.target_product_name}</span>
+                            )}
+                            {result.target_mall_name && (
+                              <span>타겟 몰명: {result.target_mall_name}</span>
+                            )}
+                            {result.target_brand && (
+                              <span>타겟 브랜드: {result.target_brand}</span>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
