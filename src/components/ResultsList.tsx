@@ -24,6 +24,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     sortBy: 'created_at',
     sortOrder: 'desc'
   })
+  const [rankSortOrder, setRankSortOrder] = useState<'asc' | 'desc'>('asc') // 순위 정렬 순서 (asc: 1등부터, desc: 뒤에서부터)
   const [showFilters, setShowFilters] = useState(false)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({})
 
@@ -41,6 +42,11 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
       if (filters.targetMallName) params.append('targetMallName', filters.targetMallName)
       params.append('sortBy', sortOptions.sortBy)
       params.append('sortOrder', sortOptions.sortOrder)
+      
+      // 순위 정렬인 경우 rankSortOrder 파라미터 추가
+      if (sortOptions.sortBy === 'total_rank') {
+        params.append('rankSortOrder', rankSortOrder)
+      }
 
       const response = await fetch(`/api/results?${params.toString()}`)
       const data = await response.json()
@@ -94,9 +100,9 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
 
   useEffect(() => {
     fetchResults()
-  }, [refreshTrigger, filters, sortOptions])
+  }, [refreshTrigger, filters, sortOptions, rankSortOrder])
 
-  // 결과 그룹화
+  // 결과 그룹화 및 순위별 정렬
   const groupedResults = results.reduce((acc, result) => {
     const key = result.search_query
     if (!acc[key]) {
@@ -105,6 +111,15 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
     acc[key].push(result)
     return acc
   }, {} as Record<string, SearchResult[]>)
+
+  // 각 그룹 내에서 순위별로 정렬
+  Object.keys(groupedResults).forEach(key => {
+    groupedResults[key].sort((a, b) => {
+      const rankA = a.total_rank || 0
+      const rankB = b.total_rank || 0
+      return rankSortOrder === 'asc' ? rankA - rankB : rankB - rankA
+    })
+  })
 
   if (loading) {
     return (
@@ -261,6 +276,84 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                     </select>
                   </div>
                 </div>
+                
+                {/* 순위 정렬 옵션 - 순위가 선택되었을 때만 표시 */}
+                {sortOptions.sortBy === 'total_rank' && (
+                  <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                    <div className="space-y-2">
+                      <label className="flex items-center text-sm font-medium text-amber-800 dark:text-amber-200">
+                        <Award className="w-4 h-4 mr-2 text-amber-600" />
+                        순위 정렬 방식
+                      </label>
+                      <div className="flex space-x-4">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="rankSortOrder"
+                            value="asc"
+                            checked={rankSortOrder === 'asc'}
+                            onChange={(e) => setRankSortOrder(e.target.value as 'asc' | 'desc')}
+                            className="w-4 h-4 text-amber-600 bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-600 focus:ring-amber-500 dark:focus:ring-amber-400"
+                          />
+                          <span className="ml-2 text-sm text-amber-800 dark:text-amber-200">1등부터 (오름차순)</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="rankSortOrder"
+                            value="desc"
+                            checked={rankSortOrder === 'desc'}
+                            onChange={(e) => setRankSortOrder(e.target.value as 'asc' | 'desc')}
+                            className="w-4 h-4 text-amber-600 bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-600 focus:ring-amber-500 dark:focus:ring-amber-400"
+                          />
+                          <span className="ml-2 text-sm text-amber-800 dark:text-amber-200">뒤에서부터 (내림차순)</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 순위별 정렬 옵션 */}
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mr-3">
+                      <Award className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300">순위별 정렬</h4>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setRankSortOrder('asc')}
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                        rankSortOrder === 'asc'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>1등부터</span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setRankSortOrder('desc')}
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                        rankSortOrder === 'desc'
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25'
+                          : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                      <span>뒤에서부터</span>
+                    </motion.button>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    각 검색어 그룹 내에서 상품들을 순위별로 정렬합니다
+                  </p>
+                </div>
               </div>
             </motion.div>
           )}
@@ -360,11 +453,20 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200">
-                              #{resultIndex + 1}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              resultIndex === 0 
+                                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
+                                : resultIndex < 3 
+                                  ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-md'
+                                  : 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
+                            }`}>
+                              {resultIndex === 0 ? '🥇 1등' : resultIndex === 1 ? '🥈 2등' : resultIndex === 2 ? '🥉 3등' : `#${resultIndex + 1}`}
                             </span>
                             <span className="text-sm text-slate-600 dark:text-slate-400">
                               {result.mall_name}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              (실제 순위: {result.total_rank}위)
                             </span>
                           </div>
                           <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">

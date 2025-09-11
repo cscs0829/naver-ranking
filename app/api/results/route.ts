@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const exportExcel = searchParams.get('export') === 'excel'
     const sortBy = searchParams.get('sortBy') || 'created_at'
     const sortOrder = searchParams.get('sortOrder') || 'desc'
+    const rankSortOrder = searchParams.get('rankSortOrder') || 'asc' // 순위 정렬 순서
 
     let query = supabase
       .from('search_results')
@@ -26,7 +27,8 @@ export async function GET(request: NextRequest) {
         query = query.order('search_query', { ascending: sortOrder === 'asc' })
         break
       case 'total_rank':
-        query = query.order('total_rank', { ascending: sortOrder === 'asc' })
+        // 순위 정렬인 경우 rankSortOrder 사용
+        query = query.order('total_rank', { ascending: rankSortOrder === 'asc' })
         break
       case 'mall_name':
         query = query.order('mall_name', { ascending: sortOrder === 'asc' })
