@@ -257,10 +257,10 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                     className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-indigo-100 dark:focus:ring-indigo-900/50 focus:border-indigo-500 dark:focus:border-indigo-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
                     disabled={isLoading}
                   >
+                    <option value={1}>1페이지 (100개 상품)</option>
+                    <option value={2}>2페이지 (200개 상품)</option>
                     <option value={5}>5페이지 (500개 상품)</option>
-                    <option value={10}>10페이지 (1,000개 상품)</option>
-                    <option value={20}>20페이지 (2,000개 상품)</option>
-                    <option value={50}>50페이지 (5,000개 상품)</option>
+                    <option value={10}>10페이지 (1,000개 상품) - 최대</option>
                   </select>
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
                     <BarChart3 className="w-5 h-5 text-slate-400" />
@@ -271,7 +271,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
                   <Zap className="w-3 h-3 mr-1" />
-                  더 많은 페이지를 검색할수록 정확도가 높아집니다
+                  네이버 API 제한으로 최대 10페이지(1,000개)까지 검색 가능합니다
                 </p>
               </div>
             </motion.div>

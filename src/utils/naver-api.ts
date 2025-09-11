@@ -38,6 +38,16 @@ export class NaverShoppingRankChecker {
 
   async searchProducts(query: string, start: number = 1, display: number = 100): Promise<NaverSearchResponse | null> {
     try {
+      // 네이버 API 제한사항 확인
+      if (start > 1000) {
+        console.warn(`start 파라미터가 1000을 초과했습니다: ${start}`)
+        return null
+      }
+      
+      if (display > 100) {
+        display = 100 // 최대 100개로 제한
+      }
+
       const response = await axios.get(this.baseUrl, {
         params: {
           query,
@@ -49,12 +59,16 @@ export class NaverShoppingRankChecker {
           'X-Naver-Client-Id': this.clientId,
           'X-Naver-Client-Secret': this.clientSecret
         },
-        timeout: 10000
+        timeout: 15000
       })
 
       return response.data
     } catch (error) {
       console.error('네이버 API 호출 오류:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('API 응답:', error.response?.data)
+        console.error('상태 코드:', error.response?.status)
+      }
       return null
     }
   }
@@ -120,15 +134,24 @@ export class NaverShoppingRankChecker {
     let totalSearched = 0
     let currentPage = 1
     const itemsPerPage = 100
+    
+    // 네이버 API 제한: 최대 1000개 (10페이지)
+    const actualMaxPages = Math.min(maxPages, 10)
+    const maxItems = actualMaxPages * itemsPerPage
 
-    while (currentPage <= maxPages) {
+    console.log(`검색 시작: "${searchQuery}", 최대 ${actualMaxPages}페이지 (${maxItems}개 상품)`)
+
+    while (currentPage <= actualMaxPages) {
       const start = (currentPage - 1) * itemsPerPage + 1
+      console.log(`페이지 ${currentPage} 검색 중... (start: ${start}, display: ${itemsPerPage})`)
+      
       const response = await this.searchProducts(searchQuery, start, itemsPerPage)
       if (!response || !response.items) {
         console.error(`페이지 ${currentPage} 검색 실패`)
-        currentPage++
-        continue
+        break // 더 이상 검색할 수 없으면 중단
       }
+
+      console.log(`페이지 ${currentPage}: ${response.items.length}개 상품 발견`)
       totalSearched += response.items.length
 
       for (let i = 0; i < response.items.length; i++) {
@@ -157,10 +180,18 @@ export class NaverShoppingRankChecker {
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, 800))
+      // 더 이상 상품이 없으면 중단
+      if (response.items.length < itemsPerPage) {
+        console.log(`페이지 ${currentPage}에서 ${response.items.length}개만 반환됨. 검색 완료.`)
+        break
+      }
+
+      // API 호출 제한을 고려한 딜레이 (네이버 API는 초당 10회 제한)
+      await new Promise(resolve => setTimeout(resolve, 200))
       currentPage++
     }
 
+    console.log(`검색 완료: 총 ${totalSearched}개 상품 검색, ${items.length}개 매칭`)
     return { items, totalSearched, foundCount: items.length }
   }
 
