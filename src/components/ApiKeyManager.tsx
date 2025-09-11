@@ -98,21 +98,21 @@ export default function ApiKeyManager() {
     }
   }
 
-  const handleDeactivateProfile = async (id: number) => {
-    if (!confirm('이 프로필을 비활성화하시겠습니까?')) return
+  const handleDeleteProfile = async (id: number) => {
+    if (!confirm('이 프로필을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
     try {
-      const res = await fetch(`/api/keys?profileId=${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/keys?profileId=${id}&hard=true`, { method: 'DELETE' })
       const data = await res.json()
       if (res.ok) {
         setSuccess(data.message)
         setError('')
         fetchKeys()
       } else {
-        setError(data.error || '프로필 비활성화에 실패했습니다.')
+        setError(data.error || '프로필 삭제에 실패했습니다.')
         setSuccess('')
       }
     } catch (e) {
-      setError('프로필 비활성화 중 오류가 발생했습니다.')
+      setError('프로필 삭제 중 오류가 발생했습니다.')
       setSuccess('')
     }
   }
@@ -391,16 +391,15 @@ export default function ApiKeyManager() {
                             기본설정
                           </motion.button>
                         )}
-                        {p.is_active && (
-                          <motion.button 
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDeactivateProfile(p.id)} 
-                            className="px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
-                          >
-                            비활성
-                          </motion.button>
-                        )}
+                        <motion.button 
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleDeleteProfile(p.id)} 
+                          className="px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
+                        >
+                          <Trash2 className="w-4 h-4 mr-1 inline" />
+                          삭제
+                        </motion.button>
                       </div>
                     </td>
                   </tr>
