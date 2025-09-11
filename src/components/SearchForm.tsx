@@ -271,7 +271,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
                   <Zap className="w-3 h-3 mr-1" />
-                  네이버 API 제한으로 최대 10페이지(1,000개)까지 검색 가능합니다
+                  네이버 API 제한으로 최대 10페이지(1,000개)까지 검색 가능합니다. 실제 웹페이지는 40개씩 표시됩니다.
                 </p>
               </div>
             </motion.div>

@@ -555,7 +555,7 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                               {result.mall_name}
                             </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400">
-                              (실제 순위: {result.total_rank}위)
+                              (전체 {result.total_rank}위, 웹페이지 {result.page}페이지 {result.rank_in_page}번째)
                             </span>
                           </div>
                           <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -621,6 +621,14 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                               <div>
                                 <span className="font-medium text-slate-700 dark:text-slate-300">쇼핑몰:</span>
                                 <span className="ml-2 text-slate-600 dark:text-slate-400">{result.mall_name}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">전체 순위:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.total_rank}위</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-slate-700 dark:text-slate-300">웹페이지 순위:</span>
+                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.page}페이지 {result.rank_in_page}번째</span>
                               </div>
                               <div>
                                 <span className="font-medium text-slate-700 dark:text-slate-300">카테고리:</span>

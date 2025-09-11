@@ -132,41 +132,49 @@ export class NaverShoppingRankChecker {
   ): Promise<{ items: SearchResult[]; totalSearched: number; foundCount: number }> {
     const items: SearchResult[] = []
     let totalSearched = 0
-    let currentPage = 1
-    const itemsPerPage = 100
+    let currentApiPage = 1
+    const itemsPerApiPage = 100 // API에서 한 번에 가져오는 상품 수
+    const itemsPerWebPage = 40  // 실제 네이버 쇼핑 웹페이지에서 표시하는 상품 수
     
     // 네이버 API 제한: 최대 1000개 (10페이지)
     const actualMaxPages = Math.min(maxPages, 10)
-    const maxItems = actualMaxPages * itemsPerPage
+    const maxItems = actualMaxPages * itemsPerApiPage
 
     console.log(`검색 시작: "${searchQuery}", 최대 ${actualMaxPages}페이지 (${maxItems}개 상품)`)
+    console.log(`실제 네이버 쇼핑 웹페이지: 한 페이지당 ${itemsPerWebPage}개 상품 표시`)
 
-    while (currentPage <= actualMaxPages) {
-      const start = (currentPage - 1) * itemsPerPage + 1
-      console.log(`페이지 ${currentPage} 검색 중... (start: ${start}, display: ${itemsPerPage})`)
+    while (currentApiPage <= actualMaxPages) {
+      const start = (currentApiPage - 1) * itemsPerApiPage + 1
+      console.log(`API 페이지 ${currentApiPage} 검색 중... (start: ${start}, display: ${itemsPerApiPage})`)
       
-      const response = await this.searchProducts(searchQuery, start, itemsPerPage)
+      const response = await this.searchProducts(searchQuery, start, itemsPerApiPage)
       if (!response || !response.items) {
-        console.error(`페이지 ${currentPage} 검색 실패`)
+        console.error(`API 페이지 ${currentApiPage} 검색 실패`)
         break // 더 이상 검색할 수 없으면 중단
       }
 
-      console.log(`페이지 ${currentPage}: ${response.items.length}개 상품 발견`)
+      console.log(`API 페이지 ${currentApiPage}: ${response.items.length}개 상품 발견`)
       totalSearched += response.items.length
 
+      // API에서 가져온 100개를 실제 웹페이지 기준 40개씩 나누어 처리
       for (let i = 0; i < response.items.length; i++) {
         const product = response.items[i]
         if (this.isTargetProduct(product, targetProductName, targetMallName, targetBrand)) {
           const productInfo = this.extractProductInfo(product)
-          const totalRank = (currentPage - 1) * itemsPerPage + i + 1
+          
+          // 실제 네이버 쇼핑 웹페이지 기준으로 페이지와 순위 계산
+          const totalRank = (currentApiPage - 1) * itemsPerApiPage + i + 1
+          const webPage = Math.floor(totalRank / itemsPerWebPage) + 1
+          const rankInWebPage = ((totalRank - 1) % itemsPerWebPage) + 1
+          
           items.push({
             search_query: searchQuery,
             target_mall_name: targetMallName,
             target_brand: targetBrand,
             target_product_name: targetProductName,
-            page: currentPage,
-            rank_in_page: i + 1,
-            total_rank: totalRank,
+            page: webPage, // 실제 웹페이지 번호
+            rank_in_page: rankInWebPage, // 웹페이지 내 순위
+            total_rank: totalRank, // 전체 순위
             product_title: productInfo.product_title!,
             mall_name: productInfo.mall_name!,
             brand: productInfo.brand,
@@ -177,21 +185,24 @@ export class NaverShoppingRankChecker {
             category2: productInfo.category2,
             category3: productInfo.category3
           })
+          
+          console.log(`매칭 상품 발견: 전체 ${totalRank}위, 웹페이지 ${webPage}페이지 ${rankInWebPage}번째`)
         }
       }
 
       // 더 이상 상품이 없으면 중단
-      if (response.items.length < itemsPerPage) {
-        console.log(`페이지 ${currentPage}에서 ${response.items.length}개만 반환됨. 검색 완료.`)
+      if (response.items.length < itemsPerApiPage) {
+        console.log(`API 페이지 ${currentApiPage}에서 ${response.items.length}개만 반환됨. 검색 완료.`)
         break
       }
 
       // API 호출 제한을 고려한 딜레이 (네이버 API는 초당 10회 제한)
       await new Promise(resolve => setTimeout(resolve, 200))
-      currentPage++
+      currentApiPage++
     }
 
     console.log(`검색 완료: 총 ${totalSearched}개 상품 검색, ${items.length}개 매칭`)
+    console.log(`실제 웹페이지 기준: 최대 ${Math.ceil(totalSearched / itemsPerWebPage)}페이지`)
     return { items, totalSearched, foundCount: items.length }
   }
 
