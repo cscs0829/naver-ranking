@@ -618,6 +618,17 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                             {result.target_brand && (
                               <span>타겟 브랜드: {result.target_brand}</span>
                             )}
+                            {result.created_at && (
+                              <span>
+                                검색시각: {new Date(result.created_at).toLocaleString('ko-KR', {
+                                  month: '2-digit',
+                                  day: '2-digit',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  second: '2-digit'
+                                })}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">
