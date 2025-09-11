@@ -165,7 +165,7 @@ export default function ApiKeyManager() {
       {/* 액션 버튼 */}
       <div className="flex justify-center">
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.05, y: -2 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             setShowProfileForm(!showProfileForm)
@@ -173,11 +173,12 @@ export default function ApiKeyManager() {
             setError('')
             setSuccess('')
           }}
-          className="group flex items-center px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl shadow-xl hover:shadow-2xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+          className="group flex items-center px-10 py-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-3xl shadow-2xl hover:shadow-3xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-emerald-200 dark:focus:ring-emerald-900/50 hover:from-emerald-700 hover:to-teal-700"
         >
-          <Plus className="w-6 h-6 mr-3 group-hover:animate-pulse" />
-          <span className="text-lg font-semibold">프로필(아이디+시크릿) 추가</span>
-          <Star className="w-5 h-5 ml-2" />
+          <Plus className="w-7 h-7 mr-4 group-hover:animate-pulse" />
+          <span className="text-xl font-bold">프로필(아이디+시크릿) 추가</span>
+          <Star className="w-6 h-6 ml-3 group-hover:animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
         </motion.button>
       </div>
 
@@ -282,21 +283,25 @@ export default function ApiKeyManager() {
                 <label htmlFor="makeDefault" className="text-sm text-slate-700 dark:text-slate-300">이 프로필을 기본으로 설정</label>
               </div>
               <div className="flex justify-center space-x-4 pt-2">
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="button" 
                   onClick={() => setShowProfileForm(false)} 
-                  className="px-8 py-3 border-2 border-slate-300 dark:border-slate-600 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 font-semibold"
+                  className="px-10 py-4 border-2 border-slate-300 dark:border-slate-600 rounded-2xl text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all duration-300 font-bold text-lg hover:shadow-md"
                 >
                   취소
-                </button>
-                <button 
+                </motion.button>
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   type="submit" 
-                  className="group px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl hover:shadow-lg transform transition-all duration-300 hover:scale-105 font-semibold"
+                  className="group px-10 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl hover:shadow-xl transform transition-all duration-300 hover:from-emerald-700 hover:to-teal-700 font-bold text-lg"
                 >
                   <span className="flex items-center">
-                    <CheckCircle className="w-5 h-5 mr-2 group-hover:animate-pulse" /> 저장하기
+                    <CheckCircle className="w-6 h-6 mr-3 group-hover:animate-pulse" /> 저장하기
                   </span>
-                </button>
+                </motion.button>
               </div>
             </form>
           </motion.div>
@@ -377,20 +382,24 @@ export default function ApiKeyManager() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         {!p.is_default && p.is_active && (
-                          <button 
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handleSetDefaultProfile(p.id)} 
-                            className="px-3 py-1 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                            className="px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
                           >
                             기본설정
-                          </button>
+                          </motion.button>
                         )}
                         {p.is_active && (
-                          <button 
+                          <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => handleDeactivateProfile(p.id)} 
-                            className="px-3 py-1 text-xs rounded-lg bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/70 transition-colors"
+                            className="px-4 py-2 text-sm rounded-xl bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
                           >
                             비활성
-                          </button>
+                          </motion.button>
                         )}
                       </div>
                     </td>

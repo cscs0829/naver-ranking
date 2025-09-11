@@ -114,43 +114,47 @@ export default function Home() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 lg:hidden"
           >
-            <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />
             <motion.div
-              initial={{ x: -300 }}
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed left-0 top-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl"
+              exit={{ x: -320 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 h-full w-80 bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl shadow-2xl border-r border-slate-200/20 dark:border-slate-700/20"
             >
-              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between p-6 border-b border-slate-200/60 dark:border-slate-700/60">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">메뉴</h2>
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 hover:scale-105"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <nav className="p-6 space-y-2">
+              <nav className="p-6 space-y-3">
                 {tabs.map((tab) => (
-                  <button
+                  <motion.button
                     key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       setActiveTab(tab.id)
                       setSidebarOpen(false)
                     }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                    className={`w-full flex items-center space-x-3 px-4 py-4 rounded-2xl text-left transition-all duration-300 ${
                       activeTab === tab.id
-                        ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'
-                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                        : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:shadow-md'
                     }`}
                   >
-                    {tab.icon}
-                    <div>
-                      <div className="font-medium">{tab.label}</div>
-                      <div className="text-sm opacity-75">{tab.description}</div>
+                    <div className={`p-2 rounded-xl ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-600'}`}>
+                      {tab.icon}
                     </div>
-                  </button>
+                    <div>
+                      <div className="font-semibold">{tab.label}</div>
+                      <div className="text-sm opacity-80">{tab.description}</div>
+                    </div>
+                  </motion.button>
                 ))}
               </nav>
             </motion.div>
@@ -159,155 +163,206 @@ export default function Home() {
       </AnimatePresence>
 
       {/* 헤더 */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-700/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-18">
             {/* 로고 및 제목 */}
             <div className="flex items-center space-x-4">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="lg:hidden p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:shadow-md"
               >
                 <Menu className="w-5 h-5" />
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Search className="w-6 h-6 text-white" />
+              </motion.button>
+              <div className="flex items-center space-x-4">
+                <motion.div 
+                  className="relative"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <Search className="w-7 h-7 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse"></div>
-                </div>
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse shadow-lg"></div>
+                </motion.div>
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
                     네이버 쇼핑 순위 검색기
                   </h1>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">실시간 상품 순위 분석</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">실시간 상품 순위 분석</p>
                 </div>
               </div>
             </div>
 
             {/* 데스크톱 네비게이션 */}
-            <div className="hidden lg:flex items-center space-x-1">
+            <div className="hidden lg:flex items-center space-x-2">
               {tabs.map((tab) => (
-                <button
+                <motion.button
                   key={tab.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+                  className={`flex items-center space-x-3 px-5 py-3 rounded-2xl font-semibold transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:shadow-md'
                   }`}
                 >
-                  {tab.icon}
+                  <div className={`p-1.5 rounded-lg ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-600'}`}>
+                    {tab.icon}
+                  </div>
                   <span>{tab.label}</span>
-                </button>
+                </motion.button>
               ))}
             </div>
 
             {/* 테마 토글 */}
-            <div className="flex items-center space-x-2">
-              <button
+            <div className="flex items-center space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
-                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:shadow-md"
                 title={`테마: ${theme}`}
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
+              </motion.button>
             </div>
           </div>
         </div>
       </header>
 
       {/* 메인 컨텐츠 */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <AnimatePresence mode="wait">
           {activeTab === 'search' && (
             <motion.div
               key="search"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="space-y-8"
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
             >
               {/* 검색 섹션 헤더 */}
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                  <Sparkles className="w-4 h-4" />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-blue-500/25"
+                >
+                  <Sparkles className="w-5 h-5 animate-pulse" />
                   <span>순위 분석</span>
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
                   네이버 쇼핑 순위 분석
                 </h2>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
                   검색어를 입력하고 상품의 순위를 실시간으로 분석해보세요
                 </p>
-              </div>
+              </motion.div>
 
               {/* 검색 폼 */}
-              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
+              >
                 <SearchForm onSearch={handleSearch} isLoading={isLoading} />
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
           {activeTab === 'results' && (
             <motion.div
               key="results"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="space-y-8"
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
             >
               {/* 결과 섹션 헤더 */}
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-medium">
-                  <TrendingUp className="w-4 h-4" />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-emerald-500/25"
+                >
+                  <TrendingUp className="w-5 h-5 animate-pulse" />
                   <span>저장된 결과</span>
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
                   검색 결과
                 </h2>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
                   이전에 검색한 결과들을 확인하고 분석해보세요
                 </p>
-              </div>
+              </motion.div>
 
               {/* 결과 리스트 */}
-              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
+              >
                 <ResultsList refreshTrigger={refreshTrigger} />
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
           {activeTab === 'keys' && (
             <motion.div
               key="keys"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="space-y-8"
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
             >
               {/* API 키 섹션 헤더 */}
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center space-x-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium">
-                  <Settings className="w-4 h-4" />
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-purple-500/25"
+                >
+                  <Settings className="w-5 h-5 animate-pulse" />
                   <span>API 키 관리</span>
-                </div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
                   API 키 관리
                 </h2>
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
                   네이버 쇼핑 API 키를 안전하게 관리하세요
                 </p>
-              </div>
+              </motion.div>
 
               {/* API 키 매니저 */}
-              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-3xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
+              >
                 <ApiKeyManager />
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

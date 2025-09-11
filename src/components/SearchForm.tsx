@@ -92,28 +92,30 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               id="searchQuery"
               value={formData.searchQuery}
               onChange={(e) => handleInputChange('searchQuery', e.target.value)}
-              className="w-full px-4 py-4 pl-12 pr-4 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              className="w-full px-6 py-5 pl-14 pr-6 border-2 border-slate-200 dark:border-slate-600 rounded-3xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-lg font-medium shadow-sm hover:shadow-md focus:shadow-lg"
               placeholder="예: 베트남 여행, 아이폰 케이스"
               required
               disabled={isLoading}
             />
-            <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <Search className="w-5 h-5 text-slate-400" />
+            <div className="absolute left-5 top-1/2 transform -translate-y-1/2">
+              <Search className="w-6 h-6 text-slate-400" />
             </div>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">최소 1자 이상 입력하세요.</p>
         </div>
 
         {/* 고급 옵션 토글 */}
-        <div className="flex items-center justify-between">
-          <button
+        <div className="flex items-center justify-center">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center space-x-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+            className="flex items-center space-x-3 px-6 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-300 bg-slate-50 dark:bg-slate-700 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-600 hover:shadow-md"
           >
-            <span className="font-medium">고급 옵션</span>
-            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showAdvanced ? 'rotate-180' : ''}`} />
-          </button>
+            <span className="font-semibold text-lg">고급 옵션</span>
+            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
+          </motion.button>
         </div>
 
         {/* 고급 옵션들 */}
@@ -278,88 +280,105 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
       </div>
 
       {/* 검색 버튼 */}
-      <div className="flex justify-center pt-6">
+      <div className="flex justify-center pt-8">
         <motion.button
-          whileHover={{ y: -2, scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          whileHover={{ y: -3, scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           type="button"
           onClick={handleAnalyzeAndSave}
           disabled={isLoading || !formData.searchQuery.trim()}
-          className="group relative flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="group relative flex items-center px-12 py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-3xl font-bold text-xl shadow-2xl hover:shadow-3xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-blue-700 hover:to-indigo-700"
         >
           {isLoading ? (
             <>
-              <Loader2 className="w-6 h-6 mr-3 animate-spin" />
+              <Loader2 className="w-7 h-7 mr-4 animate-spin" />
               <span>검색 중...</span>
             </>
           ) : (
             <>
-              <Database className="w-6 h-6 mr-3" />
+              <Database className="w-7 h-7 mr-4" />
               <span>검색 실행</span>
-              <Sparkles className="w-5 h-5 ml-2 group-hover:animate-pulse" />
+              <Sparkles className="w-6 h-6 ml-3 group-hover:animate-pulse" />
             </>
           )}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
         </motion.button>
       </div>
 
       {/* 사용법 안내 */}
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-6 border border-slate-200 dark:border-slate-600">
-        <div className="flex items-center mb-4">
-          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-3">
-            <Info className="w-4 h-4 text-white" />
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-3xl p-8 border border-slate-200 dark:border-slate-600 shadow-lg">
+        <div className="flex items-center mb-6">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+            <Info className="w-5 h-5 text-white" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
             사용법 안내
           </h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-blue-600 dark:text-blue-400 text-xs font-bold">1</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="flex items-start space-x-4 p-4 bg-white/60 dark:bg-slate-800/60 rounded-2xl hover:shadow-md transition-all duration-300"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg">
+                <span className="text-white text-sm font-bold">1</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">검색어 입력</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">네이버 쇼핑에서 검색할 키워드를 입력하세요</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-white">검색어 입력</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">네이버 쇼핑에서 검색할 키워드를 입력하세요</p>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-emerald-100 dark:bg-emerald-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-emerald-600 dark:text-emerald-400 text-xs font-bold">2</span>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="flex items-start space-x-4 p-4 bg-white/60 dark:bg-slate-800/60 rounded-2xl hover:shadow-md transition-all duration-300"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg">
+                <span className="text-white text-sm font-bold">2</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">타겟 상품명</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">찾고자 하는 상품명에 포함되어야 할 키워드</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-white">타겟 상품명</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">찾고자 하는 상품명에 포함되어야 할 키워드</p>
               </div>
-            </div>
+            </motion.div>
           </div>
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-purple-100 dark:bg-purple-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-purple-600 dark:text-purple-400 text-xs font-bold">3</span>
+          <div className="space-y-6">
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="flex items-start space-x-4 p-4 bg-white/60 dark:bg-slate-800/60 rounded-2xl hover:shadow-md transition-all duration-300"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg">
+                <span className="text-white text-sm font-bold">3</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">타겟 몰명</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">특정 몰에서 판매하는 상품을 찾을 때</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-white">타겟 몰명</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">특정 몰에서 판매하는 상품을 찾을 때</p>
               </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-6 h-6 bg-orange-100 dark:bg-orange-900/50 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-orange-600 dark:text-orange-400 text-xs font-bold">4</span>
+            </motion.div>
+            <motion.div 
+              whileHover={{ scale: 1.02 }}
+              className="flex items-start space-x-4 p-4 bg-white/60 dark:bg-slate-800/60 rounded-2xl hover:shadow-md transition-all duration-300"
+            >
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-lg">
+                <span className="text-white text-sm font-bold">4</span>
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-white">타겟 브랜드</p>
-                <p className="text-xs text-slate-600 dark:text-slate-400">특정 브랜드의 상품을 찾을 때</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-white">타겟 브랜드</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">특정 브랜드의 상품을 찾을 때</p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-        <div className="mt-4 p-4 bg-white/60 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-600">
-          <p className="text-xs text-slate-600 dark:text-slate-400 flex items-center">
-            <Zap className="w-3 h-3 mr-2 text-yellow-500" />
-            <strong>팁:</strong> 같은 검색어로 다시 검색하면 기존 데이터가 자동으로 업데이트됩니다
+        <motion.div 
+          whileHover={{ scale: 1.01 }}
+          className="mt-6 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl border border-yellow-200 dark:border-yellow-800 shadow-md"
+        >
+          <p className="text-sm text-slate-700 dark:text-slate-300 flex items-center font-medium">
+            <Zap className="w-5 h-5 mr-3 text-yellow-500 animate-pulse" />
+            <strong className="text-yellow-600 dark:text-yellow-400">팁:</strong> 
+            <span className="ml-2">같은 검색어로 다시 검색하면 기존 데이터가 자동으로 업데이트됩니다</span>
           </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

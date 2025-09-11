@@ -177,21 +177,32 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
             </h3>
           </div>
           <div className="flex items-center gap-3">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              className="flex items-center space-x-3 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
             >
-              <span className="font-medium">필터</span>
-              {showFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            <a
+              <span>필터</span>
+              <motion.div
+                animate={{ rotate: showFilters ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="w-5 h-5" />
+              </motion.div>
+            </motion.button>
+            <motion.a
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
-              className="flex items-center space-x-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-xl hover:bg-emerald-200 dark:hover:bg-emerald-900/70 transition-colors"
+              className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
             >
-              <Download className="w-4 h-4" />
-              <span className="text-sm font-medium">엑셀 내보내기</span>
-            </a>
-            <button
+              <Download className="w-5 h-5" />
+              <span>엑셀 내보내기</span>
+            </motion.a>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={async () => {
                 if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
                 try {
@@ -200,11 +211,11 @@ export default function ResultsList({ refreshTrigger }: ResultsListProps) {
                   if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
                 } catch(e){ toast('전체 삭제 중 오류','error') }
               }}
-              className="flex items-center space-x-2 px-4 py-2 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-xl hover:bg-red-200 dark:hover:bg-red-900/70 transition-colors"
+              className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
             >
-              <Trash2 className="w-4 h-4" />
-              <span className="text-sm font-medium">전체 삭제</span>
-            </button>
+              <Trash2 className="w-5 h-5" />
+              <span>전체 삭제</span>
+            </motion.button>
           </div>
         </div>
 

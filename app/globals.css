@@ -370,6 +370,61 @@ body {
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 버튼 호버 효과 */
+.btn-hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* 그라데이션 텍스트 애니메이션 */
+.gradient-text-animated {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* 카드 호버 효과 */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-hover:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* 입력 필드 포커스 효과 */
+.input-focus {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-focus:focus {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* 버튼 그라데이션 애니메이션 */
+.btn-gradient-animated {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+.btn-gradient-animated:hover {
+  animation-duration: 1s;
+}
+
 /* 다크 모드 전용 스타일 */
 @media (prefers-color-scheme: dark) {
   .dark\:shadow-soft {
