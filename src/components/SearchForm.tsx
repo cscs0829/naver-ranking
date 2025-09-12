@@ -42,7 +42,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         const data = await res.json()
         if (res.ok && data.profiles) {
           setProfiles(data.profiles)
-          const def = data.profiles.find((p: any) => p.is_default)
+          // "헤더" 프로필을 기본값으로 설정, 없으면 is_default 프로필 사용
+          const def = data.profiles.find((p: any) => p.name === '헤더') || data.profiles.find((p: any) => p.is_default)
           if (def) {
             setFormData(prev => ({ ...prev, profileId: def.id }))
           }
@@ -145,7 +146,10 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                     >
                       <option value="">기본 프로필(설정 시)</option>
                       {profiles.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}{p.is_default ? ' (기본)' : ''}</option>
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                          {p.name === '헤더' ? ' (권장)' : p.is_default ? ' (기본)' : ''}
+                        </option>
                       ))}
                     </select>
                     <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
