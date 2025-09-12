@@ -137,23 +137,34 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (최대 5개, 쉼표로 구분)</label>
-              <input
-                type="text"
-                value={formData.keywords[0]?.param?.join(', ') || ''}
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (최대 5개, 줄바꿈으로 구분)</label>
+              <textarea
+                rows={3}
+                value={(formData.keywords[0]?.param || []).join('\n')}
                 onChange={(e) => {
                   const inputValue = e.target.value
-                  const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0,5)
+                  const keywords = inputValue
+                    .split(/\n|,/)
+                    .map(k => k.trim())
+                    .filter(k => k)
+                    .slice(0,5)
                   setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: keywords }] }))
                 }}
                 onBlur={(e) => {
                   const inputValue = e.target.value
-                  const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0,5)
+                  const keywords = inputValue
+                    .split(/\n|,/)
+                    .map(k => k.trim())
+                    .filter(k => k)
+                    .slice(0,5)
                   setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: keywords }] }))
                 }}
-                placeholder="비교할 검색어 추가"
+                placeholder={"각 줄에 하나씩 입력 (예: 푸꾸옥\n다낭)"}
                 className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
               />
+              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                {(formData.keywords[0]?.param || []).length}/5 개 입력됨
+              </div>
             </div>
           </div>
 
