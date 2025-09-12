@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import SearchForm from '@/components/SearchForm'
 import ResultsList from '@/components/ResultsList'
+import KeywordAnalysisForm from '@/components/KeywordAnalysisForm'
+import KeywordResultsList from '@/components/KeywordResultsList'
 import ApiKeyManager from '@/components/ApiKeyManager'
 import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun, Menu, X, Settings, FileText, Key } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -21,14 +23,16 @@ interface SearchData {
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keys'>('search')
+  const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys'>('search')
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const tabs: Array<{ id: 'search' | 'results' | 'keys'; label: string; icon: React.ReactNode; description: string }> = [
+  const tabs: Array<{ id: 'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys'; label: string; icon: React.ReactNode; description: string }> = [
     { id: 'search', label: '순위 검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
     { id: 'results', label: '순위 결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
+    { id: 'keyword-analysis', label: '키워드 분석', icon: <TrendingUp className="w-5 h-5" />, description: '네이버 쇼핑인사이트 키워드 분석' },
+    { id: 'keyword-results', label: '키워드 결과', icon: <Database className="w-5 h-5" />, description: '저장된 키워드 분석 결과' },
     { id: 'keys', label: 'API 키', icon: <Key className="w-5 h-5" />, description: 'API 키 관리' },
   ]
 
@@ -84,6 +88,40 @@ export default function Home() {
     } catch (error) {
       console.error('검색 오류:', error)
       toast('검색 중 오류 발생', 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeywordAnalysis = async (analysisData: any) => {
+    try {
+      setIsLoading(true)
+      
+      const response = await fetch('/api/keyword-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(analysisData),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // 분석 모드: 분석 완료 안내
+        if (!analysisData.save) {
+          toast(`키워드 분석 완료: ${result.count}개 키워드 분석됨`, 'success')
+        } else {
+          // 저장 모드: 키워드 결과 탭으로 이동해 관리
+          setActiveTab('keyword-results')
+          setRefreshTrigger((prev: number) => prev + 1)
+        }
+      } else {
+        toast(`오류: ${result.error}`, 'error')
+      }
+    } catch (error) {
+      console.error('키워드 분석 오류:', error)
+      toast('키워드 분석 중 오류 발생', 'error')
     } finally {
       setIsLoading(false)
     }
@@ -321,6 +359,95 @@ export default function Home() {
                 <ResultsList 
                   refreshTrigger={refreshTrigger} 
                   onNavigateToSearch={() => setActiveTab('search')}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'keyword-analysis' && (
+            <motion.div
+              key="keyword-analysis"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
+            >
+              {/* 키워드 분석 섹션 헤더 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-orange-500/25"
+                >
+                  <TrendingUp className="w-5 h-5 animate-pulse" />
+                  <span>키워드 분석</span>
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
+                  네이버 쇼핑인사이트 키워드 분석
+                </h2>
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                  여행 관련 키워드의 검색 트렌드를 분석하고 인사이트를 얻어보세요
+                </p>
+              </motion.div>
+
+              {/* 키워드 분석 폼 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
+              >
+                <KeywordAnalysisForm onAnalysis={handleKeywordAnalysis} isLoading={isLoading} />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'keyword-results' && (
+            <motion.div
+              key="keyword-results"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
+            >
+              {/* 키워드 결과 섹션 헤더 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-cyan-500/25"
+                >
+                  <Database className="w-5 h-5 animate-pulse" />
+                  <span>키워드 결과</span>
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
+                  키워드 분석 결과
+                </h2>
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                  이전에 분석한 키워드 트렌드 결과들을 확인하고 비교해보세요
+                </p>
+              </motion.div>
+
+              {/* 키워드 결과 리스트 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
+              >
+                <KeywordResultsList 
+                  refreshTrigger={refreshTrigger} 
+                  onNavigateToAnalysis={() => setActiveTab('keyword-analysis')}
                 />
               </motion.div>
             </motion.div>
