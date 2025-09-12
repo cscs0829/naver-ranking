@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Search, Calendar, Filter, Download, Save, TrendingUp, Globe, Users, Smartphone, Monitor, ChevronDown, Plus, X } from 'lucide-react'
+import { Search, Calendar, Filter, Download, Save, TrendingUp, Globe, Users, Smartphone, Monitor, ChevronDown, Plus, X, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/utils/toast'
 
@@ -14,6 +14,7 @@ interface KeywordAnalysisData {
   device?: 'pc' | 'mo' | ''
   gender?: 'm' | 'f' | ''
   ages?: string[]
+  profileId?: number
   save?: boolean
 }
 
@@ -31,10 +32,39 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     keywords: [{ name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }], // 기본값: 해외여행 키워드
     device: '',
     gender: '',
-    ages: []
+    ages: [],
+    profileId: undefined
   })
 
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
+  const [loadingProfiles, setLoadingProfiles] = useState(false)
+
+  // 프로필 목록 로드 (쇼핑인사이트 API만)
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoadingProfiles(true)
+        const res = await fetch('/api/keys?api_type=insights')
+        const data = await res.json()
+        if (res.ok && data.profiles) {
+          // 쇼핑인사이트 API 타입만 필터링
+          const insightsProfiles = data.profiles.filter((p: any) => p.api_type === 'insights')
+          setProfiles(insightsProfiles)
+          // 기본 프로필을 자동으로 선택
+          const defaultProfile = insightsProfiles?.find((p: any) => p.is_default)
+          if (defaultProfile) {
+            setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
+          }
+        }
+      } catch (e) {
+        console.error('프로필 조회 오류:', e)
+      } finally {
+        setLoadingProfiles(false)
+      }
+    }
+    load()
+  }, [])
 
   // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
   const categoryOptions = [
@@ -375,7 +405,42 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                 exit={{ opacity: 0, height: 0 }}
                 className="space-y-6 overflow-hidden"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* API 키 프로필 */}
+                  <div className="space-y-3">
+                    <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
+                      사용할 API 키 프로필
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="profileId"
+                        value={formData.profileId ?? ''}
+                        onChange={(e) => setFormData(prev => ({ ...prev, profileId: e.target.value ? parseInt(e.target.value) : undefined }))}
+                        className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
+                        disabled={isLoading}
+                      >
+                        <option value="">기본 프로필 사용</option>
+                        {profiles.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                            {p.is_default ? ' (기본)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                        <Sparkles className="w-5 h-5 text-slate-400" />
+                      </div>
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                      </div>
+                    </div>
+                    {loadingProfiles && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">프로필 불러오는 중...</p>
+                    )}
+                    <p className="text-xs text-slate-500 dark:text-slate-400">선택하지 않으면 기본 프로필이 사용됩니다.</p>
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                       디바이스
@@ -390,6 +455,9 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       <option value="mo">모바일</option>
                     </select>
                   </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
