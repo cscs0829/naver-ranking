@@ -77,21 +77,41 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }))
   }
 
+  const MIN_DATE = '2017-08-01'
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (formData.keywords.length === 0) {
-      toast('최소 1개의 키워드를 입력해주세요.', 'error')
+    // 날짜 유효성 보정
+    let start = formData.startDate < MIN_DATE ? MIN_DATE : formData.startDate
+    let end = formData.endDate
+    if (start > end) {
+      // 시작이 종료보다 크면 종료일로 맞춤
+      start = end
+    }
+    // timeUnit 보정
+    const allowed: Array<'date'|'week'|'month'> = ['date','week','month']
+    const unit = allowed.includes(formData.timeUnit) ? formData.timeUnit : 'week'
+
+    const patched = { ...formData, startDate: start, endDate: end, timeUnit: unit }
+
+    if (patched.category.length === 0) {
+      toast('최소 1개의 카테고리를 선택해주세요.', 'error')
+      return
+    }
+    if (patched.keywords.length === 0) {
+      toast('최소 1개의 키워드를 선택해주세요.', 'error')
       return
     }
 
-    const valid = (formData.keywords[0]?.param || []).filter(k => k && k.trim().length > 0)
-    if (valid.length === 0) {
+    // 키워드 유효성 검사
+    const validKeywords = patched.keywords.filter(k => (k?.param||[]).some(kw => (kw||'').trim().length>0))
+    if (validKeywords.length === 0) {
       toast('최소 하나 이상의 유효한 키워드를 입력해주세요.', 'error')
       return
     }
 
-    onAnalysis({ ...formData, keywords: [{ name: '검색어', param: valid.slice(0, 5) }] })
+    onAnalysis(patched)
   }
 
   return (
@@ -156,7 +176,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">시작</label>
-              <input type="date" value={formData.startDate} onChange={(e)=>setFormData(prev=>({...prev,startDate:e.target.value}))} className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white" max={formData.endDate} />
+              <input type="date" value={formData.startDate} onChange={(e)=>setFormData(prev=>({...prev,startDate:e.target.value}))} className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white" max={formData.endDate} min={MIN_DATE} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

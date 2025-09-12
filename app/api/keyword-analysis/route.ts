@@ -67,9 +67,13 @@ export async function POST(request: NextRequest) {
     // 네이버 쇼핑인사이트 호출
     let result
     try {
+      // 날짜 가드: DataLab은 2017-08-01부터 조회 가능
+      const minDate = '2017-08-01'
+      const safeStart = startDate < minDate ? minDate : startDate
+      const safeEnd = endDate < safeStart ? safeStart : endDate
       result = await insights.getCategoryKeywordTrends(
-        startDate,
-        endDate,
+        safeStart,
+        safeEnd,
         timeUnit,
         category,
         validKeywords,
@@ -128,7 +132,8 @@ export async function POST(request: NextRequest) {
       success: true, 
       count: result.results.length, 
       results: result.results,
-      data: result
+      data: result,
+      range: { start: safeStart, end: safeEnd }
     }, { status: 200 })
   } catch (error: any) {
     console.error('키워드 분석 API 오류:', error?.response?.data || error?.message || error)
