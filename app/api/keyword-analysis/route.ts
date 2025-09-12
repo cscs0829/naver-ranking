@@ -60,6 +60,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 검색어 트렌드 특성상 키워드 그룹은 개별 키워드당 하나씩 만드는 것이 비교에 유리
+    // 예: '푸꾸옥, 다낭' -> [{name:'푸꾸옥', param:['푸꾸옥']}, {name:'다낭', param:['다낭']}]
+    const expandedKeywordGroups: Array<{ name: string; param: string[] }> = Array.from(new Set(
+      validKeywords.flatMap((g: any) => (g.param || []).map((kw: string) => kw.trim()).filter(Boolean))
+    )).slice(0, 5).map((kw: string) => ({ name: kw, param: [kw] }))
+
+    // 연령대 필터 정규화 (허용 목록 외 제거)
+    const allowedAges = new Set(['10','20','30','40','50','60'])
+    const normalizedAges = Array.isArray(ages) ? ages.map(String).filter((a: string) => allowedAges.has(a)) : undefined
+
     // API 키 프로필 조회 (DataLab 검색어 트렌드)
     console.log('API 키 조회:', { profileId, apiType: 'search' })
     const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'search') : await getActiveProfile(undefined, 'search')
@@ -90,10 +100,10 @@ export async function POST(request: NextRequest) {
         safeStart,
         safeEnd,
         timeUnit,
-        validKeywords,
+        expandedKeywordGroups,
         device,
         gender,
-        ages
+        normalizedAges && normalizedAges.length > 0 ? normalizedAges : undefined
       )
     } catch (err: any) {
       console.error('DataLab 검색어 트렌드 호출 예외:', err?.response?.data || err?.message || err)

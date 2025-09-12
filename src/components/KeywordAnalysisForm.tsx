@@ -143,7 +143,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                 value={formData.keywords[0]?.param?.join(', ') || ''}
                 onChange={(e) => {
                   const inputValue = e.target.value
-                  setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: [inputValue] }] }))
+                  const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0,5)
+                  setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: keywords }] }))
                 }}
                 onBlur={(e) => {
                   const inputValue = e.target.value
