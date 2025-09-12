@@ -389,3 +389,75 @@ export class NaverShoppingInsights {
     }
   }
 }
+
+// DataLab 검색어 트렌드 클라이언트
+export interface SearchTrendResultData {
+  period: string
+  ratio: number
+}
+
+export interface SearchTrendResultItem {
+  title: string
+  keywords: string[]
+  data: SearchTrendResultData[]
+}
+
+export interface SearchTrendResponse {
+  startDate: string
+  endDate: string
+  timeUnit: string
+  results: SearchTrendResultItem[]
+}
+
+export class NaverSearchTrends {
+  private clientId: string
+  private clientSecret: string
+  private baseUrl = 'https://openapi.naver.com/v1/datalab/search'
+
+  constructor(clientId: string, clientSecret: string) {
+    this.clientId = clientId
+    this.clientSecret = clientSecret
+  }
+
+  async getSearchTrends(
+    startDate: string,
+    endDate: string,
+    timeUnit: 'date' | 'week' | 'month',
+    keywords: Array<{ name: string; param: string[] }>,
+    device?: 'pc' | 'mo' | '',
+    gender?: 'm' | 'f' | '',
+    ages?: string[]
+  ): Promise<SearchTrendResponse | null> {
+    try {
+      const requestBody: any = {
+        startDate,
+        endDate,
+        timeUnit,
+        keywordGroups: keywords.slice(0, 5).map(k => ({
+          groupName: k.name || '검색어',
+          keywords: k.param && k.param.length > 0 ? k.param.slice(0, 20) : []
+        }))
+      }
+      if (device) requestBody.device = device
+      if (gender) requestBody.gender = gender
+      if (ages && ages.length > 0) requestBody.ages = ages
+
+      const response = await axios.post(this.baseUrl, requestBody, {
+        headers: {
+          'X-Naver-Client-Id': this.clientId,
+          'X-Naver-Client-Secret': this.clientSecret,
+          'Content-Type': 'application/json'
+        },
+        timeout: 15000
+      })
+      return response.data
+    } catch (error) {
+      console.error('검색어 트렌드 조회 오류:', error)
+      if (axios.isAxiosError(error)) {
+        console.error('API 응답:', error.response?.data)
+        console.error('상태 코드:', error.response?.status)
+      }
+      return null
+    }
+  }
+}

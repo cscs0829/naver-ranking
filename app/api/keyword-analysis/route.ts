@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { NaverShoppingInsights } from '@/utils/naver-insights'
+import { NaverSearchTrends } from '@/utils/naver-insights'
 import { supabase, checkSupabaseConfig } from '@/utils/supabase'
 import { getActiveProfile } from '@/utils/api-keys'
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       profileId
     } = body
 
-    if (!startDate || !endDate || !timeUnit || !category || !keywords) {
+    if (!startDate || !endDate || !timeUnit || !keywords) {
       console.error('필수 파라미터 누락:', { startDate, endDate, timeUnit, category, keywords })
       return NextResponse.json(
         { error: '필수 파라미터가 누락되었습니다.' },
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const insights = new NaverShoppingInsights(
+    const searchTrends = new NaverSearchTrends(
       naverKeys.clientId,
       naverKeys.clientSecret
     )
@@ -71,11 +71,11 @@ export async function POST(request: NextRequest) {
     const safeEnd = endDate < safeStart ? safeStart : endDate
     let result
     try {
-      result = await insights.getCategoryKeywordTrends(
+      // 검색어 트렌드로 전환: category는 사용하지 않음
+      result = await searchTrends.getSearchTrends(
         safeStart,
         safeEnd,
         timeUnit,
-        category,
         validKeywords,
         device,
         gender,
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       start_date: startDate,
       end_date: endDate,
       time_unit: timeUnit,
-      category: JSON.stringify(category),
+      category: category ? JSON.stringify(category) : JSON.stringify([]),
       keywords: JSON.stringify(validKeywords),
       device: device || null,
       gender: gender || null,

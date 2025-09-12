@@ -28,7 +28,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     timeUnit: 'date',
-    category: [{ name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['50000005'] }],
+    category: [],
     keywords: [{ name: '', param: [] }],
     device: '',
     gender: '',
@@ -62,9 +62,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     load()
   }, [])
 
-  const categoryOptions = [
-    { name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['50000005'] }
-  ]
+  // 검색어 트렌드 사용: 카테고리 미사용
 
   const setPeriod = (days: number) => {
     const end = new Date()
@@ -95,10 +93,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
     const patched = { ...formData, startDate: start, endDate: end, timeUnit: unit }
 
-    if (patched.category.length === 0) {
-      toast('최소 1개의 카테고리를 선택해주세요.', 'error')
-      return
-    }
+    // 검색어 트렌드에서는 카테고리 검증 불필요
     if (patched.keywords.length === 0) {
       toast('최소 1개의 키워드를 선택해주세요.', 'error')
       return
@@ -140,14 +135,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">분야</label>
-              <div className="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                여가/생활편의 &gt; 해외여행 &gt; 해외패키지/기타
-              </div>
-            </div>
-            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (최대 5개, 쉼표로 구분)</label>
               <input
                 type="text"
