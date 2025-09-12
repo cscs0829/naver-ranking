@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 네이버 쇼핑인사이트 API 클라이언트 초기화
+    console.log('API 키 정보:', { clientId: naverKeys.clientId, clientSecret: naverKeys.clientSecret ? '있음' : '없음' })
     const insights = new NaverShoppingInsights(
       naverKeys.clientId,
       naverKeys.clientSecret
