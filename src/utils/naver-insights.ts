@@ -131,6 +131,8 @@ export class NaverShoppingInsights {
         ...(gender && { gender }),
         ...(ages && { ages })
       }
+      
+      console.log('네이버 API 요청 본문:', JSON.stringify(requestBody, null, 2))
 
       const response = await axios.post(`${this.baseUrl}/category/keywords`, requestBody, {
         headers: {
