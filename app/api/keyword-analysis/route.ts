@@ -29,6 +29,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 키워드 유효성 검사
+    const validKeywords = keywords.filter((k: any) => k && k.param && k.param.length > 0 && k.param.some((keyword: string) => keyword.trim().length > 0))
+    if (validKeywords.length === 0) {
+      console.error('유효한 키워드가 없습니다:', keywords)
+      return NextResponse.json(
+        { error: '최소 하나 이상의 유효한 키워드를 입력해주세요.' },
+        { status: 400 }
+      )
+    }
+
     // 쇼핑인사이트 API 타입의 기본 프로필 사용
     console.log('API 키 조회:', { profileId, apiType: 'insights' })
     const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'insights') : await getActiveProfile(undefined, 'insights')
@@ -48,13 +58,13 @@ export async function POST(request: NextRequest) {
       naverKeys.clientSecret
     )
 
-    // 키워드 트렌드 분석
+    // 키워드 트렌드 분석 (유효한 키워드만 사용)
     const result = await insights.getCategoryKeywordTrends(
       startDate,
       endDate,
       timeUnit,
       category,
-      keywords,
+      validKeywords,
       device,
       gender,
       ages

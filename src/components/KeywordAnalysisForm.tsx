@@ -109,6 +109,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
       return
     }
 
+    // 키워드 유효성 검사
+    const validKeywords = formData.keywords.filter(k => 
+      k && k.param && k.param.length > 0 && k.param.some(keyword => keyword.trim().length > 0)
+    )
+    
+    if (validKeywords.length === 0) {
+      toast('최소 하나 이상의 유효한 키워드를 입력해주세요.', 'error')
+      return
+    }
+
     onAnalysis(formData)
   }
 
@@ -322,7 +332,12 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       onBlur={(e) => {
                         // 포커스를 잃을 때만 쉼표로 분리
                         const inputValue = e.target.value
-                        const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0, 5)
+                        // 빈 문자열, 공백만 있는 문자열, 쉼표만 있는 경우를 제거
+                        const keywords = inputValue
+                          .split(',')
+                          .map(k => k.trim())
+                          .filter(k => k && k.length > 0)
+                          .slice(0, 5)
                         console.log('입력값:', inputValue)
                         console.log('분리된 키워드:', keywords)
                         updateKeyword(index, 'param', keywords)
@@ -332,7 +347,11 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                         if (e.key === 'Enter') {
                           e.preventDefault()
                           const inputValue = e.currentTarget.value
-                          const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0, 5)
+                          const keywords = inputValue
+                            .split(',')
+                            .map(k => k.trim())
+                            .filter(k => k && k.length > 0)
+                            .slice(0, 5)
                           updateKeyword(index, 'param', keywords)
                         }
                       }}
