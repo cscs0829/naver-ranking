@@ -425,6 +425,73 @@ body {
   animation-duration: 1s;
 }
 
+/* 모바일 터치 최적화 */
+@media (max-width: 768px) {
+  /* 300ms 클릭 지연 제거 */
+  html {
+    touch-action: manipulation;
+  }
+  
+  /* 모바일에서 더 큰 터치 영역 */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* 모바일 스크롤 최적화 */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  
+  /* 모바일 카드 간격 조정 */
+  .mobile-card-spacing {
+    margin-bottom: 16px;
+  }
+  
+  /* 모바일 텍스트 크기 조정 */
+  .mobile-text {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* 모바일 버튼 크기 조정 */
+  .mobile-button {
+    padding: 12px 16px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  /* 모바일 모달 최적화 */
+  .mobile-modal {
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* 모바일 그리드 조정 */
+  .mobile-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  /* 모바일 간격 조정 */
+  .mobile-spacing {
+    padding: 16px;
+  }
+  
+  /* 모바일 폰트 크기 */
+  .mobile-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .mobile-subtitle {
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
 /* 다크 모드 전용 스타일 */
 @media (prefers-color-scheme: dark) {
   .dark\:shadow-soft {

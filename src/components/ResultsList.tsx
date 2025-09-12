@@ -43,16 +43,24 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
     return html.replace(/<[^>]*>/g, '')
   }
 
-  // 모바일 감지
+  // 모바일 감지 (SSR 안전)
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768)
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth < 768)
+      }
     }
     
     checkIsMobile()
-    window.addEventListener('resize', checkIsMobile)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkIsMobile)
+    }
     
-    return () => window.removeEventListener('resize', checkIsMobile)
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', checkIsMobile)
+      }
+    }
   }, [])
 
   // 모달 열기
@@ -100,10 +108,12 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
     })
   }
 
-  // 결과 목록 가져오기
+  // 결과 목록 가져오기 (모바일 최적화)
   const fetchResults = async () => {
     try {
       setLoading(true)
+      setError('')
+      
       const params = new URLSearchParams()
       if (filters.searchQuery) params.append('searchQuery', filters.searchQuery)
       if (filters.targetMallName) params.append('targetMallName', filters.targetMallName)
@@ -115,17 +125,43 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
         params.append('rankSortOrder', rankSortOrder)
       }
 
-      const response = await fetch(`/api/results?${params.toString()}`)
+      // 모바일에서 더 안정적인 요청을 위해 timeout 추가
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10초 타임아웃
+
+      const response = await fetch(`/api/results?${params.toString()}`, {
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      })
+      
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const data = await response.json()
 
-      if (response.ok) {
+      if (data.success !== false) {
         setResults(data.data || [])
         setError('')
       } else {
         setError(data.error || '결과를 가져올 수 없습니다.')
       }
     } catch (err) {
-      setError('결과를 가져오는 중 오류가 발생했습니다.')
+      console.error('데이터 로딩 오류:', err)
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError('요청 시간이 초과되었습니다. 다시 시도해주세요.')
+        } else {
+          setError(`오류: ${err.message}`)
+        }
+      } else {
+        setError('결과를 가져오는 중 오류가 발생했습니다.')
+      }
     } finally {
       setLoading(false)
     }
@@ -220,6 +256,16 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
           <div className="h-6 w-48 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
           <div className="mt-4 h-40 rounded-xl animate-pulse bg-slate-200 dark:bg-slate-700" />
         </div>
+        
+        {/* 모바일용 로딩 메시지 */}
+        {isMobile && (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span className="font-semibold">데이터를 불러오는 중...</span>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -237,12 +283,12 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               검색 결과 필터
             </h3>
           </div>
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-3 ${isMobile ? 'flex-col space-y-2' : ''}`}>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-3 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
+              className={`flex items-center space-x-3 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg ${isMobile ? 'w-full justify-center' : ''}`}
             >
               <span>필터</span>
               <motion.div
@@ -252,31 +298,35 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                 <ChevronDown className="w-5 h-5" />
               </motion.div>
             </motion.button>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
-              className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
-            >
-              <Download className="w-5 h-5" />
-              <span>엑셀 내보내기</span>
-            </motion.a>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={async () => {
-                if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
-                try {
-                  const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
-                  const data = await res.json()
-                  if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
-                } catch(e){ toast('전체 삭제 중 오류','error') }
-              }}
-              className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
-            >
-              <Trash2 className="w-5 h-5" />
-              <span>전체 삭제</span>
-            </motion.button>
+            {!isMobile && (
+              <>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
+                  className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                >
+                  <Download className="w-5 h-5" />
+                  <span>엑셀 내보내기</span>
+                </motion.a>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={async () => {
+                    if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
+                    try {
+                      const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
+                      const data = await res.json()
+                      if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
+                    } catch(e){ toast('전체 삭제 중 오류','error') }
+                  }}
+                  className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  <span>전체 삭제</span>
+                </motion.button>
+              </>
+            )}
           </div>
         </div>
 
@@ -289,66 +339,129 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               transition={{ duration: 0.3, ease: "easeOut" }}
               className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 space-y-6 overflow-hidden"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Search className="w-4 h-4 mr-2 text-blue-600" />
-                    검색어
-                  </label>
+              {isMobile ? (
+                // 모바일용 간단한 필터
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <Search className="w-4 h-4 mr-2 text-blue-600" />
+                      검색어
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        id="searchQueryFilter"
+                        value={filters.searchQuery}
+                        onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            fetchResults()
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                        placeholder="검색어로 필터링"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={fetchResults}
+                        className="px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                      >
+                        <Search className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                  
                   <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      id="searchQueryFilter"
-                      value={filters.searchQuery}
-                      onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          fetchResults()
-                        }
-                      }}
-                      className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                      placeholder="검색어로 필터링"
-                    />
+                    <motion.a
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      href={`/api/results?${new URLSearchParams({ ...(filters.searchQuery?{searchQuery:filters.searchQuery}:{}) , ...(filters.targetMallName?{targetMallName:filters.targetMallName}:{}) , export: 'excel' }).toString()}`}
+                      className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>엑셀 내보내기</span>
+                    </motion.a>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={fetchResults}
-                      className="px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
-                    >
-                      <Search className="w-4 h-4" />
-                    </motion.button>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <label htmlFor="mallNameFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Award className="w-4 h-4 mr-2 text-purple-600" />
-                    몰명
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      id="mallNameFilter"
-                      value={filters.targetMallName}
-                      onChange={(e) => setFilters(prev => ({ ...prev, targetMallName: e.target.value }))}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          fetchResults()
-                        }
+                      onClick={async () => {
+                        if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
+                        try {
+                          const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
+                          const data = await res.json()
+                          if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
+                        } catch(e){ toast('전체 삭제 중 오류','error') }
                       }}
-                      className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                      placeholder="몰명으로 필터링"
-                    />
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={fetchResults}
-                      className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                      className="px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
                     >
-                      <Search className="w-4 h-4" />
+                      <Trash2 className="w-4 h-4" />
                     </motion.button>
                   </div>
                 </div>
-              </div>
+              ) : (
+                // 데스크톱용 기존 필터
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <Search className="w-4 h-4 mr-2 text-blue-600" />
+                      검색어
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        id="searchQueryFilter"
+                        value={filters.searchQuery}
+                        onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            fetchResults()
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                        placeholder="검색어로 필터링"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={fetchResults}
+                        className="px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                      >
+                        <Search className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <label htmlFor="mallNameFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      <Award className="w-4 h-4 mr-2 text-purple-600" />
+                      몰명
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        id="mallNameFilter"
+                        value={filters.targetMallName}
+                        onChange={(e) => setFilters(prev => ({ ...prev, targetMallName: e.target.value }))}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            fetchResults()
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                        placeholder="몰명으로 필터링"
+                      />
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={fetchResults}
+                        className="px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:from-purple-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold flex items-center"
+                      >
+                        <Search className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* 필터 적용 버튼 */}
               <div className="flex justify-end">
@@ -649,7 +762,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => openModal(result)}
-                          className="cursor-pointer"
+                          className="cursor-pointer mobile-touch-target mobile-card-spacing"
                         >
                           <div className="flex items-center justify-between mb-3">
                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -668,7 +781,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                           </div>
                           
                           <div className="space-y-2">
-                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white overflow-hidden" style={{
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white overflow-hidden mobile-title" style={{
                               display: '-webkit-box',
                               WebkitLineClamp: 2,
                               WebkitBoxOrient: 'vertical'
@@ -856,7 +969,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden mobile-modal"
               onClick={(e) => e.stopPropagation()}
             >
               {/* 모달 헤더 */}
