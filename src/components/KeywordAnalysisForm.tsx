@@ -38,6 +38,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
+  const [keywordInput, setKeywordInput] = useState('')
 
   useEffect(() => {
     const load = async () => {
@@ -137,34 +138,69 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (최대 5개, 줄바꿈으로 구분)</label>
-              <textarea
-                rows={3}
-                value={(formData.keywords[0]?.param || []).join('\n')}
-                onChange={(e) => {
-                  const inputValue = e.target.value
-                  const keywords = inputValue
-                    .split(/\n|,/)
-                    .map(k => k.trim())
-                    .filter(k => k)
-                    .slice(0,5)
-                  setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: keywords }] }))
-                }}
-                onBlur={(e) => {
-                  const inputValue = e.target.value
-                  const keywords = inputValue
-                    .split(/\n|,/)
-                    .map(k => k.trim())
-                    .filter(k => k)
-                    .slice(0,5)
-                  setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: keywords }] }))
-                }}
-                placeholder={"각 줄에 하나씩 입력 (예: 푸꾸옥\n다낭)"}
-                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              />
-              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                {(formData.keywords[0]?.param || []).length}/5 개 입력됨
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (Enter로 추가, 최대 5개)</label>
+              <div className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                <div className="flex flex-wrap gap-2">
+                  {(formData.keywords[0]?.param || []).map((kw) => (
+                    <span key={kw} className="inline-flex items-center px-2.5 py-1 rounded-lg text-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                      {kw}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = (formData.keywords[0]?.param || []).filter(k => k !== kw)
+                          setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: next }] }))
+                        }}
+                        className="ml-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                        aria-label="remove keyword"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onPaste={(e) => {
+                      const text = e.clipboardData.getData('text')
+                      if (!text) return
+                      e.preventDefault()
+                      const tokens = text.split(/\n|,/).map(s => s.trim()).filter(Boolean)
+                      setFormData(prev => {
+                        const current = prev.keywords[0]?.param || []
+                        const merged = Array.from(new Set([...current, ...tokens]))
+                        return { ...prev, keywords: [{ name: '검색어', param: merged.slice(0,5) }] }
+                      })
+                      setKeywordInput('')
+                    }}
+                    onKeyDown={(e) => {
+                      const current = formData.keywords[0]?.param || []
+                      if ((e.key === 'Enter' || e.key === ',') && keywordInput.trim()) {
+                        e.preventDefault()
+                        const next = Array.from(new Set([...current, keywordInput.trim()])).slice(0,5)
+                        setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: next }] }))
+                        setKeywordInput('')
+                      } else if (e.key === 'Backspace' && !keywordInput && current.length > 0) {
+                        // 입력이 비어있고 백스페이스면 마지막 토큰 제거
+                        e.preventDefault()
+                        const next = current.slice(0, -1)
+                        setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: next }] }))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!keywordInput.trim()) return
+                      const current = formData.keywords[0]?.param || []
+                      const next = Array.from(new Set([...current, keywordInput.trim()])).slice(0,5)
+                      setFormData(prev => ({ ...prev, keywords: [{ name: '검색어', param: next }] }))
+                      setKeywordInput('')
+                    }}
+                    placeholder={(formData.keywords[0]?.param || []).length >= 5 ? '' : '검색어 입력 후 Enter'}
+                    disabled={(formData.keywords[0]?.param || []).length >= 5}
+                    className="min-w-[8rem] flex-1 bg-transparent outline-none placeholder-slate-400 dark:placeholder-slate-500"
+                  />
+                </div>
               </div>
+              <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">{(formData.keywords[0]?.param || []).length}/5 개 입력됨</div>
             </div>
           </div>
 
