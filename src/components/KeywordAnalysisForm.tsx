@@ -14,7 +14,6 @@ interface KeywordAnalysisData {
   device?: 'pc' | 'mo' | ''
   gender?: 'm' | 'f' | ''
   ages?: string[]
-  profileId?: number
   save?: boolean
 }
 
@@ -36,7 +35,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   })
 
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const [profiles, setProfiles] = useState<any[]>([])
 
   // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
   const categoryOptions = [
@@ -67,26 +65,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     { name: '디지털', placeholder: '스마트폰, 아이폰, 갤럭시, 안드로이드' }
   ]
 
-  // API 키 프로필 목록 가져오기 (쇼핑검색 API만)
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        const response = await fetch('/api/keys?api_type=shopping')
-        const data = await response.json()
-        if (response.ok) {
-          setProfiles(data.profiles || [])
-          // 기본 프로필 설정
-          const defaultProfile = data.profiles?.find((p: any) => p.is_default)
-          if (defaultProfile) {
-            setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
-          }
-        }
-      } catch (error) {
-        console.error('프로필 조회 오류:', error)
-      }
-    }
-    fetchProfiles()
-  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,14 +79,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
       return
     }
 
-    // profileId가 없으면 기본 프로필 사용
-    const analysisData = {
-      ...formData,
-      profileId: formData.profileId || profiles.find(p => p.is_default)?.id,
-      save: true
-    }
-
-    onAnalysis(analysisData)
+    onAnalysis(formData)
   }
 
   const addCategory = () => {
@@ -214,23 +185,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                API 키 프로필
-              </label>
-              <select
-                value={formData.profileId || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, profileId: e.target.value ? Number(e.target.value) : undefined }))}
-                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-              >
-                <option value="">기본 프로필 사용</option>
-                {profiles.map(profile => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name} {profile.is_default ? '(기본)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
         </div>
 
