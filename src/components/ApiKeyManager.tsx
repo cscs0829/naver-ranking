@@ -272,7 +272,7 @@ export default function ApiKeyManager() {
                     value={profileForm.clientId}
                     onChange={(e) => setProfileForm({ ...profileForm, clientId: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/50 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="ycVfKVqp7TXD_KRDrdiW"
+                    placeholder="예: your_client_id_here"
                   />
                 </div>
                 <div>
@@ -282,7 +282,7 @@ export default function ApiKeyManager() {
                     value={profileForm.clientSecret}
                     onChange={(e) => setProfileForm({ ...profileForm, clientSecret: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/50 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="jWX0ylyHyX"
+                    placeholder="예: your_client_secret_here"
                   />
                 </div>
               </div>
