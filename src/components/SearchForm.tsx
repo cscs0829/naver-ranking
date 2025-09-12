@@ -42,8 +42,9 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         const data = await res.json()
         if (res.ok && data.profiles) {
           setProfiles(data.profiles)
-          // 기본 프로필 설정
-          const defaultProfile = data.profiles?.find((p: any) => p.is_default)
+          // "트립페이지 네이버 API" 프로필을 우선으로 설정, 없으면 is_default 프로필 사용
+          const defaultProfile = data.profiles?.find((p: any) => p.name === '트립페이지 네이버 API') || 
+                                data.profiles?.find((p: any) => p.is_default)
           if (defaultProfile) {
             setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
           }
@@ -147,7 +148,8 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                       <option value="">기본 프로필 사용</option>
                       {profiles.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name} {p.is_default ? '(기본)' : ''}
+                          {p.name}
+                          {p.name === '트립페이지 네이버 API' ? ' (권장)' : p.is_default ? ' (기본)' : ''}
                         </option>
                       ))}
                     </select>
