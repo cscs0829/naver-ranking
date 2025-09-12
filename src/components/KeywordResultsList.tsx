@@ -384,23 +384,41 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
                         <div className="flex items-center space-x-1">
                           <Globe className="w-4 h-4" />
                           <span>
-                            {Array.isArray(result.category)
-                              ? result.category.map(cat => cat.name || cat).join(', ')
-                              : typeof result.category === 'string' 
-                                ? result.category 
-                                : '카테고리 정보 없음'
-                            }
+                            {(() => {
+                              try {
+                                if (Array.isArray(result.category)) {
+                                  return result.category.map(cat => 
+                                    typeof cat === 'object' && cat !== null ? (cat.name || JSON.stringify(cat)) : String(cat)
+                                  ).join(', ')
+                                }
+                                if (typeof result.category === 'string') {
+                                  return result.category
+                                }
+                                return '카테고리 정보 없음'
+                              } catch (e) {
+                                return '카테고리 정보 없음'
+                              }
+                            })()}
                           </span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Search className="w-4 h-4" />
                           <span>
-                            {Array.isArray(result.keywords)
-                              ? result.keywords.map(kw => kw.name || kw).join(', ')
-                              : typeof result.keywords === 'string' 
-                                ? result.keywords 
-                                : '키워드 정보 없음'
-                            }
+                            {(() => {
+                              try {
+                                if (Array.isArray(result.keywords)) {
+                                  return result.keywords.map(kw => 
+                                    typeof kw === 'object' && kw !== null ? (kw.name || JSON.stringify(kw)) : String(kw)
+                                  ).join(', ')
+                                }
+                                if (typeof result.keywords === 'string') {
+                                  return result.keywords
+                                }
+                                return '키워드 정보 없음'
+                              } catch (e) {
+                                return '키워드 정보 없음'
+                              }
+                            })()}
                           </span>
                         </div>
                         {result.device && (

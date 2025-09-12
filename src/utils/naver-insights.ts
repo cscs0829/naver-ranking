@@ -117,18 +117,13 @@ export class NaverShoppingInsights {
     ages?: string[]
   ): Promise<InsightsResponse | null> {
     try {
-      // 네이버 API 형식에 맞게 수정 - 각 키워드 그룹마다 하나의 키워드만
+      // 네이버 API 형식에 맞게 수정 - keyword는 문자열 배열이어야 함
       const requestBody = {
         startDate,
         endDate,
         timeUnit,
         category: category[0]?.param[0] || '50000005', // 첫 번째 카테고리의 첫 번째 코드 사용
-        keyword: keywords.flatMap(k => 
-          k.param.map((keyword, index) => ({
-            name: `${k.name}_${index + 1}`,
-            param: [keyword]
-          }))
-        ),
+        keyword: keywords.flatMap(k => k.param), // 모든 키워드를 평면화된 문자열 배열로
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
