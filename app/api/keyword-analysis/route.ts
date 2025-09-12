@@ -66,9 +66,23 @@ export async function POST(request: NextRequest) {
       validKeywords.flatMap((g: any) => (g.param || []).map((kw: string) => kw.trim()).filter(Boolean))
     )).slice(0, 5).map((kw: string) => ({ name: kw, param: [kw] }))
 
-    // 연령대 필터 정규화 (허용 목록 외 제거)
-    const allowedAges = new Set(['10','20','30','40','50','60'])
-    const normalizedAges = Array.isArray(ages) ? ages.map(String).filter((a: string) => allowedAges.has(a)) : undefined
+    // 연령대 필터 정규화 (검색어 트렌드 전용 코드 매핑)
+    // UI(10,20,30,40,50,60) → DataLab Search ages 코드('1'~'11')
+    const decadeToSearchAges: Record<string, string[]> = {
+      '10': ['2'],              // 13-18세
+      '20': ['3','4'],          // 19-24, 25-29
+      '30': ['5','6'],          // 30-34, 35-39
+      '40': ['7','8'],          // 40-44, 45-49
+      '50': ['9','10'],         // 50-54, 55-59
+      '60': ['11']              // 60+
+    }
+    const normalizedAges = Array.isArray(ages)
+      ? Array.from(new Set(
+          ages
+            .map(String)
+            .flatMap((a: string) => decadeToSearchAges[a] || [])
+        ))
+      : undefined
 
     // API 키 프로필 조회 (DataLab 검색어 트렌드)
     console.log('API 키 조회:', { profileId, apiType: 'search' })
