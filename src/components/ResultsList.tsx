@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { SearchResult } from '@/utils/supabase'
 import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -59,6 +60,8 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('resize', checkIsMobile)
+        // 컴포넌트 언마운트 시 body 스크롤 복원
+        document.body.style.overflow = 'unset'
       }
     }
   }, [])
@@ -67,12 +70,20 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
   const openModal = (result: SearchResult) => {
     setSelectedResult(result)
     setShowModal(true)
+    // 모달이 열릴 때 body 스크롤 방지
+    if (typeof window !== 'undefined') {
+      document.body.style.overflow = 'hidden'
+    }
   }
 
   // 모달 닫기
   const closeModal = () => {
     setShowModal(false)
     setSelectedResult(null)
+    // 모달이 닫힐 때 body 스크롤 복원
+    if (typeof window !== 'undefined') {
+      document.body.style.overflow = 'unset'
+    }
   }
 
   // 간단한 정렬 함수 (lodash orderBy 대체)
@@ -954,23 +965,36 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
         </div>
       )}
 
-      {/* 모바일용 모달 */}
-      <AnimatePresence>
-        {showModal && selectedResult && (
+      {/* 모바일용 모달 - Portal 사용 */}
+      {showModal && selectedResult && typeof window !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm mobile-modal-overlay"
             onClick={closeModal}
+            style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              zIndex: 9999
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden mobile-modal"
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden mobile-modal relative"
               onClick={(e) => e.stopPropagation()}
+              style={{ 
+                position: 'relative', 
+                zIndex: 10000,
+                maxHeight: '90vh'
+              }}
             >
               {/* 모달 헤더 */}
               <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-600">
@@ -1121,8 +1145,9 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
