@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
   try {
     checkSupabaseConfig()
     const body = await request.json()
+    console.log('키워드 분석 요청 데이터:', JSON.stringify(body, null, 2))
+    
     const {
       startDate,
       endDate,
@@ -20,6 +22,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     if (!startDate || !endDate || !timeUnit || !category || !keywords) {
+      console.error('필수 파라미터 누락:', { startDate, endDate, timeUnit, category, keywords })
       return NextResponse.json(
         { error: '필수 파라미터가 누락되었습니다.' },
         { status: 400 }
@@ -27,8 +30,12 @@ export async function POST(request: NextRequest) {
     }
 
     // 쇼핑인사이트 API 타입의 기본 프로필 사용
+    console.log('API 키 조회:', { profileId, apiType: 'insights' })
     const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'insights') : await getActiveProfile(undefined, 'insights')
+    console.log('조회된 API 키:', naverKeys ? '있음' : '없음')
+    
     if (!naverKeys) {
+      console.error('API 키 조회 실패')
       return NextResponse.json(
         { error: '네이버 쇼핑인사이트 API 키를 데이터베이스에서 가져올 수 없습니다.' },
         { status: 500 }
