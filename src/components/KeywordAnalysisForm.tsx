@@ -150,8 +150,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
-  const updateKeyword = (index: number, field: 'name' | 'placeholder', value: string): void
-  const updateKeyword = (index: number, field: 'param', value: string[]): void
   const updateKeyword = (index: number, field: 'name' | 'param' | 'placeholder', value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
