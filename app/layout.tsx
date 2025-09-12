@@ -12,45 +12,11 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: '네이버 쇼핑 순위 검색기',
-  description: '네이버 쇼핑에서 상품 순위를 검색하고 비교하는 도구',
-  keywords: ['네이버', '쇼핑', '순위', '검색', 'API', '분석'],
-  authors: [{ name: '네이버 쇼핑 순위 검색기' }],
-  creator: '네이버 쇼핑 순위 검색기',
-  publisher: '네이버 쇼핑 순위 검색기',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL('https://naver-ranking.vercel.app'),
-  openGraph: {
-    title: '네이버 쇼핑 순위 검색기',
-    description: '네이버 쇼핑에서 상품 순위를 검색하고 비교하는 도구',
-    url: 'https://naver-ranking.vercel.app',
-    siteName: '네이버 쇼핑 순위 검색기',
-    locale: 'ko_KR',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: '네이버 쇼핑 순위 검색기',
-    description: '네이버 쇼핑에서 상품 순위를 검색하고 비교하는 도구',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  verification: {
-    google: 'your-google-verification-code',
-  },
+  title: 'Naver Ranking',
+  description: 'Naver ranking app',
+  other: {
+    'mobile-web-app-capable': 'yes'
+  }
 }
 
 export default function RootLayout({

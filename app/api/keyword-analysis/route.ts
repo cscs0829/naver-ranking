@@ -29,8 +29,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 키워드 유효성 검사
-    const validKeywords = keywords.filter((k: any) => k && k.param && k.param.length > 0 && k.param.some((keyword: string) => keyword.trim().length > 0))
+    // 키워드 유효성 검사 (쉼표 파싱 후 빈값 제거)
+    const normalizedKeywords = Array.isArray(keywords)
+      ? keywords.map((k: any) => ({
+          name: k.name || '검색어',
+          param: (k.param || []).flatMap((p: string) => String(p).split(',')).map((s: string) => s.trim()).filter((s: string) => s).slice(0, 5)
+        }))
+      : []
+
+    const validKeywords = normalizedKeywords.filter((k: any) => k.param && k.param.length > 0)
     if (validKeywords.length === 0) {
       console.error('유효한 키워드가 없습니다:', keywords)
       return NextResponse.json(
@@ -39,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 쇼핑인사이트 API 타입의 기본 프로필 사용
+    // API 키 프로필 조회
     console.log('API 키 조회:', { profileId, apiType: 'insights' })
     const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'insights') : await getActiveProfile(undefined, 'insights')
     console.log('조회된 API 키:', naverKeys ? '있음' : '없음')
@@ -52,24 +59,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 네이버 쇼핑인사이트 API 클라이언트 초기화
-    console.log('API 키 정보:', { clientId: naverKeys.clientId, clientSecret: naverKeys.clientSecret ? '있음' : '없음' })
     const insights = new NaverShoppingInsights(
       naverKeys.clientId,
       naverKeys.clientSecret
     )
 
-    // 키워드 트렌드 분석 (유효한 키워드만 사용)
-    const result = await insights.getCategoryKeywordTrends(
-      startDate,
-      endDate,
-      timeUnit,
-      category,
-      validKeywords,
-      device,
-      gender,
-      ages
-    )
+    // 네이버 쇼핑인사이트 호출
+    let result
+    try {
+      result = await insights.getCategoryKeywordTrends(
+        startDate,
+        endDate,
+        timeUnit,
+        category,
+        validKeywords,
+        device,
+        gender,
+        ages
+      )
+    } catch (err: any) {
+      console.error('네이버 인사이트 호출 예외:', err?.response?.data || err?.message || err)
+      return NextResponse.json(
+        { error: '네이버 쇼핑인사이트 API 호출 실패', detail: err?.response?.data || err?.message || String(err) },
+        { status: 502 }
+      )
+    }
 
     if (!result) {
       return NextResponse.json(
@@ -78,7 +92,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 분석 결과를 데이터베이스에 저장
     if (!supabase) {
       throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
     }
@@ -90,7 +103,7 @@ export async function POST(request: NextRequest) {
       end_date: endDate,
       time_unit: timeUnit,
       category: JSON.stringify(category),
-      keywords: JSON.stringify(keywords),
+      keywords: JSON.stringify(validKeywords),
       device: device || null,
       gender: gender || null,
       ages: ages ? JSON.stringify(ages) : null,
@@ -106,7 +119,7 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       console.error('키워드 분석 결과 저장 오류:', insertError)
       return NextResponse.json(
-        { error: '키워드 분석 결과 저장에 실패했습니다.' },
+        { error: '키워드 분석 결과 저장에 실패했습니다.', detail: insertError.message },
         { status: 500 }
       )
     }
@@ -117,10 +130,10 @@ export async function POST(request: NextRequest) {
       results: result.results,
       data: result
     }, { status: 200 })
-  } catch (error) {
-    console.error('키워드 분석 API 오류:', error)
+  } catch (error: any) {
+    console.error('키워드 분석 API 오류:', error?.response?.data || error?.message || error)
     return NextResponse.json(
-      { error: '서버 오류가 발생했습니다.', detail: error instanceof Error ? error.message : String(error) },
+      { error: '서버 오류가 발생했습니다.', detail: error?.response?.data || error?.message || String(error) },
       { status: 500 }
     )
   }
