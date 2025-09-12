@@ -41,10 +41,12 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         const res = await fetch('/api/keys?api_type=shopping')
         const data = await res.json()
         if (res.ok && data.profiles) {
-          setProfiles(data.profiles)
+          // 쇼핑검색 API 타입만 필터링
+          const shoppingProfiles = data.profiles.filter((p: any) => p.api_type === 'shopping')
+          setProfiles(shoppingProfiles)
           // "트립페이지 네이버 API" 프로필을 우선으로 설정, 없으면 is_default 프로필 사용
-          const defaultProfile = data.profiles?.find((p: any) => p.name === '트립페이지 네이버 API') || 
-                                data.profiles?.find((p: any) => p.is_default)
+          const defaultProfile = shoppingProfiles?.find((p: any) => p.name === '트립페이지 네이버 API') || 
+                                shoppingProfiles?.find((p: any) => p.is_default)
           if (defaultProfile) {
             setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
           }

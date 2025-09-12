@@ -29,15 +29,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 쇼핑검색 API 타입의 기본 프로필 사용
-    console.log('API 키 조회:', { profileId, apiType: 'shopping' })
-    const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'shopping') : await getActiveProfile(undefined, 'shopping')
+    // 쇼핑인사이트 API 타입의 기본 프로필 사용
+    console.log('API 키 조회:', { profileId, apiType: 'insights' })
+    const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'insights') : await getActiveProfile(undefined, 'insights')
     console.log('조회된 API 키:', naverKeys ? '있음' : '없음')
     
     if (!naverKeys) {
       console.error('API 키 조회 실패')
       return NextResponse.json(
-        { error: '네이버 쇼핑검색 API 키를 데이터베이스에서 가져올 수 없습니다.' },
+        { error: '네이버 쇼핑인사이트 API 키를 데이터베이스에서 가져올 수 없습니다.' },
         { status: 500 }
       )
     }
