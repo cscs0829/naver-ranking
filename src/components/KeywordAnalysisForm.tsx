@@ -10,7 +10,7 @@ interface KeywordAnalysisData {
   endDate: string
   timeUnit: 'date' | 'week' | 'month'
   category: Array<{ name: string; param: string[] }>
-  keywords: Array<{ name: string; param: string[] }>
+  keywords: Array<{ name: string; param: string[]; placeholder?: string }>
   device?: 'pc' | 'mo' | ''
   gender?: 'm' | 'f' | ''
   ages?: string[]
@@ -58,13 +58,13 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
   // 키워드 예시 (참고용)
   const keywordExamples = [
-    { name: '해외여행', keywords: ['해외여행', '해외패키지', '해외투어'] },
-    { name: '일본여행', keywords: ['일본여행', '일본패키지', '일본투어'] },
-    { name: '유럽여행', keywords: ['유럽여행', '유럽패키지', '유럽투어'] },
-    { name: '동남아여행', keywords: ['동남아여행', '동남아패키지', '동남아투어'] },
-    { name: '패션의류', keywords: ['여성의류', '원피스', '블라우스', '스커트'] },
-    { name: '화장품', keywords: ['스킨케어', '토너', '세럼', '크림'] },
-    { name: '디지털', keywords: ['스마트폰', '아이폰', '갤럭시', '안드로이드'] }
+    { name: '해외여행', placeholder: '해외여행, 해외패키지, 해외투어' },
+    { name: '일본여행', placeholder: '일본여행, 일본패키지, 일본투어' },
+    { name: '유럽여행', placeholder: '유럽여행, 유럽패키지, 유럽투어' },
+    { name: '동남아여행', placeholder: '동남아여행, 동남아패키지, 동남아투어' },
+    { name: '패션의류', placeholder: '여성의류, 원피스, 블라우스, 스커트' },
+    { name: '화장품', placeholder: '스킨케어, 토너, 세럼, 크림' },
+    { name: '디지털', placeholder: '스마트폰, 아이폰, 갤럭시, 안드로이드' }
   ]
 
   // API 키 프로필 목록 가져오기
@@ -138,7 +138,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
-  const updateKeyword = (index: number, field: 'name' | 'param', value: string | string[]) => {
+  const updateKeyword = (index: number, field: 'name' | 'param' | 'placeholder', value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
       keywords: prev.keywords.map((k, i) => 
@@ -304,7 +304,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                         const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k)
                         updateKeyword(index, 'param', keywords)
                       }}
-                      placeholder="예) 해외여행, 베트남 패키지, 푸꾸옥 여행"
+                      placeholder={keyword.placeholder || "예) 해외여행, 베트남 패키지, 푸꾸옥 여행"}
                       className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     />
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -322,7 +322,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                           type="button"
                           onClick={() => {
                             updateKeyword(index, 'name', example.name)
-                            updateKeyword(index, 'param', example.keywords)
+                            updateKeyword(index, 'param', [])
+                            updateKeyword(index, 'placeholder', example.placeholder)
                           }}
                           className="px-3 py-1 text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
                         >
@@ -334,6 +335,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                         onClick={() => {
                           updateKeyword(index, 'name', '')
                           updateKeyword(index, 'param', [])
+                          updateKeyword(index, 'placeholder', '')
                         }}
                         className="px-3 py-1 text-xs bg-orange-200 dark:bg-orange-600 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-300 dark:hover:bg-orange-500 transition-colors font-medium"
                       >
