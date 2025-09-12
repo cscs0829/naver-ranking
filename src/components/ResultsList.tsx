@@ -291,7 +291,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               <Filter className="w-4 h-4 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              검색 필터
+              순위 결과 필터
             </h3>
           </div>
           <div className={`flex items-center gap-3 ${isMobile ? 'flex-col space-y-2' : ''}`}>
@@ -707,7 +707,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
             </div>
           </div>
           <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
-            검색 결과가 없습니다
+            순위 결과가 없습니다
           </h3>
           <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
             아직 검색한 결과가 없습니다. 검색 탭에서 새로운 검색을 시작해보세요.

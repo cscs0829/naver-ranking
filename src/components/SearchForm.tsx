@@ -329,7 +329,7 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               </div>
               <div>
                 <p className="text-base font-semibold text-slate-900 dark:text-white">검색어 입력</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">네이버 쇼핑에서 검색할 키워드를 입력하세요</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">네이버에서 검색할 키워드를 입력하세요</p>
               </div>
             </motion.div>
             <motion.div 

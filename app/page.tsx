@@ -27,8 +27,8 @@ export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const tabs: Array<{ id: 'search' | 'results' | 'keys'; label: string; icon: React.ReactNode; description: string }> = [
-    { id: 'search', label: '검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
-    { id: 'results', label: '결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
+    { id: 'search', label: '순위 검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
+    { id: 'results', label: '순위 결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
     { id: 'keys', label: 'API 키', icon: <Key className="w-5 h-5" />, description: 'API 키 관리' },
   ]
 
@@ -189,9 +189,9 @@ export default function Home() {
                 </motion.div>
                 <div>
                   <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
-                    네이버 쇼핑 순위 검색기
+                    네이버 데이터 검색기
                   </h1>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">실시간 상품 순위 분석</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">실시간 데이터 분석</p>
                 </div>
               </div>
             </div>
@@ -304,10 +304,10 @@ export default function Home() {
                   <span>저장된 결과</span>
                 </motion.div>
                 <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  검색 결과
+                  순위 결과
                 </h2>
                 <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
-                  이전에 검색한 결과들을 확인하고 분석해보세요
+                  이전에 검색한 순위 결과들을 확인하고 분석해보세요
                 </p>
               </motion.div>
 
@@ -380,16 +380,16 @@ export default function Home() {
                 <Search className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-semibold text-slate-900 dark:text-white">
-                네이버 쇼핑 순위 검색기
+                네이버 데이터 검색기
               </span>
             </div>
             <div className="text-slate-600 dark:text-slate-400 space-y-1">
-              <p>네이버 쇼핑 API를 사용하여 상품 순위를 검색합니다.</p>
+              <p>네이버 API를 사용하여 다양한 데이터를 검색하고 분석합니다.</p>
               <p>검색 결과는 데이터베이스에 저장되어 비교 분석이 가능합니다.</p>
             </div>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
               <p className="text-sm text-slate-500 dark:text-slate-500">
-                © 2024 네이버 쇼핑 순위 검색기. All rights reserved.
+                © 2024 네이버 데이터 검색기. All rights reserved.
               </p>
             </div>
           </div>
