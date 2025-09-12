@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { TrendingUp, Calendar, Filter, Download, Trash2, Search, BarChart3, Users, Smartphone, Monitor, Globe, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/utils/toast'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts'
 
 interface KeywordTrendData {
   period: string
@@ -168,18 +169,42 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
 
   // 최대값 찾기
   const getMaxRatio = (data: KeywordTrendData[]) => {
+    if (!data || data.length === 0) return 0
     return Math.max(...data.map(d => d.ratio))
   }
 
   // 최소값 찾기
   const getMinRatio = (data: KeywordTrendData[]) => {
+    if (!data || data.length === 0) return 0
     return Math.min(...data.map(d => d.ratio))
   }
 
   // 평균값 계산
   const getAverageRatio = (data: KeywordTrendData[]) => {
+    if (!data || data.length === 0) return 0
     const sum = data.reduce((acc, d) => acc + d.ratio, 0)
     return sum / data.length
+  }
+
+  // 차트 데이터 준비
+  const prepareChartData = (data: KeywordTrendData[]) => {
+    if (!data || data.length === 0) return []
+    
+    // 기간별로 그룹화
+    const groupedData: { [key: string]: { [group: string]: number } } = {}
+    
+    data.forEach(item => {
+      if (!groupedData[item.period]) {
+        groupedData[item.period] = {}
+      }
+      groupedData[item.period][item.group] = item.ratio
+    })
+    
+    // 차트용 데이터로 변환
+    return Object.keys(groupedData).map(period => ({
+      period,
+      ...groupedData[period]
+    }))
   }
 
   return (
@@ -447,27 +472,69 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
                                 </div>
                               </div>
                               
-                              <div className="space-y-2">
-                                <h5 className="font-medium text-slate-900 dark:text-white">상세 데이터:</h5>
-                                <div className="max-h-40 overflow-y-auto">
-                                  <table className="w-full text-sm">
-                                    <thead>
-                                      <tr className="border-b border-slate-200 dark:border-slate-600">
-                                        <th className="text-left py-2 text-slate-600 dark:text-slate-400">기간</th>
-                                        <th className="text-left py-2 text-slate-600 dark:text-slate-400">그룹</th>
-                                        <th className="text-right py-2 text-slate-600 dark:text-slate-400">비율</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {trendResult.data.map((data, dataIndex) => (
-                                        <tr key={dataIndex} className="border-b border-slate-100 dark:border-slate-700">
-                                          <td className="py-2 text-slate-900 dark:text-white">{data.period}</td>
-                                          <td className="py-2 text-slate-900 dark:text-white">{data.group}</td>
-                                          <td className="py-2 text-right text-slate-900 dark:text-white">{data.ratio.toFixed(2)}</td>
+                              <div className="space-y-4">
+                                <h5 className="font-medium text-slate-900 dark:text-white">트렌드 차트:</h5>
+                                <div className="h-80 w-full">
+                                  <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={prepareChartData(trendResult.data)}>
+                                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                      <XAxis 
+                                        dataKey="period" 
+                                        stroke="#64748b"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                      />
+                                      <YAxis 
+                                        stroke="#64748b"
+                                        fontSize={12}
+                                        tickLine={false}
+                                        axisLine={false}
+                                      />
+                                      <Tooltip 
+                                        contentStyle={{
+                                          backgroundColor: '#1e293b',
+                                          border: '1px solid #334155',
+                                          borderRadius: '8px',
+                                          color: '#f1f5f9'
+                                        }}
+                                        labelStyle={{ color: '#f1f5f9' }}
+                                      />
+                                      <Line 
+                                        type="monotone" 
+                                        dataKey={trendResult.title} 
+                                        stroke="#3b82f6" 
+                                        strokeWidth={2}
+                                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                                        activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                                      />
+                                    </LineChart>
+                                  </ResponsiveContainer>
+                                </div>
+                                
+                                {/* 데이터 테이블 */}
+                                <div className="space-y-2">
+                                  <h6 className="text-sm font-medium text-slate-700 dark:text-slate-300">데이터 테이블:</h6>
+                                  <div className="max-h-40 overflow-y-auto">
+                                    <table className="w-full text-sm">
+                                      <thead>
+                                        <tr className="border-b border-slate-200 dark:border-slate-600">
+                                          <th className="text-left py-2 text-slate-600 dark:text-slate-400">기간</th>
+                                          <th className="text-left py-2 text-slate-600 dark:text-slate-400">그룹</th>
+                                          <th className="text-right py-2 text-slate-600 dark:text-slate-400">비율</th>
                                         </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
+                                      </thead>
+                                      <tbody>
+                                        {trendResult.data.map((data, dataIndex) => (
+                                          <tr key={dataIndex} className="border-b border-slate-100 dark:border-slate-700">
+                                            <td className="py-2 text-slate-900 dark:text-white">{data.period}</td>
+                                            <td className="py-2 text-slate-900 dark:text-white">{data.group}</td>
+                                            <td className="py-2 text-right text-slate-900 dark:text-white">{data.ratio.toFixed(2)}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
                                 </div>
                               </div>
                             </div>
