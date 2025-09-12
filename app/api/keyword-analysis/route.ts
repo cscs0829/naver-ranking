@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
     )
 
     // 네이버 쇼핑인사이트 호출
+    // 날짜 가드: DataLab은 2017-08-01부터 조회 가능 (응답에서도 사용하므로 스코프 상단에서 계산)
+    const minDate = '2017-08-01'
+    const safeStart = startDate < minDate ? minDate : startDate
+    const safeEnd = endDate < safeStart ? safeStart : endDate
     let result
     try {
-      // 날짜 가드: DataLab은 2017-08-01부터 조회 가능
-      const minDate = '2017-08-01'
-      const safeStart = startDate < minDate ? minDate : startDate
-      const safeEnd = endDate < safeStart ? safeStart : endDate
       result = await insights.getCategoryKeywordTrends(
         safeStart,
         safeEnd,
