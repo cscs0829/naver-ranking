@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { TrendingUp, Calendar, Filter, Download, Trash2, Search, BarChart3, Users, Smartphone, Monitor, Globe, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from '@/utils/toast'
 
 interface KeywordTrendData {
   period: string
