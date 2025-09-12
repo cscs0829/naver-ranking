@@ -28,7 +28,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30일 전
     endDate: new Date().toISOString().split('T')[0], // 오늘
     timeUnit: 'date',
-    category: [{ name: '해외여행', param: ['50000005'] }], // 기본값: 해외여행
+    category: [{ name: '해외여행', param: ['50000005'] }], // 기본값: 해외여행 (여행사 특화)
     keywords: [{ name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }], // 기본값: 해외여행 키워드
     device: '',
     gender: '',
@@ -38,14 +38,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [profiles, setProfiles] = useState<any[]>([])
 
-  // 여행 관련 카테고리 옵션 (네이버 쇼핑 카테고리 코드)
+  // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
   const categoryOptions = [
-    { name: '해외여행', param: ['50000005'] },
+    // 여행 관련 카테고리 (우선순위)
+    { name: '해외여행', param: ['50000005'] }, // 기본값
     { name: '국내여행', param: ['50000006'] },
     { name: '항공권', param: ['50000007'] },
     { name: '숙박', param: ['50000008'] },
     { name: '렌터카', param: ['50000009'] },
     { name: '여행용품', param: ['50000010'] },
+    // 기타 카테고리
     { name: '패션의류', param: ['50000000'] },
     { name: '화장품/미용', param: ['50000002'] },
     { name: '식품', param: ['50000003'] },
@@ -78,9 +80,12 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
         { name: '음료', param: ['음료', '커피', '차', '주스'] }
       ],
       '해외여행': [
-        { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] },
+        { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }, // 기본값
         { name: '일본여행', param: ['일본여행', '일본패키지', '일본투어'] },
-        { name: '유럽여행', param: ['유럽여행', '유럽패키지', '유럽투어'] }
+        { name: '유럽여행', param: ['유럽여행', '유럽패키지', '유럽투어'] },
+        { name: '동남아여행', param: ['동남아여행', '동남아패키지', '동남아투어'] },
+        { name: '중국여행', param: ['중국여행', '중국패키지', '중국투어'] },
+        { name: '미국여행', param: ['미국여행', '미국패키지', '미국투어'] }
       ],
       '국내여행': [
         { name: '국내여행', param: ['국내여행', '국내패키지', '국내투어'] },
@@ -100,7 +105,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
     
     return categoryKeywords[categoryName as keyof typeof categoryKeywords] || [
-      { name: '기본키워드', param: ['키워드1', '키워드2', '키워드3'] }
+      { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] } // 기본값: 해외여행
     ]
   }
 
@@ -172,9 +177,9 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
 
   const addKeyword = () => {
     setFormData(prev => {
-      const currentCategory = prev.category[0]?.name || '해외여행'
+      const currentCategory = prev.category[0]?.name || '해외여행' // 기본값: 해외여행
       const keywordOptions = getKeywordOptions(currentCategory)
-      const defaultKeyword = keywordOptions.length > 0 ? keywordOptions[0] : { name: '기본키워드', param: ['키워드1', '키워드2', '키워드3'] }
+      const defaultKeyword = keywordOptions.length > 0 ? keywordOptions[0] : { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }
       
       return {
         ...prev,
