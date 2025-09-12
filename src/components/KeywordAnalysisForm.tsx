@@ -314,7 +314,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                   
                   {/* 키워드 예시 표시 */}
                   <div className="mt-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">키워드 예시:</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">키워드 예시 (클릭하여 자동 입력) 또는 직접 입력:</p>
                     <div className="flex flex-wrap gap-2">
                       {keywordExamples.map(example => (
                         <button
@@ -329,6 +329,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                           {example.name}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          updateKeyword(index, 'name', '')
+                          updateKeyword(index, 'param', [])
+                        }}
+                        className="px-3 py-1 text-xs bg-orange-200 dark:bg-orange-600 text-orange-700 dark:text-orange-300 rounded-lg hover:bg-orange-300 dark:hover:bg-orange-500 transition-colors font-medium"
+                      >
+                        직접 입력
+                      </button>
                     </div>
                   </div>
                 </div>
