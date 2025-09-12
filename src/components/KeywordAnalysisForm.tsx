@@ -38,22 +38,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [profiles, setProfiles] = useState<any[]>([])
 
-  // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
-  const categoryOptions = [
-    // 여행 관련 카테고리 (우선순위)
-    { name: '해외여행', param: ['50000005'] }, // 기본값
-    { name: '국내여행', param: ['50000006'] },
-    { name: '항공권', param: ['50000007'] },
-    { name: '숙박', param: ['50000008'] },
-    { name: '렌터카', param: ['50000009'] },
-    { name: '여행용품', param: ['50000010'] },
-    // 기타 카테고리
-    { name: '패션의류', param: ['50000000'] },
-    { name: '화장품/미용', param: ['50000002'] },
-    { name: '식품', param: ['50000003'] },
-    { name: '생활용품', param: ['50000004'] },
-    { name: '디지털/가전', param: ['50000001'] },
-    { name: '스포츠/레저', param: ['50000011'] }
+  // 카테고리 예시 (참고용 - 사용자가 직접 입력)
+  const categoryExamples = [
+    { name: '해외여행', code: '50000005' },
+    { name: '국내여행', code: '50000006' },
+    { name: '항공권', code: '50000007' },
+    { name: '숙박', code: '50000008' },
+    { name: '패션의류', code: '50000000' },
+    { name: '화장품/미용', code: '50000002' },
+    { name: '식품', code: '50000003' },
+    { name: '디지털/가전', code: '50000001' }
   ]
 
   // 카테고리별 키워드 옵션
@@ -144,7 +138,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const addCategory = () => {
     setFormData(prev => ({
       ...prev,
-      category: [...prev.category, { name: '해외여행', param: ['50000005'] }]
+      category: [...prev.category, { name: '', param: [''] }] // 빈 값으로 시작
     }))
   }
 
@@ -157,22 +151,15 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
-  const updateCategory = (index: number, category: { name: string; param: string[] }) => {
-    setFormData(prev => {
-      const newCategory = prev.category.map((c, i) => i === index ? category : c)
-      
-      // 카테고리가 변경되면 해당 카테고리의 첫 번째 키워드 옵션으로 키워드도 업데이트
-      const newKeywordOptions = getKeywordOptions(category.name)
-      const newKeywords = prev.keywords.map((k, i) => 
-        i === 0 && newKeywordOptions.length > 0 ? newKeywordOptions[0] : k
+  const updateCategory = (index: number, field: 'name' | 'param', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      category: prev.category.map((c, i) => 
+        i === index 
+          ? { ...c, [field]: field === 'param' ? [value] : value }
+          : c
       )
-      
-      return {
-        ...prev,
-        category: newCategory,
-        keywords: newKeywords
-      }
-    })
+    }))
   }
 
   const addKeyword = () => {
@@ -269,35 +256,66 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
           <div className="space-y-4">
             {formData.category.map((category, index) => (
               <div key={index} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      카테고리 선택
-                    </label>
-                    <select
-                      value={category.name}
-                      onChange={(e) => {
-                        const selected = categoryOptions.find(opt => opt.name === e.target.value)
-                        if (selected) {
-                          updateCategory(index, selected)
-                        }
-                      }}
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      {categoryOptions.map(option => (
-                        <option key={option.name} value={option.name}>{option.name}</option>
-                      ))}
-                    </select>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        카테고리 이름
+                      </label>
+                      <input
+                        type="text"
+                        value={category.name}
+                        onChange={(e) => updateCategory(index, 'name', e.target.value)}
+                        placeholder="예) 해외여행, 패션의류, 화장품/미용"
+                        className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    {formData.category.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCategory(index)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
-                  {formData.category.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeCategory(index)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      카테고리 코드
+                    </label>
+                    <input
+                      type="text"
+                      value={category.param[0] || ''}
+                      onChange={(e) => updateCategory(index, 'param', e.target.value)}
+                      placeholder="예) 50000005 (해외여행), 50000000 (패션의류)"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      네이버쇼핑 카테고리 URL의 'cat_id' 값 또는 위 예시를 참고하세요
+                    </p>
+                  </div>
+                  
+                  {/* 카테고리 예시 표시 */}
+                  <div className="mt-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">카테고리 예시:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {categoryExamples.map(example => (
+                        <button
+                          key={example.code}
+                          type="button"
+                          onClick={() => {
+                            updateCategory(index, 'name', example.name)
+                            updateCategory(index, 'param', example.code)
+                          }}
+                          className="px-3 py-1 text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
+                        >
+                          {example.name} ({example.code})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
