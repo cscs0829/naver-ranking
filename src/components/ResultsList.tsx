@@ -291,7 +291,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
               <Filter className="w-4 h-4 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              검색 결과 필터
+              검색 필터
             </h3>
           </div>
           <div className={`flex items-center gap-3 ${isMobile ? 'flex-col space-y-2' : ''}`}>
