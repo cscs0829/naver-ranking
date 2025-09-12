@@ -316,7 +316,12 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       value={keyword.param.join(', ')}
                       onChange={(e) => {
                         const inputValue = e.target.value
-                        // 쉼표로 분리하되, 빈 문자열은 제거하고 최대 5개까지만 허용
+                        // 입력 중에는 원본 텍스트를 그대로 저장 (쉼표 분리하지 않음)
+                        updateKeyword(index, 'param', [inputValue])
+                      }}
+                      onBlur={(e) => {
+                        // 포커스를 잃을 때만 쉼표로 분리
+                        const inputValue = e.target.value
                         const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0, 5)
                         console.log('입력값:', inputValue)
                         console.log('분리된 키워드:', keywords)
