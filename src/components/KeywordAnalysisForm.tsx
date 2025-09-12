@@ -28,7 +28,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     timeUnit: 'date',
-    category: [{ name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['10008402'] }],
+    category: [{ name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['50000005'] }],
     keywords: [{ name: '', param: [] }],
     device: '',
     gender: '',
@@ -63,7 +63,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   }, [])
 
   const categoryOptions = [
-    { name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['10008402'] }
+    { name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['50000005'] }
   ]
 
   const setPeriod = (days: number) => {

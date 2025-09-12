@@ -151,6 +151,11 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
               const titles = result.results.map(r => r.title)
               const color = (i: number) => ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6"][i%5]
 
+              // 디버깅: 데이터 로그 (렌더 외부)
+              if (typeof window !== 'undefined' && (comparisonData as any[]).length === 0) {
+                try { console.debug('DEBUG chart raw results', result.results) } catch {}
+              }
+
               // 요약 텍스트
               const keywordsSummary = Array.isArray(result.keywords)
                 ? result.keywords.map((k: any) => (typeof k === 'object' ? (k.param?.join(', ') || k.name || '') : String(k))).join(', ')
@@ -196,19 +201,25 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
 
                   {/* 비교 차트 */}
                   <div className="p-6">
-                    <div className="h-80 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={comparisonData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis dataKey="period" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                          <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9' }} labelStyle={{ color: '#f1f5f9' }} />
-                          {titles.map((t, i) => (
-                            <Line key={t} type="monotone" dataKey={t} stroke={color(i)} strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 5 }} />
-                          ))}
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {comparisonData.length === 0 ? (
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        표시할 데이터가 없습니다. 기간 또는 필터를 변경해 보세요.
+                      </div>
+                    ) : (
+                      <div className="h-80 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={comparisonData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                            <XAxis dataKey="period" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9' }} labelStyle={{ color: '#f1f5f9' }} />
+                            {titles.map((t, i) => (
+                              <Line key={t} type="monotone" dataKey={t} stroke={color(i)} strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 5 }} />
+                            ))}
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
                   </div>
 
                   {/* 상세(선택) - 원래 per-series 데이터 테이블을 토글로 제공 */}
