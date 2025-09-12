@@ -489,13 +489,14 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
         </div>
 
         {/* 액션 버튼 */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+        <div className="flex justify-center pt-6">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            type="submit"
+            type="button"
+            onClick={() => onAnalysis(formData)}
             disabled={isLoading}
-            className="flex-1 flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/25 hover:shadow-xl hover:shadow-orange-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex items-center justify-center space-x-3 px-12 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -504,22 +505,10 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
               </>
             ) : (
               <>
-                <TrendingUp className="w-6 h-6" />
-                <span>키워드 분석 시작</span>
+                <Save className="w-6 h-6" />
+                <span>키워드 분석 및 저장</span>
               </>
             )}
-          </motion.button>
-          
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => onAnalysis({ ...formData, save: true })}
-            disabled={isLoading}
-            className="flex-1 flex items-center justify-center space-x-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Save className="w-6 h-6" />
-            <span>분석 후 저장</span>
           </motion.button>
         </div>
       </form>

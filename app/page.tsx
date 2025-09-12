@@ -108,14 +108,10 @@ export default function Home() {
       const result = await response.json()
 
       if (result.success) {
-        // 분석 모드: 분석 완료 안내
-        if (!analysisData.save) {
-          toast(`키워드 분석 완료: ${result.count}개 키워드 분석됨`, 'success')
-        } else {
-          // 저장 모드: 키워드 결과 탭으로 이동해 관리
-          setActiveTab('keyword-results')
-          setRefreshTrigger((prev: number) => prev + 1)
-        }
+        // 키워드 분석 완료 후 저장하고 결과 탭으로 이동
+        setActiveTab('keyword-results')
+        setRefreshTrigger((prev: number) => prev + 1)
+        toast(`키워드 분석 완료: ${result.count}개 키워드 분석 및 저장됨`, 'success')
       } else {
         toast(`오류: ${result.error}`, 'error')
       }

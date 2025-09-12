@@ -16,8 +16,7 @@ export async function POST(request: NextRequest) {
       device,
       gender,
       ages,
-      profileId,
-      save = false
+      profileId
     } = body
 
     if (!startDate || !endDate || !timeUnit || !category || !keywords) {
@@ -61,39 +60,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 저장 모드인 경우 데이터베이스에 저장
-    if (save) {
-      if (!supabase) {
-        throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
-      }
+    // 분석 결과를 데이터베이스에 저장
+    if (!supabase) {
+      throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+    }
 
-      const analysisName = `키워드 분석 ${new Date().toLocaleString('ko-KR')}`
-      const analysisData = {
-        analysis_name: analysisName,
-        start_date: startDate,
-        end_date: endDate,
-        time_unit: timeUnit,
-        category: JSON.stringify(category),
-        keywords: JSON.stringify(keywords),
-        device: device || null,
-        gender: gender || null,
-        ages: ages ? JSON.stringify(ages) : null,
-        results: JSON.stringify(result.results),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
+    const analysisName = `키워드 분석 ${new Date().toLocaleString('ko-KR')}`
+    const analysisData = {
+      analysis_name: analysisName,
+      start_date: startDate,
+      end_date: endDate,
+      time_unit: timeUnit,
+      category: JSON.stringify(category),
+      keywords: JSON.stringify(keywords),
+      device: device || null,
+      gender: gender || null,
+      ages: ages ? JSON.stringify(ages) : null,
+      results: JSON.stringify(result.results),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
 
-      const { error: insertError } = await supabase
-        .from('keyword_analysis_results')
-        .insert([analysisData])
+    const { error: insertError } = await supabase
+      .from('keyword_analysis_results')
+      .insert([analysisData])
 
-      if (insertError) {
-        console.error('키워드 분석 결과 저장 오류:', insertError)
-        return NextResponse.json(
-          { error: '키워드 분석 결과 저장에 실패했습니다.' },
-          { status: 500 }
-        )
-      }
+    if (insertError) {
+      console.error('키워드 분석 결과 저장 오류:', insertError)
+      return NextResponse.json(
+        { error: '키워드 분석 결과 저장에 실패했습니다.' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json({ 
