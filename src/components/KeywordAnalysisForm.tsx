@@ -39,6 +39,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
   const [keywordInput, setKeywordInput] = useState('')
+  const [isComposing, setIsComposing] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -161,6 +162,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     type="text"
                     value={keywordInput}
                     onChange={(e) => setKeywordInput(e.target.value)}
+                    onCompositionStart={() => setIsComposing(true)}
+                    onCompositionEnd={() => setIsComposing(false)}
                     onPaste={(e) => {
                       const text = e.clipboardData.getData('text')
                       if (!text) return
@@ -175,6 +178,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     }}
                     onKeyDown={(e) => {
                       const current = formData.keywords[0]?.param || []
+                      if (isComposing) return
                       if ((e.key === 'Enter' || e.key === ',') && keywordInput.trim()) {
                         e.preventDefault()
                         const next = Array.from(new Set([...current, keywordInput.trim()])).slice(0,5)
@@ -188,6 +192,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       }
                     }}
                     onBlur={() => {
+                      if (isComposing) return
                       if (!keywordInput.trim()) return
                       const current = formData.keywords[0]?.param || []
                       const next = Array.from(new Set([...current, keywordInput.trim()])).slice(0,5)
