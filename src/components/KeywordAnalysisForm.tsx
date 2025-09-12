@@ -361,6 +361,18 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       분석할 키워드를 쉼표로 구분하여 입력하세요 (최대 5개)
                     </p>
+                    
+                    {/* 여행사 키워드 가이드 */}
+                    <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">💡 여행사 키워드 추천:</div>
+                      <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
+                        <div><strong>해외여행:</strong> 해외여행, 해외패키지, 해외투어, 해외자유여행</div>
+                        <div><strong>국내여행:</strong> 국내여행, 국내패키지, 당일치기, 주말여행</div>
+                        <div><strong>지역별:</strong> 동남아여행, 유럽여행, 일본여행, 중국여행</div>
+                        <div><strong>테마여행:</strong> 신혼여행, 가족여행, 혼자여행, 힐링여행</div>
+                        <div><strong>계절여행:</strong> 여름휴가, 겨울여행, 봄여행, 가을여행</div>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* 키워드 예시 표시 */}
