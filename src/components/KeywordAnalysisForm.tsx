@@ -299,24 +299,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     </button>
                   )}
                 </div>
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    카테고리 코드 (직접 입력 가능)
-                  </label>
-                  <input
-                    type="text"
-                    value={category.param[0] || ''}
-                    onChange={(e) => {
-                      const newCategory = { ...category, param: [e.target.value] }
-                      updateCategory(index, newCategory)
-                    }}
-                    placeholder="예: 50000005 (해외여행)"
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    네이버 쇼핑 카테고리 코드를 직접 입력하거나 위에서 선택하세요
-                  </p>
-                </div>
               </div>
             ))}
             
@@ -373,7 +355,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                 </div>
                 <div className="mt-3">
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    키워드 (직접 입력 가능, 쉼표로 구분)
+                    키워드 (쉼표로 구분, 최대 5개)
                   </label>
                   <input
                     type="text"
@@ -383,11 +365,11 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       const newKeyword = { ...keyword, param: keywords }
                       updateKeyword(index, newKeyword)
                     }}
-                    placeholder="예: 해외여행, 해외패키지, 해외투어"
+                    placeholder="예: 해외여행, 베트남 패키지, 푸꾸옥 여행"
                     className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                   />
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    분석할 키워드를 쉼표로 구분하여 입력하거나 위에서 선택하세요
+                    분석할 키워드를 쉼표로 구분하여 입력하거나 위에서 선택하세요 (최대 5개)
                   </p>
                 </div>
               </div>
