@@ -423,25 +423,6 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                   </div>
                 </div>
 
-                {profiles.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      API 프로필 (쇼핑인사이트)
-                    </label>
-                    <select
-                      value={formData.profileId || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, profileId: e.target.value ? Number(e.target.value) : undefined }))}
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="">기본 프로필 사용</option>
-                      {profiles.map(profile => (
-                        <option key={profile.id} value={profile.id}>
-                          {profile.name} {profile.is_default ? '(기본)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
               </motion.div>
             )}
           </AnimatePresence>
