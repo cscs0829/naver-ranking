@@ -116,12 +116,33 @@ export async function upsertProfile(name: string, clientId: string, clientSecret
 export async function setDefaultProfile(id: number): Promise<boolean> {
   checkSupabaseConfig()
   if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
+  
+  // 먼저 해당 프로필의 API 타입을 가져옴
+  const { data: profile, error: fetchError } = await supabase
+    .from('api_key_profiles')
+    .select('api_type')
+    .eq('id', id)
+    .single()
+  
+  if (fetchError || !profile) {
+    console.error('Error fetching profile:', fetchError)
+    return false
+  }
+  
+  // 해당 프로필을 기본으로 설정
   const { error } = await supabase.from('api_key_profiles').update({ is_default: true }).eq('id', id)
   if (error) {
     console.error('Error setting default profile:', error)
     return false
   }
-  await supabase.from('api_key_profiles').update({ is_default: false }).neq('id', id)
+  
+  // 같은 API 타입의 다른 프로필들의 기본값 해제
+  await supabase
+    .from('api_key_profiles')
+    .update({ is_default: false })
+    .eq('api_type', profile.api_type)
+    .neq('id', id)
+  
   return true
 }
 
