@@ -286,10 +286,20 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       value={keyword.param.join(', ')}
                       onChange={(e) => {
                         const inputValue = e.target.value
-                        const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k)
+                        // 쉼표로 분리하되, 빈 문자열은 제거하고 최대 5개까지만 허용
+                        const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0, 5)
                         console.log('입력값:', inputValue)
                         console.log('분리된 키워드:', keywords)
                         updateKeyword(index, 'param', keywords)
+                      }}
+                      onKeyDown={(e) => {
+                        // Enter 키로도 키워드를 추가할 수 있도록 처리
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          const inputValue = e.currentTarget.value
+                          const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0, 5)
+                          updateKeyword(index, 'param', keywords)
+                        }
                       }}
                       placeholder={keyword.placeholder || "예) 해외여행, 베트남 패키지, 푸꾸옥 여행"}
                       className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
