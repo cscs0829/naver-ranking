@@ -138,6 +138,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
+  const updateKeyword = (index: number, field: 'name' | 'placeholder', value: string): void
+  const updateKeyword = (index: number, field: 'param', value: string[]): void
   const updateKeyword = (index: number, field: 'name' | 'param' | 'placeholder', value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
@@ -301,7 +303,10 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                       type="text"
                       value={keyword.param.join(', ')}
                       onChange={(e) => {
-                        const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                        const inputValue = e.target.value
+                        const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k)
+                        console.log('입력값:', inputValue)
+                        console.log('분리된 키워드:', keywords)
                         updateKeyword(index, 'param', keywords)
                       }}
                       placeholder={keyword.placeholder || "예) 해외여행, 베트남 패키지, 푸꾸옥 여행"}
