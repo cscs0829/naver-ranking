@@ -57,6 +57,7 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     sortOrder: 'desc' as 'asc' | 'desc'
   })
   const [expandedResults, setExpandedResults] = useState<Set<number>>(new Set())
+  const [autoNavigated, setAutoNavigated] = useState(false)
 
   const fetchResults = async () => {
     try {
@@ -91,6 +92,14 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     fetchResults()
   }, [refreshTrigger, filters, sortOptions])
 
+  // 데이터가 비어 있으면 키워드 분석 탭으로 유도
+  useEffect(() => {
+    if (!loading && !error && results.length === 0 && !autoNavigated) {
+      setAutoNavigated(true)
+      onNavigateToAnalysis()
+    }
+  }, [loading, error, results, autoNavigated, onNavigateToAnalysis])
+
   const handleDelete = async (id: number) => {
     if (!confirm('이 키워드 분석 결과를 삭제하시겠습니까?')) return
     try {
@@ -112,6 +121,68 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     const next = new Set(expandedResults)
     next.has(id) ? next.delete(id) : next.add(id)
     setExpandedResults(next)
+  }
+
+  const handleDeleteAll = async () => {
+    if (!confirm('모든 키워드 분석 결과를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return
+    try {
+      const response = await fetch(`/api/keyword-results`, { method: 'DELETE' })
+      const data = await response.json()
+      if (response.ok) {
+        toast(data.message || '모든 키워드 분석 결과가 삭제되었습니다.', 'success')
+        fetchResults()
+      } else {
+        toast(`전체 삭제 실패: ${data.error || '알 수 없는 오류'}`, 'error')
+      }
+    } catch (err) {
+      console.error('전체 삭제 오류:', err)
+      toast('전체 삭제 중 오류가 발생했습니다.', 'error')
+    }
+  }
+
+  const handleExportCsv = () => {
+    if (!results || results.length === 0) {
+      toast('내보낼 데이터가 없습니다.', 'info')
+      return
+    }
+    const rows: string[] = []
+    const header = [
+      'id','analysis_name','start_date','end_date','time_unit','device','gender','ages','keyword_title','period','ratio'
+    ]
+    rows.push(header.join(','))
+    results.forEach(r => {
+      const base = [
+        String(r.id),
+        JSON.stringify(r.analysis_name),
+        r.start_date,
+        r.end_date,
+        r.time_unit,
+        r.device || '',
+        r.gender || '',
+        Array.isArray(r.ages) ? r.ages.join('|') : (r.ages || ''),
+      ]
+      r.results.forEach(series => {
+        series.data.forEach(d => {
+          const row = [
+            ...base,
+            JSON.stringify(series.title),
+            d.period,
+            String(d.ratio)
+          ]
+          rows.push(row.map(v => typeof v === 'string' ? v.replace(/\n/g,' ').replace(/"/g,'"') : v).join(','))
+        })
+      })
+    })
+    const csv = rows.join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `keyword-analysis-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 
   // 단일 비교 차트용 데이터 변환
@@ -141,6 +212,15 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
 
       {!loading && !error && (
         <div className="space-y-6">
+          {/* 액션 바 */}
+          <div className="flex items-center justify-end gap-2">
+            <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={handleExportCsv} className="px-4 py-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+              <Download className="w-4 h-4" /> 내보내기(CSV)
+            </motion.button>
+            <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={handleDeleteAll} className="px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 flex items-center gap-2">
+              <Trash2 className="w-4 h-4" /> 전체 삭제
+            </motion.button>
+          </div>
           {results.length === 0 ? (
             <div className="text-center py-12">
               <h3 className="text-xl font-semibold">키워드 분석 결과가 없습니다</h3>
