@@ -116,21 +116,10 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   }
 
   const updateCategory = (index: number, category: { name: string; param: string[] }) => {
-    setFormData(prev => {
-      const newCategory = prev.category.map((c, i) => i === index ? category : c)
-      
-      // 카테고리가 변경되면 해당 카테고리의 첫 번째 키워드 옵션으로 키워드도 업데이트
-      const newKeywordOptions = getKeywordOptions(category.name)
-      const newKeywords = prev.keywords.map((k, i) => 
-        i === 0 && newKeywordOptions.length > 0 ? newKeywordOptions[0] : k
-      )
-      
-      return {
-        ...prev,
-        category: newCategory,
-        keywords: newKeywords
-      }
-    })
+    setFormData(prev => ({
+      ...prev,
+      category: prev.category.map((c, i) => i === index ? category : c)
+    }))
   }
 
   const addKeyword = () => {
