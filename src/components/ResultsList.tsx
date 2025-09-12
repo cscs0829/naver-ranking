@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { SearchResult } from '@/utils/supabase'
-import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye } from 'lucide-react'
+import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Lottie from 'lottie-react'
-import { orderBy } from 'lodash'
+// import { orderBy } from 'lodash'
 import emptyAnim from './empty-state.json'
 import { toast } from '@/utils/toast'
 
@@ -34,10 +34,70 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
   })
   const [showFilters, setShowFilters] = useState(false)
   const [expanded, setExpanded] = useState<Record<number, boolean>>({})
+  const [isMobile, setIsMobile] = useState(false)
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
   // HTML 태그 제거 함수
   const stripHtmlTags = (html: string): string => {
     return html.replace(/<[^>]*>/g, '')
+  }
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
+
+  // 모달 열기
+  const openModal = (result: SearchResult) => {
+    setSelectedResult(result)
+    setShowModal(true)
+  }
+
+  // 모달 닫기
+  const closeModal = () => {
+    setShowModal(false)
+    setSelectedResult(null)
+  }
+
+  // 간단한 정렬 함수 (lodash orderBy 대체)
+  const simpleOrderBy = (array: any[], fields: string[], orders: string[]) => {
+    return array.sort((a, b) => {
+      for (let i = 0; i < fields.length; i++) {
+        const field = fields[i]
+        const order = orders[i] || 'asc'
+        
+        let aVal = a[field]
+        let bVal = b[field]
+        
+        // null/undefined 처리
+        if (aVal == null) aVal = ''
+        if (bVal == null) bVal = ''
+        
+        // 숫자 비교
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          if (aVal !== bVal) {
+            return order === 'asc' ? aVal - bVal : bVal - aVal
+          }
+        } else {
+          // 문자열 비교
+          const aStr = String(aVal).toLowerCase()
+          const bStr = String(bVal).toLowerCase()
+          if (aStr !== bStr) {
+            const result = aStr < bStr ? -1 : 1
+            return order === 'asc' ? result : -result
+          }
+        }
+      }
+      return 0
+    })
   }
 
   // 결과 목록 가져오기
@@ -138,7 +198,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
       sortOrders.push('asc')
     }
     
-    groupedResults[key] = orderBy(
+    groupedResults[key] = simpleOrderBy(
       groupedResults[key],
       sortFields,
       sortOrders
@@ -583,10 +643,16 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                       transition={{ duration: 0.3, delay: resultIndex * 0.05 }}
                       className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-700 dark:to-slate-600 rounded-xl p-4 border border-slate-200 dark:border-slate-600 hover:shadow-md transition-all duration-300"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      {isMobile ? (
+                        // 모바일용 간단한 카드 UI
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => openModal(result)}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                               resultIndex === 0 
                                 ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
                                 : resultIndex < 3 
@@ -595,128 +661,177 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                             }`}>
                               {resultIndex === 0 ? '🥇 1등' : resultIndex === 1 ? '🥈 2등' : resultIndex === 2 ? '🥉 3등' : `#${resultIndex + 1}`}
                             </span>
-                            <span className="text-sm text-slate-600 dark:text-slate-400">
-                              {result.mall_name}
-                            </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-400">
-                              (전체 {result.total_rank}위, 웹페이지 {result.page}페이지 {result.rank_in_page}번째)
-                            </span>
-                          </div>
-                          <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                            {stripHtmlTags(result.product_title || '')}
-                          </h4>
-                          <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-400">
-                            <span>순위: {result.total_rank}</span>
-                            <span>가격: {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}</span>
-                            <span>브랜드: {result.brand || 'N/A'}</span>
-                            {result.target_product_name && (
-                              <span>타겟 상품명: {result.target_product_name}</span>
-                            )}
-                            {result.target_mall_name && (
-                              <span>타겟 몰명: {result.target_mall_name}</span>
-                            )}
-                            {result.target_brand && (
-                              <span>타겟 브랜드: {result.target_brand}</span>
-                            )}
-                            {result.created_at && (
-                              <span>
-                                검색시각: {new Date(result.created_at).toLocaleString('ko-KR', {
-                                  month: '2-digit',
-                                  day: '2-digit',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  second: '2-digit'
-                                })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setExpanded(prev => ({ ...prev, [result.id!]: !prev[result.id!] }))}
-                            className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200"
-                            title="상세 정보"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDelete(result.id!)}
-                            className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200"
-                            title="삭제"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </motion.button>
-                        </div>
-                      </div>
-
-                      {/* 상세 정보 */}
-                      <AnimatePresence>
-                        {expanded[result.id!] && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600"
-                          >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">검색어:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.search_query}</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">상품 ID:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.product_id}</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">브랜드:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.brand || 'N/A'}</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">가격:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">
-                                  {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">쇼핑몰:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.mall_name}</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">전체 순위:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.total_rank}위</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">웹페이지 순위:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">{result.page}페이지 {result.rank_in_page}번째</span>
-                              </div>
-                              <div>
-                                <span className="font-medium text-slate-700 dark:text-slate-300">카테고리:</span>
-                                <span className="ml-2 text-slate-600 dark:text-slate-400">
-                                  {result.category1} {result.category2 && `> ${result.category2}`}
-                                </span>
-                              </div>
+                            <div className="flex items-center space-x-2">
+                              <Smartphone className="w-4 h-4 text-slate-400" />
+                              <span className="text-xs text-slate-500">터치하여 상세보기</span>
                             </div>
-                            {result.product_link && (
-                              <div className="mt-4">
-                                <a
-                                  href={result.product_link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors duration-200"
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
-                                  상품 페이지 보기
-                                </a>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white overflow-hidden" style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical'
+                            }}>
+                              {stripHtmlTags(result.product_title || '')}
+                            </h4>
+                            
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                {result.mall_name}
+                              </span>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                전체 {result.total_rank}위
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
+                              <span>{result.page}페이지 {result.rank_in_page}번째</span>
+                              {result.price && (
+                                <span className="font-medium">{result.price.toLocaleString()}원</span>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        // 데스크톱용 기존 UI
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                resultIndex === 0 
+                                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
+                                  : resultIndex < 3 
+                                    ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-md'
+                                    : 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
+                              }`}>
+                                {resultIndex === 0 ? '🥇 1등' : resultIndex === 1 ? '🥈 2등' : resultIndex === 2 ? '🥉 3등' : `#${resultIndex + 1}`}
+                              </span>
+                              <span className="text-sm text-slate-600 dark:text-slate-400">
+                                {result.mall_name}
+                              </span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                (전체 {result.total_rank}위, 웹페이지 {result.page}페이지 {result.rank_in_page}번째)
+                              </span>
+                            </div>
+                            <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                              {stripHtmlTags(result.product_title || '')}
+                            </h4>
+                            <div className="flex items-center space-x-4 text-sm text-slate-600 dark:text-slate-400">
+                              <span>순위: {result.total_rank}</span>
+                              <span>가격: {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}</span>
+                              <span>브랜드: {result.brand || 'N/A'}</span>
+                              {result.target_product_name && (
+                                <span>타겟 상품명: {result.target_product_name}</span>
+                              )}
+                              {result.target_mall_name && (
+                                <span>타겟 몰명: {result.target_mall_name}</span>
+                              )}
+                              {result.target_brand && (
+                                <span>타겟 브랜드: {result.target_brand}</span>
+                              )}
+                              {result.created_at && (
+                                <span>
+                                  검색시각: {new Date(result.created_at).toLocaleString('ko-KR', {
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => setExpanded(prev => ({ ...prev, [result.id!]: !prev[result.id!] }))}
+                              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors duration-200"
+                              title="상세 정보"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleDelete(result.id!)}
+                              className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200"
+                              title="삭제"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 데스크톱용 상세 정보 */}
+                      {!isMobile && (
+                        <AnimatePresence>
+                          {expanded[result.id!] && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600"
+                            >
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">검색어:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.search_query}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">상품 ID:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.product_id}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">브랜드:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.brand || 'N/A'}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">가격:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">
+                                    {result.price ? `${result.price.toLocaleString()}원` : 'N/A'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">쇼핑몰:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.mall_name}</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">전체 순위:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.total_rank}위</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">웹페이지 순위:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">{result.page}페이지 {result.rank_in_page}번째</span>
+                                </div>
+                                <div>
+                                  <span className="font-medium text-slate-700 dark:text-slate-300">카테고리:</span>
+                                  <span className="ml-2 text-slate-600 dark:text-slate-400">
+                                    {result.category1} {result.category2 && `> ${result.category2}`}
+                                  </span>
+                                </div>
                               </div>
-                            )}
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                              {result.product_link && (
+                                <div className="mt-4">
+                                  <a
+                                    href={result.product_link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors duration-200"
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-2" />
+                                    상품 페이지 보기
+                                  </a>
+                                </div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      )}
                     </motion.div>
                   ))}
                 </div>
@@ -725,6 +840,176 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
           ))}
         </div>
       )}
+
+      {/* 모바일용 모달 */}
+      <AnimatePresence>
+        {showModal && selectedResult && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={closeModal}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 모달 헤더 */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-600">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+                    <Eye className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">상세 정보</h3>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={closeModal}
+                  className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200"
+                >
+                  <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </motion.button>
+              </div>
+
+              {/* 모달 내용 */}
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <div className="space-y-6">
+                  {/* 상품 정보 */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        selectedResult.total_rank === 1
+                          ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
+                          : selectedResult.total_rank <= 3
+                            ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-md'
+                            : 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
+                      }`}>
+                        {selectedResult.total_rank === 1 ? '🥇 1등' : selectedResult.total_rank === 2 ? '🥈 2등' : selectedResult.total_rank === 3 ? '🥉 3등' : `#${selectedResult.total_rank}`}
+                      </span>
+                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                        {new Date(selectedResult.created_at || '').toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xl font-bold text-slate-900 dark:text-white">
+                      {stripHtmlTags(selectedResult.product_title || '')}
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
+                        <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">몰명</div>
+                        <div className="text-slate-900 dark:text-white">{selectedResult.mall_name}</div>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
+                        <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">전체 순위</div>
+                        <div className="text-slate-900 dark:text-white">{selectedResult.total_rank}위</div>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
+                        <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">페이지</div>
+                        <div className="text-slate-900 dark:text-white">{selectedResult.page}페이지 {selectedResult.rank_in_page}번째</div>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
+                        <div className="font-medium text-slate-700 dark:text-slate-300 mb-1">가격</div>
+                        <div className="text-slate-900 dark:text-white">
+                          {selectedResult.price ? `${selectedResult.price.toLocaleString()}원` : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 추가 정보 */}
+                  <div className="space-y-4">
+                    <h5 className="text-lg font-semibold text-slate-900 dark:text-white">추가 정보</h5>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">검색어:</span>
+                        <span className="text-slate-900 dark:text-white">{selectedResult.search_query}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">브랜드:</span>
+                        <span className="text-slate-900 dark:text-white">{selectedResult.brand || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-600 dark:text-slate-400">상품 ID:</span>
+                        <span className="text-slate-900 dark:text-white font-mono text-xs">{selectedResult.product_id}</span>
+                      </div>
+                      {selectedResult.category1 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-600 dark:text-slate-400">카테고리:</span>
+                          <span className="text-slate-900 dark:text-white">
+                            {selectedResult.category1} {selectedResult.category2 && `> ${selectedResult.category2}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 타겟 정보 */}
+                  {(selectedResult.target_product_name || selectedResult.target_mall_name || selectedResult.target_brand) && (
+                    <div className="space-y-4">
+                      <h5 className="text-lg font-semibold text-slate-900 dark:text-white">타겟 정보</h5>
+                      <div className="space-y-3 text-sm">
+                        {selectedResult.target_product_name && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">타겟 상품명:</span>
+                            <span className="text-slate-900 dark:text-white">{selectedResult.target_product_name}</span>
+                          </div>
+                        )}
+                        {selectedResult.target_mall_name && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">타겟 몰명:</span>
+                            <span className="text-slate-900 dark:text-white">{selectedResult.target_mall_name}</span>
+                          </div>
+                        )}
+                        {selectedResult.target_brand && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600 dark:text-slate-400">타겟 브랜드:</span>
+                            <span className="text-slate-900 dark:text-white">{selectedResult.target_brand}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 액션 버튼들 */}
+                  <div className="flex space-x-3 pt-4 border-t border-slate-200 dark:border-slate-600">
+                    {selectedResult.product_link && (
+                      <motion.a
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        href={selectedResult.product_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>상품 페이지 보기</span>
+                      </motion.a>
+                    )}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        handleDelete(selectedResult.id!)
+                        closeModal()
+                      }}
+                      className="px-4 py-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200 font-semibold"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
