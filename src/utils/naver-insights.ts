@@ -118,13 +118,13 @@ export class NaverShoppingInsights {
   ): Promise<InsightsResponse | null> {
     try {
       // 네이버 API 형식에 맞게 수정
-      // category는 문자열이어야 하고, keyword는 문자열 배열이어야 함
+      // category는 문자열이어야 하고, keyword는 객체 배열이어야 함
       const requestBody = {
         startDate,
         endDate,
         timeUnit,
         category: category[0]?.param[0] || '50000005', // 카테고리 코드 (문자열)
-        keyword: keywords.flatMap(k => k.param), // 키워드 배열 (문자열 배열)
+        keyword: keywords.map(k => ({ name: k.name, param: k.param })), // 키워드 객체 배열
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
