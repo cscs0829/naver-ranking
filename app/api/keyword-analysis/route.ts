@@ -29,6 +29,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 날짜/단위 유효성 검사
+    const minDataLabDate = new Date('2017-08-01')
+    const startDateObj = new Date(startDate)
+    const endDateObj = new Date(endDate)
+    if (startDateObj < minDataLabDate) {
+      return NextResponse.json({ error: '시작 날짜는 2017-08-01 이후여야 합니다.' }, { status: 400 })
+    }
+    if (startDateObj > endDateObj) {
+      return NextResponse.json({ error: '시작 날짜가 종료 날짜보다 클 수 없습니다.' }, { status: 400 })
+    }
+    if (!['date','week','month'].includes(timeUnit)) {
+      return NextResponse.json({ error: '유효하지 않은 단위입니다. (date|week|month)' }, { status: 400 })
+    }
+
     // 키워드 유효성 검사 (쉼표 파싱 후 빈값 제거)
     const normalizedKeywords = Array.isArray(keywords)
       ? keywords.map((k: any) => ({
@@ -46,15 +60,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // API 키 프로필 조회
-    console.log('API 키 조회:', { profileId, apiType: 'insights' })
-    const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'insights') : await getActiveProfile(undefined, 'insights')
+    // API 키 프로필 조회 (DataLab 검색어 트렌드)
+    console.log('API 키 조회:', { profileId, apiType: 'search' })
+    const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'search') : await getActiveProfile(undefined, 'search')
     console.log('조회된 API 키:', naverKeys ? '있음' : '없음')
     
     if (!naverKeys) {
-      console.error('API 키 조회 실패')
+      console.error('API 키 조회 실패 (DataLab 검색어 트렌드)')
       return NextResponse.json(
-        { error: '네이버 쇼핑인사이트 API 키를 데이터베이스에서 가져올 수 없습니다.' },
+        { error: '네이버 DataLab 검색어 트렌드 API 키를 데이터베이스에서 가져올 수 없습니다.' },
         { status: 500 }
       )
     }
@@ -64,7 +78,7 @@ export async function POST(request: NextRequest) {
       naverKeys.clientSecret
     )
 
-    // 네이버 쇼핑인사이트 호출
+    // 네이버 DataLab 검색어 트렌드 호출
     // 날짜 가드: DataLab은 2017-08-01부터 조회 가능 (응답에서도 사용하므로 스코프 상단에서 계산)
     const minDate = '2017-08-01'
     const safeStart = startDate < minDate ? minDate : startDate
@@ -82,9 +96,9 @@ export async function POST(request: NextRequest) {
         ages
       )
     } catch (err: any) {
-      console.error('네이버 인사이트 호출 예외:', err?.response?.data || err?.message || err)
+      console.error('DataLab 검색어 트렌드 호출 예외:', err?.response?.data || err?.message || err)
       return NextResponse.json(
-        { error: '네이버 쇼핑인사이트 API 호출 실패', detail: err?.response?.data || err?.message || String(err) },
+        { error: '네이버 DataLab 검색어 트렌드 API 호출 실패', detail: err?.response?.data || err?.message || String(err) },
         { status: 502 }
       )
     }
