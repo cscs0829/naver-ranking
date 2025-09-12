@@ -38,70 +38,34 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [profiles, setProfiles] = useState<any[]>([])
 
-  // 카테고리 예시 (참고용 - 사용자가 직접 입력)
-  const categoryExamples = [
-    { name: '해외여행', code: '50000005' },
-    { name: '국내여행', code: '50000006' },
-    { name: '항공권', code: '50000007' },
-    { name: '숙박', code: '50000008' },
-    { name: '패션의류', code: '50000000' },
-    { name: '화장품/미용', code: '50000002' },
-    { name: '식품', code: '50000003' },
-    { name: '디지털/가전', code: '50000001' }
+  // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
+  const categoryOptions = [
+    // 여행 관련 카테고리 (우선순위)
+    { name: '해외여행', param: ['50000005'] }, // 기본값
+    { name: '국내여행', param: ['50000006'] },
+    { name: '항공권', param: ['50000007'] },
+    { name: '숙박', param: ['50000008'] },
+    { name: '렌터카', param: ['50000009'] },
+    { name: '여행용품', param: ['50000010'] },
+    // 기타 카테고리
+    { name: '패션의류', param: ['50000000'] },
+    { name: '화장품/미용', param: ['50000002'] },
+    { name: '식품', param: ['50000003'] },
+    { name: '생활용품', param: ['50000004'] },
+    { name: '디지털/가전', param: ['50000001'] },
+    { name: '스포츠/레저', param: ['50000011'] }
   ]
 
-  // 카테고리별 키워드 옵션
-  const getKeywordOptions = (categoryName: string) => {
-    const categoryKeywords = {
-      '패션의류': [
-        { name: '여성의류', param: ['여성의류', '원피스', '블라우스', '스커트'] },
-        { name: '남성의류', param: ['남성의류', '셔츠', '바지', '자켓'] },
-        { name: '신발', param: ['신발', '운동화', '구두', '부츠'] }
-      ],
-      '화장품/미용': [
-        { name: '스킨케어', param: ['스킨케어', '토너', '세럼', '크림'] },
-        { name: '메이크업', param: ['메이크업', '립스틱', '파운데이션', '아이섀도'] },
-        { name: '향수', param: ['향수', '퍼퓸', '오드뚜왈렛'] }
-      ],
-      '디지털/가전': [
-        { name: '스마트폰', param: ['스마트폰', '아이폰', '갤럭시', '안드로이드'] },
-        { name: '노트북', param: ['노트북', '맥북', '삼성노트북', 'LG노트북'] },
-        { name: '가전제품', param: ['가전제품', '냉장고', '세탁기', 'TV'] }
-      ],
-      '식품': [
-        { name: '건강식품', param: ['건강식품', '비타민', '프로틴', '영양제'] },
-        { name: '간식', param: ['간식', '과자', '사탕', '초콜릿'] },
-        { name: '음료', param: ['음료', '커피', '차', '주스'] }
-      ],
-      '해외여행': [
-        { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }, // 기본값
-        { name: '일본여행', param: ['일본여행', '일본패키지', '일본투어'] },
-        { name: '유럽여행', param: ['유럽여행', '유럽패키지', '유럽투어'] },
-        { name: '동남아여행', param: ['동남아여행', '동남아패키지', '동남아투어'] },
-        { name: '중국여행', param: ['중국여행', '중국패키지', '중국투어'] },
-        { name: '미국여행', param: ['미국여행', '미국패키지', '미국투어'] }
-      ],
-      '국내여행': [
-        { name: '국내여행', param: ['국내여행', '국내패키지', '국내투어'] },
-        { name: '제주도', param: ['제주도', '제주여행', '제주패키지'] },
-        { name: '강원도', param: ['강원도', '강원여행', '강원패키지'] }
-      ],
-      '항공권': [
-        { name: '국내항공', param: ['국내항공', '국내항공권', '제주항공'] },
-        { name: '해외항공', param: ['해외항공', '해외항공권', '국제항공'] },
-        { name: 'LCC', param: ['LCC', '저가항공', '할인항공'] }
-      ],
-      '숙박': [
-        { name: '호텔', param: ['호텔', '리조트', '콘도'] },
-        { name: '펜션', param: ['펜션', '게스트하우스', '민박'] },
-        { name: '모텔', param: ['모텔', '여관', '여인숙'] }
-      ]
-    }
-    
-    return categoryKeywords[categoryName as keyof typeof categoryKeywords] || [
-      { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] } // 기본값: 해외여행
-    ]
-  }
+  // 키워드 예시 (참고용)
+  const keywordExamples = [
+    { name: '해외여행', keywords: ['해외여행', '해외패키지', '해외투어'] },
+    { name: '일본여행', keywords: ['일본여행', '일본패키지', '일본투어'] },
+    { name: '유럽여행', keywords: ['유럽여행', '유럽패키지', '유럽투어'] },
+    { name: '동남아여행', keywords: ['동남아여행', '동남아패키지', '동남아투어'] },
+    { name: '패션의류', keywords: ['여성의류', '원피스', '블라우스', '스커트'] },
+    { name: '화장품', keywords: ['스킨케어', '토너', '세럼', '크림'] },
+    { name: '디지털', keywords: ['스마트폰', '아이폰', '갤럭시', '안드로이드'] }
+  ]
 
   // API 키 프로필 목록 가져오기
   useEffect(() => {
@@ -138,7 +102,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   const addCategory = () => {
     setFormData(prev => ({
       ...prev,
-      category: [...prev.category, { name: '', param: [''] }] // 빈 값으로 시작
+      category: [...prev.category, { name: '해외여행', param: ['50000005'] }] // 기본값: 해외여행
     }))
   }
 
@@ -151,28 +115,29 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
-  const updateCategory = (index: number, field: 'name' | 'param', value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      category: prev.category.map((c, i) => 
-        i === index 
-          ? { ...c, [field]: field === 'param' ? [value] : value }
-          : c
-      )
-    }))
-  }
-
-  const addKeyword = () => {
+  const updateCategory = (index: number, category: { name: string; param: string[] }) => {
     setFormData(prev => {
-      const currentCategory = prev.category[0]?.name || '해외여행' // 기본값: 해외여행
-      const keywordOptions = getKeywordOptions(currentCategory)
-      const defaultKeyword = keywordOptions.length > 0 ? keywordOptions[0] : { name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }
+      const newCategory = prev.category.map((c, i) => i === index ? category : c)
+      
+      // 카테고리가 변경되면 해당 카테고리의 첫 번째 키워드 옵션으로 키워드도 업데이트
+      const newKeywordOptions = getKeywordOptions(category.name)
+      const newKeywords = prev.keywords.map((k, i) => 
+        i === 0 && newKeywordOptions.length > 0 ? newKeywordOptions[0] : k
+      )
       
       return {
         ...prev,
-        keywords: [...prev.keywords, defaultKeyword]
+        category: newCategory,
+        keywords: newKeywords
       }
     })
+  }
+
+  const addKeyword = () => {
+    setFormData(prev => ({
+      ...prev,
+      keywords: [...prev.keywords, { name: '', param: [] }] // 빈 값으로 시작
+    }))
   }
 
   const removeKeyword = (index: number) => {
@@ -184,10 +149,14 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     }
   }
 
-  const updateKeyword = (index: number, keyword: { name: string; param: string[] }) => {
+  const updateKeyword = (index: number, field: 'name' | 'param', value: string | string[]) => {
     setFormData(prev => ({
       ...prev,
-      keywords: prev.keywords.map((k, i) => i === index ? keyword : k)
+      keywords: prev.keywords.map((k, i) => 
+        i === index 
+          ? { ...k, [field]: value }
+          : k
+      )
     }))
   }
 
@@ -256,66 +225,35 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
           <div className="space-y-4">
             {formData.category.map((category, index) => (
               <div key={index} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        카테고리 이름
-                      </label>
-                      <input
-                        type="text"
-                        value={category.name}
-                        onChange={(e) => updateCategory(index, 'name', e.target.value)}
-                        placeholder="예) 해외여행, 패션의류, 화장품/미용"
-                        className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                      />
-                    </div>
-                    {formData.category.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCategory(index)}
-                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      카테고리 코드
+                      카테고리 선택
                     </label>
-                    <input
-                      type="text"
-                      value={category.param[0] || ''}
-                      onChange={(e) => updateCategory(index, 'param', e.target.value)}
-                      placeholder="예) 50000005 (해외여행), 50000000 (패션의류)"
+                    <select
+                      value={category.name}
+                      onChange={(e) => {
+                        const selected = categoryOptions.find(opt => opt.name === e.target.value)
+                        if (selected) {
+                          updateCategory(index, selected)
+                        }
+                      }}
                       className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    />
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      네이버쇼핑 카테고리 URL의 'cat_id' 값 또는 위 예시를 참고하세요
-                    </p>
-                  </div>
-                  
-                  {/* 카테고리 예시 표시 */}
-                  <div className="mt-3">
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">카테고리 예시:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {categoryExamples.map(example => (
-                        <button
-                          key={example.code}
-                          type="button"
-                          onClick={() => {
-                            updateCategory(index, 'name', example.name)
-                            updateCategory(index, 'param', example.code)
-                          }}
-                          className="px-3 py-1 text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
-                        >
-                          {example.name} ({example.code})
-                        </button>
+                    >
+                      {categoryOptions.map(option => (
+                        <option key={option.name} value={option.name}>{option.name}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
+                  {formData.category.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeCategory(index)}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -341,54 +279,69 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
           <div className="space-y-4">
             {formData.keywords.map((keyword, index) => (
               <div key={index} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
-                <div className="flex items-center space-x-4">
-                  <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      키워드 그룹 선택
-                    </label>
-                    <select
-                      value={keyword.name}
-                      onChange={(e) => {
-                        const selected = getKeywordOptions(formData.category[0]?.name || '해외여행').find(opt => opt.name === e.target.value)
-                        if (selected) {
-                          updateKeyword(index, selected)
-                        }
-                      }}
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      {getKeywordOptions(formData.category[0]?.name || '해외여행').map(option => (
-                        <option key={option.name} value={option.name}>{option.name}</option>
-                      ))}
-                    </select>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                        키워드 그룹 이름
+                      </label>
+                      <input
+                        type="text"
+                        value={keyword.name}
+                        onChange={(e) => updateKeyword(index, 'name', e.target.value)}
+                        placeholder="예) 해외여행, 일본여행, 패션의류"
+                        className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    {formData.keywords.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeKeyword(index)}
+                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
-                  {formData.keywords.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeKeyword(index)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    키워드 (쉼표로 구분, 최대 5개)
-                  </label>
-                  <input
-                    type="text"
-                    value={keyword.param.join(', ')}
-                    onChange={(e) => {
-                      const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k)
-                      const newKeyword = { ...keyword, param: keywords }
-                      updateKeyword(index, newKeyword)
-                    }}
-                    placeholder="예: 해외여행, 베트남 패키지, 푸꾸옥 여행"
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                  />
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    분석할 키워드를 쉼표로 구분하여 입력하거나 위에서 선택하세요 (최대 5개)
-                  </p>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                      키워드 (쉼표로 구분, 최대 5개)
+                    </label>
+                    <input
+                      type="text"
+                      value={keyword.param.join(', ')}
+                      onChange={(e) => {
+                        const keywords = e.target.value.split(',').map(k => k.trim()).filter(k => k)
+                        updateKeyword(index, 'param', keywords)
+                      }}
+                      placeholder="예) 해외여행, 베트남 패키지, 푸꾸옥 여행"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      분석할 키워드를 쉼표로 구분하여 입력하세요 (최대 5개)
+                    </p>
+                  </div>
+                  
+                  {/* 키워드 예시 표시 */}
+                  <div className="mt-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mb-2">키워드 예시:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {keywordExamples.map(example => (
+                        <button
+                          key={example.name}
+                          type="button"
+                          onClick={() => {
+                            updateKeyword(index, 'name', example.name)
+                            updateKeyword(index, 'param', example.keywords)
+                          }}
+                          className="px-3 py-1 text-xs bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-500 transition-colors"
+                        >
+                          {example.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
