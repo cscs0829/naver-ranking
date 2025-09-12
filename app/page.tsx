@@ -389,7 +389,7 @@ export default function Home() {
             </div>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
               <p className="text-sm text-slate-500 dark:text-slate-500">
-                © 2024 네이버 데이터 검색기. All rights reserved.
+                © 네이버 데이터 검색기. All rights reserved made by sean.
               </p>
             </div>
           </div>

@@ -32,11 +32,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (profile) {
-      const { name, clientId, clientSecret, makeDefault, id } = profile
+      const { name, clientId, clientSecret, apiType, makeDefault, id } = profile
       if (!name || !clientId || !clientSecret) {
         return NextResponse.json({ error: '프로필 name, clientId, clientSecret는 필수입니다.' }, { status: 400 })
       }
-      const success = await upsertProfile(name, clientId, clientSecret, makeDefault, id)
+      const success = await upsertProfile(name, clientId, clientSecret, apiType || 'shopping', makeDefault, id)
       if (success) return NextResponse.json({ message: '프로필이 저장되었습니다.' }, { status: 200 })
       return NextResponse.json({ error: '프로필 저장에 실패했습니다.' }, { status: 500 })
     }

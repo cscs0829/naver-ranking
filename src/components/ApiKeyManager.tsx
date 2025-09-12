@@ -18,10 +18,11 @@ export default function ApiKeyManager() {
   const [editingKeyId, setEditingKeyId] = useState<number | null>(null)
   const [profiles, setProfiles] = useState<any[]>([])
   const [showProfileForm, setShowProfileForm] = useState(false)
-  const [profileForm, setProfileForm] = useState<{ id?: number; name: string; clientId: string; clientSecret: string; makeDefault: boolean }>({ 
+  const [profileForm, setProfileForm] = useState<{ id?: number; name: string; clientId: string; clientSecret: string; apiType: 'shopping' | 'insights'; makeDefault: boolean }>({ 
     name: '', 
     clientId: '', 
     clientSecret: '', 
+    apiType: 'shopping',
     makeDefault: false 
   })
   const [showSecrets, setShowSecrets] = useState<Record<number, boolean>>({})
@@ -64,7 +65,7 @@ export default function ApiKeyManager() {
         setSuccess(data.message || '프로필이 저장되었습니다.')
         setError('')
         setShowProfileForm(false)
-        setProfileForm({ name: '', clientId: '', clientSecret: '', makeDefault: false })
+        setProfileForm({ name: '', clientId: '', clientSecret: '', apiType: 'shopping', makeDefault: false })
         fetchKeys()
       } else {
         setError(data.error || '프로필 저장에 실패했습니다.')
@@ -169,7 +170,7 @@ export default function ApiKeyManager() {
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             setShowProfileForm(!showProfileForm)
-            setProfileForm({ name: '', clientId: '', clientSecret: '', makeDefault: false })
+            setProfileForm({ name: '', clientId: '', clientSecret: '', apiType: 'shopping', makeDefault: false })
             setError('')
             setSuccess('')
           }}
@@ -240,7 +241,7 @@ export default function ApiKeyManager() {
               <p className="text-slate-600 dark:text-slate-400 mt-2">Client ID와 Secret을 한 번에 저장합니다</p>
             </div>
             <form onSubmit={handleSaveProfile} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">프로필 이름</label>
                   <input
@@ -248,9 +249,22 @@ export default function ApiKeyManager() {
                     value={profileForm.name}
                     onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                     className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/50 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="예: Main Profile"
+                    placeholder="예: Shopping API"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">API 타입</label>
+                  <select
+                    value={profileForm.apiType}
+                    onChange={(e) => setProfileForm({ ...profileForm, apiType: e.target.value as 'shopping' | 'insights' })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-emerald-100 dark:focus:ring-emerald-900/50 focus:border-emerald-500 dark:focus:border-emerald-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="shopping">쇼핑 검색 API</option>
+                    <option value="insights">쇼핑인사이트 API</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Client ID</label>
                   <input
@@ -326,6 +340,7 @@ export default function ApiKeyManager() {
               <thead className="bg-gradient-to-r from-slate-50 to-emerald-50 dark:from-slate-700 dark:to-slate-600">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">이름</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">API 타입</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Client ID</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Client Secret</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">기본</th>
@@ -337,6 +352,15 @@ export default function ApiKeyManager() {
                 {profiles.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                     <td className="px-6 py-4 text-slate-900 dark:text-white font-medium">{p.name}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        p.api_type === 'shopping' 
+                          ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
+                          : 'bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200'
+                      }`}>
+                        {p.api_type === 'shopping' ? '쇼핑 검색' : '쇼핑인사이트'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         <span className="font-mono text-sm text-slate-600 dark:text-slate-400">

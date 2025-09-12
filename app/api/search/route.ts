@@ -24,8 +24,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 프로필ID가 있으면 프로필 기반, 없으면 기존 키 기반
-    const naverKeys = profileId ? await getActiveProfile(Number(profileId)) : await getNaverApiKeys()
+    // 프로필ID가 있으면 프로필 기반, 없으면 기존 키 기반 (쇼핑 검색 API 사용)
+    const naverKeys = profileId ? await getActiveProfile(Number(profileId), 'shopping') : await getNaverApiKeys()
     if (!naverKeys) {
       return NextResponse.json(
         { error: '네이버 API 키를 데이터베이스에서 가져올 수 없습니다.' },

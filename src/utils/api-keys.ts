@@ -15,6 +15,7 @@ export interface ApiKeyProfile {
   name: string
   client_id: string
   client_secret: string
+  api_type: 'shopping' | 'insights'
   is_active: boolean
   is_default: boolean
   created_at: string
@@ -47,11 +48,11 @@ export async function getNaverApiKeys(): Promise<{ clientId: string; clientSecre
   return { clientId, clientSecret }
 }
 
-export async function getActiveProfile(profileId?: number): Promise<{ clientId: string; clientSecret: string } | null> {
+export async function getActiveProfile(profileId?: number, apiType: 'shopping' | 'insights' = 'shopping'): Promise<{ clientId: string; clientSecret: string } | null> {
   checkSupabaseConfig()
   if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
 
-  let query = supabase.from('api_key_profiles').select('*').eq('is_active', true)
+  let query = supabase.from('api_key_profiles').select('*').eq('is_active', true).eq('api_type', apiType)
   if (profileId) {
     query = query.eq('id', profileId)
   } else {
@@ -67,14 +68,21 @@ export async function getActiveProfile(profileId?: number): Promise<{ clientId: 
   return { clientId: p.client_id, clientSecret: p.client_secret }
 }
 
-export async function getAllProfiles(): Promise<ApiKeyProfile[]> {
+export async function getAllProfiles(apiType?: 'shopping' | 'insights'): Promise<ApiKeyProfile[]> {
   checkSupabaseConfig()
   if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
-  const { data, error } = await supabase
+  
+  let query = supabase
     .from('api_key_profiles')
     .select('*')
     .order('is_default', { ascending: false })
     .order('created_at', { ascending: false })
+  
+  if (apiType) {
+    query = query.eq('api_type', apiType)
+  }
+  
+  const { data, error } = await query
   if (error) {
     console.error('Error fetching profiles:', error)
     return []
@@ -82,10 +90,10 @@ export async function getAllProfiles(): Promise<ApiKeyProfile[]> {
   return data || []
 }
 
-export async function upsertProfile(name: string, clientId: string, clientSecret: string, makeDefault?: boolean, id?: number): Promise<boolean> {
+export async function upsertProfile(name: string, clientId: string, clientSecret: string, apiType: 'shopping' | 'insights' = 'shopping', makeDefault?: boolean, id?: number): Promise<boolean> {
   checkSupabaseConfig()
   if (!supabase) throw new Error('Supabase 클라이언트가 초기화되지 않았습니다.')
-  const payload: any = { name, client_id: clientId, client_secret: clientSecret, is_active: true }
+  const payload: any = { name, client_id: clientId, client_secret: clientSecret, api_type: apiType, is_active: true }
   if (typeof makeDefault !== 'undefined') payload.is_default = makeDefault
   const { error } = await supabase
     .from('api_key_profiles')
@@ -95,7 +103,12 @@ export async function upsertProfile(name: string, clientId: string, clientSecret
     return false
   }
   if (makeDefault) {
-    await supabase.from('api_key_profiles').update({ is_default: false }).neq('name', name)
+    // 같은 API 타입 내에서만 기본값 설정
+    await supabase
+      .from('api_key_profiles')
+      .update({ is_default: false })
+      .eq('api_type', apiType)
+      .neq('name', name)
   }
   return true
 }
