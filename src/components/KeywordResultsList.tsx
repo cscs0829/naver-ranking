@@ -186,25 +186,19 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     return sum / data.length
   }
 
-  // 차트 데이터 준비
-  const prepareChartData = (data: KeywordTrendData[]) => {
-    if (!data || data.length === 0) return []
-    
-    // 기간별로 그룹화
-    const groupedData: { [key: string]: { [group: string]: number } } = {}
-    
-    data.forEach(item => {
-      if (!groupedData[item.period]) {
-        groupedData[item.period] = {}
-      }
-      groupedData[item.period][item.group] = item.ratio
+  // 차트 데이터 준비 (키워드 비교용: period 기준으로 각 키워드의 ratio를 열로 병합)
+  const prepareComparisonChart = (trendResults: KeywordTrendResult[]) => {
+    if (!trendResults || trendResults.length === 0) return [] as any[]
+    const byPeriod: Record<string, any> = {}
+    trendResults.forEach(tr => {
+      tr.data.forEach(d => {
+        if (!byPeriod[d.period]) byPeriod[d.period] = { period: d.period }
+        // category/keywords 응답은 group이 없고 ratio만 제공
+        byPeriod[d.period][tr.title] = d.ratio
+      })
     })
-    
-    // 차트용 데이터로 변환
-    return Object.keys(groupedData).map(period => ({
-      period,
-      ...groupedData[period]
-    }))
+    // 기간 오름차순 정렬
+    return Object.values(byPeriod).sort((a: any, b: any) => (a.period < b.period ? -1 : a.period > b.period ? 1 : 0))
   }
 
   return (
@@ -468,6 +462,33 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
                       className="p-6 bg-slate-50 dark:bg-slate-700/50"
                     >
                       <div className="space-y-6">
+                        {/* 키워드 1~5개 비교: 각 trendResult는 title=키워드그룹명, data=[{period, ratio}] */}
+                        {(() => {
+                          const comparisonData = prepareComparisonChart(result.results)
+                          const titles = result.results.map(r => r.title)
+                          return (
+                            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                              <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                                키워드 클릭량 비교
+                              </h4>
+                              <div className="h-80 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={comparisonData}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis dataKey="period" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                                    <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#f1f5f9' }} labelStyle={{ color: '#f1f5f9' }} />
+                                    {titles.map((t, i) => (
+                                      <Line key={t} type="monotone" dataKey={t} stroke={["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6"][i%5]} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                                    ))}
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+                          )
+                        })()}
+
+                        {/* 원래 단일 결과 카드 렌더링은 group이 있는 API용. 필요 시 유지 */}
                         {result.results.map((trendResult, index) => {
                           const maxRatio = getMaxRatio(trendResult.data)
                           const minRatio = getMinRatio(trendResult.data)
@@ -498,7 +519,7 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
                                 <h5 className="font-medium text-slate-900 dark:text-white">트렌드 차트:</h5>
                                 <div className="h-80 w-full">
                                   <ResponsiveContainer width="100%" height="100%">
-                                    <LineChart data={prepareChartData(trendResult.data)}>
+                                    <LineChart data={prepareComparisonChart([trendResult])}>
                                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                       <XAxis 
                                         dataKey="period" 

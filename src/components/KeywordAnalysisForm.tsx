@@ -28,15 +28,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30일 전
     endDate: new Date().toISOString().split('T')[0], // 오늘
     timeUnit: 'date',
-    category: [{ name: '렌터카', param: ['50000009'] }], // 기본값: 렌터카 (데이터 31개)
-    keywords: [{ name: '여행관련', param: ['여행', '렌터카', '숙박'] }], // 기본값: 데이터가 있는 키워드
+    // 분야 고정: 여가/생활편의 > 해외여행 > 해외패키지/기타 (cat_id=10008402)
+    category: [{ name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['10008402'] }],
+    keywords: [{ name: '여행관련', param: ['여행', '항공권', '캐리어'] }], // 기본값: 데이터가 있는 키워드
     device: '',
     gender: '',
     ages: [],
     profileId: undefined
   })
 
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(true)
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
 
@@ -66,22 +67,9 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     load()
   }, [])
 
-  // 네이버 쇼핑 카테고리 옵션 (데이터가 있는 카테고리 우선)
+  // 분야 고정 옵션: 여가/생활편의 > 해외여행 > 해외패키지/기타
   const categoryOptions = [
-    // 여행 관련 카테고리 (데이터 확인됨)
-    { name: '렌터카', param: ['50000009'] }, // 기본값 (31개 데이터)
-    { name: '숙박', param: ['50000008'] }, // 17개 데이터
-    { name: '항공권', param: ['50000007'] }, // 1개 데이터
-    { name: '해외여행', param: ['50000005'] }, // 1개 데이터
-    { name: '국내여행', param: ['50000006'] },
-    { name: '여행용품', param: ['50000010'] },
-    // 기타 카테고리 (데이터 확인됨)
-    { name: '패션의류', param: ['50000000'] }, // 31개 데이터
-    { name: '화장품/미용', param: ['50000002'] },
-    { name: '식품', param: ['50000003'] },
-    { name: '생활용품', param: ['50000004'] },
-    { name: '디지털/가전', param: ['50000001'] },
-    { name: '스포츠/레저', param: ['50000011'] }
+    { name: '여가/생활편의 > 해외여행 > 해외패키지/기타', param: ['10008402'] }
   ]
 
   // 키워드 예시 (참고용)
@@ -94,6 +82,17 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     { name: '화장품', placeholder: '스킨케어, 토너, 세럼, 크림' },
     { name: '디지털', placeholder: '스마트폰, 아이폰, 갤럭시, 안드로이드' }
   ]
+  // 기간 프리셋 설정
+  const setPeriod = (days: number) => {
+    const end = new Date()
+    const start = new Date(end.getTime() - days * 24 * 60 * 60 * 1000)
+    setFormData(prev => ({
+      ...prev,
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0],
+      timeUnit: days <= 31 ? 'date' : days <= 93 ? 'week' : 'month'
+    }))
+  }
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -175,73 +174,101 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
   return (
     <div className="p-8 space-y-8">
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* 기본 설정 */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
-            <Calendar className="w-6 h-6 mr-3 text-orange-500" />
-            분석 기간 설정
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                시작 날짜
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                max={formData.endDate}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                종료 날짜
-              </label>
-              <input
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                min={formData.startDate}
-                max={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                시간 단위
-              </label>
+        {/* 심플 검색 설정 */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
+              <Calendar className="w-6 h-6 mr-3 text-orange-500" />
+              검색 설정
+            </h3>
+            {/* 프로필 선택 상단 고정 */}
+            <div className="w-64">
+              <label htmlFor="profileIdTop" className="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">API 키 프로필</label>
               <select
-                value={formData.timeUnit}
-                onChange={(e) => setFormData(prev => ({ ...prev, timeUnit: e.target.value as 'date' | 'week' | 'month' }))}
-                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                id="profileIdTop"
+                value={formData.profileId ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, profileId: e.target.value ? parseInt(e.target.value) : undefined }))}
+                className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                disabled={isLoading}
               >
-                <option value="date">일별</option>
-                <option value="week">주별</option>
-                <option value="month">월별</option>
+                <option value="">기본 프로필</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}{p.is_default ? ' (기본)' : ''}</option>
+                ))}
               </select>
             </div>
+          </div>
 
+          {/* 상단: 카테고리(고정) + 키워드 입력 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">분야</label>
+              <div className="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                여가/생활편의 &gt; 해외여행 &gt; 해외패키지/기타
+              </div>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">검색어 (최대 5개, 쉼표로 구분)</label>
+              <input
+                type="text"
+                value={formData.keywords[0]?.param?.join(', ') || ''}
+                onChange={(e) => {
+                  const inputValue = e.target.value
+                  updateKeyword(0, 'param', [inputValue])
+                }}
+                onBlur={(e) => {
+                  const inputValue = e.target.value
+                  const keywords = inputValue.split(',').map(k => k.trim()).filter(k => k).slice(0,5)
+                  updateKeyword(0, 'param', keywords)
+                }}
+                placeholder="비교할 검색어 추가"
+                className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* 기간 프리셋 + 직접입력 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center space-x-2">
+              <button type="button" onClick={() => setPeriod(1)} className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm">일간</button>
+              <button type="button" onClick={() => setPeriod(30)} className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm">1개월</button>
+              <button type="button" onClick={() => setPeriod(90)} className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm">3개월</button>
+              <button type="button" onClick={() => setPeriod(365)} className="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm">1년</button>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">시작</label>
+              <input type="date" value={formData.startDate} onChange={(e)=>setFormData(prev=>({...prev,startDate:e.target.value}))} className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white" max={formData.endDate} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">종료</label>
+                <input type="date" value={formData.endDate} onChange={(e)=>setFormData(prev=>({...prev,endDate:e.target.value}))} className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white" min={formData.startDate} max={new Date().toISOString().split('T')[0]} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">단위</label>
+                <select value={formData.timeUnit} onChange={(e)=>setFormData(prev=>({...prev,timeUnit:e.target.value as 'date'|'week'|'month'}))} className="w-full px-3 py-2 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                  <option value="date">일별</option>
+                  <option value="week">주별</option>
+                  <option value="month">월별</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 카테고리 설정 */}
+        {/* 카테고리(고정) - 간단 표시 */}
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
             <Globe className="w-6 h-6 mr-3 text-orange-500" />
-            분석 카테고리
+            카테고리
           </h3>
-          
           <div className="space-y-4">
             {formData.category.map((category, index) => (
               <div key={index} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
                 <div className="flex items-center space-x-4">
                   <div className="flex-1">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      카테고리 선택
+                      카테고리 (고정)
                     </label>
                     <select
                       value={category.name}
@@ -252,6 +279,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                         }
                       }}
                       className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      disabled
                     >
                       {categoryOptions.map(option => (
                         <option key={option.name} value={option.name}>{option.name}</option>
@@ -271,24 +299,16 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
               </div>
             ))}
             
-            <button
-              type="button"
-              onClick={addCategory}
-              className="flex items-center space-x-2 px-4 py-2 text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>카테고리 추가</span>
-            </button>
+            {/* 고정 */}
           </div>
         </div>
 
-        {/* 키워드 설정 */}
+        {/* 키워드 설정 (간단 입력 유지) */}
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center">
             <Search className="w-6 h-6 mr-3 text-orange-500" />
             분석 키워드
           </h3>
-          
           <div className="space-y-4">
             {formData.keywords.map((keyword, index) => (
               <div key={index} className="p-4 bg-slate-50 dark:bg-slate-700 rounded-xl">
@@ -364,13 +384,13 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     
                     {/* 여행사 키워드 가이드 */}
                     <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">💡 여행사 키워드 추천 (데이터 확인됨):</div>
+                      <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">💡 여행사 키워드 추천:</div>
                       <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                        <div><strong>🚗 렌터카 카테고리 (31개 데이터):</strong> 여행, 렌터카, 자동차, 차량</div>
-                        <div><strong>🏨 숙박 카테고리 (17개 데이터):</strong> 여행, 호텔, 숙박, 펜션</div>
-                        <div><strong>✈️ 항공권 카테고리 (1개 데이터):</strong> 여행, 항공권, 비행기</div>
-                        <div><strong>👕 패션의류 (31개 데이터):</strong> 여성의류, 남성의류, 여행의류</div>
-                        <div><strong>💡 팁:</strong> 렌터카 카테고리가 가장 많은 데이터를 제공합니다!</div>
+                        <div><strong>해외여행:</strong> 해외여행, 해외패키지, 해외투어, 해외자유여행</div>
+                        <div><strong>국내여행:</strong> 국내여행, 국내패키지, 당일치기, 주말여행</div>
+                        <div><strong>지역별:</strong> 동남아여행, 유럽여행, 일본여행, 중국여행</div>
+                        <div><strong>테마여행:</strong> 신혼여행, 가족여행, 혼자여행, 힐링여행</div>
+                        <div><strong>계절여행:</strong> 여름휴가, 겨울여행, 봄여행, 가을여행</div>
                       </div>
                     </div>
                   </div>
@@ -421,125 +441,40 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
           </div>
         </div>
 
-        {/* 고급 설정 */}
+        {/* 기본 필터 - 항상 노출 */}
         <div className="space-y-6">
-          <button
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center space-x-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
-          >
-            <Filter className="w-5 h-5" />
-            <span>고급 설정</span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-          </button>
-
-          <AnimatePresence>
-            {showAdvanced && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-6 overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* API 키 프로필 */}
-                  <div className="space-y-3">
-                    <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                      <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
-                      사용할 API 키 프로필
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="profileId"
-                        value={formData.profileId ?? ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, profileId: e.target.value ? parseInt(e.target.value) : undefined }))}
-                        className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
-                        disabled={isLoading}
-                      >
-                        <option value="">기본 프로필 사용</option>
-                        {profiles.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                            {p.is_default ? ' (기본)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                        <Sparkles className="w-5 h-5 text-slate-400" />
-                      </div>
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
-                      </div>
-                    </div>
-                    {loadingProfiles && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400">프로필 불러오는 중...</p>
-                    )}
-                    <p className="text-xs text-slate-500 dark:text-slate-400">선택하지 않으면 기본 프로필이 사용됩니다.</p>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      디바이스
-                    </label>
-                    <select
-                      value={formData.device || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, device: e.target.value as 'pc' | 'mo' | '' }))}
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="">전체</option>
-                      <option value="pc">PC</option>
-                      <option value="mo">모바일</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      성별
-                    </label>
-                    <select
-                      value={formData.gender || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value as 'm' | 'f' | '' }))}
-                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                    >
-                      <option value="">전체</option>
-                      <option value="m">남성</option>
-                      <option value="f">여성</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      연령대
-                    </label>
-                    <div className="space-y-2">
-                      {['10', '20', '30', '40', '50', '60'].map(age => (
-                        <label key={age} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={formData.ages?.includes(age) || false}
-                            onChange={(e) => {
-                              const newAges = formData.ages || []
-                              if (e.target.checked) {
-                                setFormData(prev => ({ ...prev, ages: [...newAges, age] }))
-                              } else {
-                                setFormData(prev => ({ ...prev, ages: newAges.filter(a => a !== age) }))
-                              }
-                            }}
-                            className="w-4 h-4 text-orange-600 bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-orange-500 dark:focus:ring-orange-400"
-                          />
-                          <span className="text-sm text-slate-700 dark:text-slate-300">{age}대</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">디바이스</label>
+              <select value={formData.device || ''} onChange={(e)=>setFormData(prev=>({...prev, device: e.target.value as 'pc'|'mo'|''}))} className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                <option value="">전체</option>
+                <option value="pc">PC</option>
+                <option value="mo">모바일</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">성별</label>
+              <select value={formData.gender || ''} onChange={(e)=>setFormData(prev=>({...prev, gender: e.target.value as 'm'|'f'|''}))} className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+                <option value="">전체</option>
+                <option value="m">남성</option>
+                <option value="f">여성</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">연령대</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['10','20','30','40','50','60'].map(age => (
+                  <label key={age} className="flex items-center space-x-2">
+                    <input type="checkbox" checked={formData.ages?.includes(age) || false} onChange={(e)=>{
+                      const newAges = formData.ages || []
+                      if(e.target.checked){ setFormData(prev=>({...prev, ages:[...newAges, age]})) } else { setFormData(prev=>({...prev, ages:newAges.filter(a=>a!==age)})) }
+                    }} className="w-4 h-4 text-orange-600 bg-slate-100 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-orange-500 dark:focus:ring-orange-400" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{age}대</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 액션 버튼 */}

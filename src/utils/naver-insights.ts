@@ -117,14 +117,13 @@ export class NaverShoppingInsights {
     ages?: string[]
   ): Promise<InsightsResponse | null> {
     try {
-      // 네이버 API 형식에 맞게 수정
-      // category는 문자열이어야 하고, keyword는 객체 배열이어야 함
+      // 네이버 API 형식: category는 단일 문자열(cat_id), keyword는 객체 배열
       const requestBody = {
         startDate,
         endDate,
         timeUnit,
-        category: category[0]?.param[0] || '50000005', // 카테고리 코드 (문자열)
-        keyword: keywords.map(k => ({ name: k.name, param: k.param })), // 키워드 객체 배열
+        category: category[0]?.param[0] || '10008402',
+        keyword: keywords.slice(0, 5).map(k => ({ name: k.name || (k.param?.[0] ?? ''), param: (k.param || []).slice(0, 5) })),
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
@@ -167,7 +166,8 @@ export class NaverShoppingInsights {
         startDate,
         endDate,
         timeUnit,
-        category,
+        // categories 엔드포인트는 최대 3개까지 [{name,param:[cat_id]}] 형태 허용
+        category: category.slice(0, 3),
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
@@ -208,7 +208,7 @@ export class NaverShoppingInsights {
         startDate,
         endDate,
         timeUnit,
-        category,
+        category: category.slice(0, 3),
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
@@ -248,7 +248,7 @@ export class NaverShoppingInsights {
         startDate,
         endDate,
         timeUnit,
-        category,
+        category: category.slice(0, 3),
         ...(device && { device }),
         ...(ages && { ages })
       }
@@ -289,8 +289,8 @@ export class NaverShoppingInsights {
         startDate,
         endDate,
         timeUnit,
-        category,
-        keywords,
+        category: category.slice(0, 3),
+        keywords: keywords.slice(0, 5),
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
