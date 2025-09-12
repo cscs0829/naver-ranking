@@ -122,8 +122,8 @@ export class NaverShoppingInsights {
         startDate,
         endDate,
         timeUnit,
-        category: category[0]?.param[0] || '10008402',
-        keyword: keywords.slice(0, 5).map(k => ({ name: k.name || (k.param?.[0] ?? ''), param: (k.param || []).slice(0, 5) })),
+        category: category[0]?.param[0] || '50000005', // DataLab 분야 cat_id (문자열)
+        keyword: keywords.map(k => ({ name: k.name, param: k.param })),
         ...(device && { device }),
         ...(gender && { gender }),
         ...(ages && { ages })
