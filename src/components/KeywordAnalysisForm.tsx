@@ -43,7 +43,7 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     const load = async () => {
       try {
         setLoadingProfiles(true)
-        const res = await fetch('/api/keys?api_type=insights')
+        const res = await fetch('/api/keys?api_type=search')
         const data = await res.json()
         if (res.ok && data.profiles) {
           const insightsProfiles = data.profiles.filter((p: any) => p.api_type === 'insights')
