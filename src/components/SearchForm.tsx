@@ -42,14 +42,14 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
         const data = await res.json()
         if (res.ok && data.profiles) {
           setProfiles(data.profiles)
-          // "헤더" 프로필을 기본값으로 설정, 없으면 is_default 프로필 사용
-          const def = data.profiles.find((p: any) => p.name === '헤더') || data.profiles.find((p: any) => p.is_default)
-          if (def) {
-            setFormData(prev => ({ ...prev, profileId: def.id }))
+          // 기본 프로필 설정
+          const defaultProfile = data.profiles?.find((p: any) => p.is_default)
+          if (defaultProfile) {
+            setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
           }
         }
       } catch (e) {
-        // noop
+        console.error('프로필 조회 오류:', e)
       } finally {
         setLoadingProfiles(false)
       }
@@ -144,11 +144,10 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                       className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
                       disabled={isLoading}
                     >
-                      <option value="">기본 프로필(설정 시)</option>
+                      <option value="">기본 프로필 사용</option>
                       {profiles.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.name}
-                          {p.name === '헤더' ? ' (권장)' : p.is_default ? ' (기본)' : ''}
+                          {p.name} {p.is_default ? '(기본)' : ''}
                         </option>
                       ))}
                     </select>
