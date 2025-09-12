@@ -358,11 +358,21 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
                         </div>
                         <div className="flex items-center space-x-1">
                           <Globe className="w-4 h-4" />
-                          <span>{result.category}</span>
+                          <span>
+                            {Array.isArray(result.category) 
+                              ? result.category.join(', ')
+                              : result.category
+                            }
+                          </span>
                         </div>
                         <div className="flex items-center space-x-1">
                           <Search className="w-4 h-4" />
-                          <span>{JSON.parse(result.keywords).join(', ')}</span>
+                          <span>
+                            {Array.isArray(result.keywords) 
+                              ? result.keywords.join(', ')
+                              : '키워드 정보 없음'
+                            }
+                          </span>
                         </div>
                         {result.device && (
                           <div className="flex items-center space-x-1">
