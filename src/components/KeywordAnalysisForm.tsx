@@ -28,8 +28,8 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30일 전
     endDate: new Date().toISOString().split('T')[0], // 오늘
     timeUnit: 'date',
-    category: [{ name: '해외여행', param: ['50000005'] }], // 기본값: 해외여행 (여행사 특화)
-    keywords: [{ name: '해외여행', param: ['해외여행', '해외패키지', '해외투어'] }], // 기본값: 해외여행 키워드
+    category: [{ name: '렌터카', param: ['50000009'] }], // 기본값: 렌터카 (데이터 31개)
+    keywords: [{ name: '여행관련', param: ['여행', '렌터카', '숙박'] }], // 기본값: 데이터가 있는 키워드
     device: '',
     gender: '',
     ages: [],
@@ -66,17 +66,17 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     load()
   }, [])
 
-  // 네이버 쇼핑 카테고리 옵션 (여행 관련이 우선, 해외여행이 기본값)
+  // 네이버 쇼핑 카테고리 옵션 (데이터가 있는 카테고리 우선)
   const categoryOptions = [
-    // 여행 관련 카테고리 (우선순위)
-    { name: '해외여행', param: ['50000005'] }, // 기본값
+    // 여행 관련 카테고리 (데이터 확인됨)
+    { name: '렌터카', param: ['50000009'] }, // 기본값 (31개 데이터)
+    { name: '숙박', param: ['50000008'] }, // 17개 데이터
+    { name: '항공권', param: ['50000007'] }, // 1개 데이터
+    { name: '해외여행', param: ['50000005'] }, // 1개 데이터
     { name: '국내여행', param: ['50000006'] },
-    { name: '항공권', param: ['50000007'] },
-    { name: '숙박', param: ['50000008'] },
-    { name: '렌터카', param: ['50000009'] },
     { name: '여행용품', param: ['50000010'] },
-    // 기타 카테고리
-    { name: '패션의류', param: ['50000000'] },
+    // 기타 카테고리 (데이터 확인됨)
+    { name: '패션의류', param: ['50000000'] }, // 31개 데이터
     { name: '화장품/미용', param: ['50000002'] },
     { name: '식품', param: ['50000003'] },
     { name: '생활용품', param: ['50000004'] },
@@ -364,13 +364,13 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
                     
                     {/* 여행사 키워드 가이드 */}
                     <div className="mt-3 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">💡 여행사 키워드 추천:</div>
+                      <div className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">💡 여행사 키워드 추천 (데이터 확인됨):</div>
                       <div className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
-                        <div><strong>해외여행:</strong> 해외여행, 해외패키지, 해외투어, 해외자유여행</div>
-                        <div><strong>국내여행:</strong> 국내여행, 국내패키지, 당일치기, 주말여행</div>
-                        <div><strong>지역별:</strong> 동남아여행, 유럽여행, 일본여행, 중국여행</div>
-                        <div><strong>테마여행:</strong> 신혼여행, 가족여행, 혼자여행, 힐링여행</div>
-                        <div><strong>계절여행:</strong> 여름휴가, 겨울여행, 봄여행, 가을여행</div>
+                        <div><strong>🚗 렌터카 카테고리 (31개 데이터):</strong> 여행, 렌터카, 자동차, 차량</div>
+                        <div><strong>🏨 숙박 카테고리 (17개 데이터):</strong> 여행, 호텔, 숙박, 펜션</div>
+                        <div><strong>✈️ 항공권 카테고리 (1개 데이터):</strong> 여행, 항공권, 비행기</div>
+                        <div><strong>👕 패션의류 (31개 데이터):</strong> 여성의류, 남성의류, 여행의류</div>
+                        <div><strong>💡 팁:</strong> 렌터카 카테고리가 가장 많은 데이터를 제공합니다!</div>
                       </div>
                     </div>
                   </div>
