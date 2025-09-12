@@ -33,12 +33,12 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [loadingProfiles, setLoadingProfiles] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  // 프로필 목록 로드
+  // 프로필 목록 로드 (쇼핑검색 API만)
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingProfiles(true)
-        const res = await fetch('/api/keys')
+        const res = await fetch('/api/keys?api_type=shopping')
         const data = await res.json()
         if (res.ok && data.profiles) {
           setProfiles(data.profiles)

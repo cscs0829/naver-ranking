@@ -67,14 +67,19 @@ export default function KeywordAnalysisForm({ onAnalysis, isLoading }: KeywordAn
     { name: '디지털', placeholder: '스마트폰, 아이폰, 갤럭시, 안드로이드' }
   ]
 
-  // API 키 프로필 목록 가져오기
+  // API 키 프로필 목록 가져오기 (쇼핑인사이트 API만)
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await fetch('/api/keys')
+        const response = await fetch('/api/keys?api_type=insights')
         const data = await response.json()
         if (response.ok) {
-          setProfiles(data.profiles?.filter((p: any) => p.api_type === 'insights') || [])
+          setProfiles(data.profiles || [])
+          // 기본 프로필 설정
+          const defaultProfile = data.profiles?.find((p: any) => p.is_default)
+          if (defaultProfile) {
+            setFormData(prev => ({ ...prev, profileId: defaultProfile.id }))
+          }
         }
       } catch (error) {
         console.error('프로필 조회 오류:', error)
