@@ -44,14 +44,28 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // JSON 문자열을 파싱하여 반환
-    const results = data?.map(item => ({
-      ...item,
-      results: JSON.parse(item.results || '[]'),
-      category: JSON.parse(item.category || '[]'),
-      keywords: JSON.parse(item.keywords || '[]'),
-      ages: item.ages ? JSON.parse(item.ages) : null
-    })) || []
+    // JSON 문자열을 안전하게 파싱하여 반환
+    const results = data?.map(item => {
+      const safeParse = (jsonString: string, defaultValue: any = []) => {
+        try {
+          if (typeof jsonString === 'string') {
+            return JSON.parse(jsonString)
+          }
+          return jsonString || defaultValue
+        } catch (e) {
+          console.warn('JSON 파싱 실패:', jsonString, e)
+          return defaultValue
+        }
+      }
+
+      return {
+        ...item,
+        results: safeParse(item.results, []),
+        category: safeParse(item.category, []),
+        keywords: safeParse(item.keywords, []),
+        ages: item.ages ? safeParse(item.ages, null) : null
+      }
+    }) || []
 
     return NextResponse.json({ data: results }, { status: 200 })
   } catch (error) {
