@@ -76,13 +76,13 @@ CREATE TRIGGER update_api_keys_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- 네이버 API 키 샘플 데이터
-INSERT INTO api_keys (key_name, key_value, description) VALUES 
-('NAVER_CLIENT_ID', 'zjWPGFMpTc6cKpBepp4H', '네이버 쇼핑 API 클라이언트 ID'),
-('NAVER_CLIENT_SECRET', 'ZVBsS75udC', '네이버 쇼핑 API 클라이언트 시크릿')
-ON CONFLICT (key_name) DO UPDATE SET 
-  key_value = EXCLUDED.key_value,
-  updated_at = NOW();
+-- 네이버 API 키 샘플 데이터 (실제 값은 환경변수에서 설정)
+-- INSERT INTO api_keys (key_name, key_value, description) VALUES 
+-- ('NAVER_CLIENT_ID', 'your_client_id_here', '네이버 쇼핑 API 클라이언트 ID'),
+-- ('NAVER_CLIENT_SECRET', 'your_client_secret_here', '네이버 쇼핑 API 클라이언트 시크릿')
+-- ON CONFLICT (key_name) DO UPDATE SET 
+--   key_value = EXCLUDED.key_value,
+--   updated_at = NOW();
 
 -- =============================================
 -- Naver API 키 프로필 (클라이언트ID/시크릿을 하나로 관리)

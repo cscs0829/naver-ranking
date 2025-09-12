@@ -25,6 +25,11 @@ CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_created_at ON keyword_an
 CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_category ON keyword_analysis_results USING GIN ((category::jsonb));
 CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_keywords ON keyword_analysis_results USING GIN ((keywords::jsonb));
 
+-- 추가 성능 최적화 인덱스
+CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_device ON keyword_analysis_results(device) WHERE device IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_gender ON keyword_analysis_results(gender) WHERE gender IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_keyword_analysis_results_time_unit ON keyword_analysis_results(time_unit);
+
 -- RLS (Row Level Security) 활성화
 ALTER TABLE keyword_analysis_results ENABLE ROW LEVEL SECURITY;
 

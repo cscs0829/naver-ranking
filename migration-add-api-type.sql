@@ -21,7 +21,7 @@ ALTER TABLE api_key_profiles
 ADD CONSTRAINT check_api_type 
 CHECK (api_type IN ('shopping', 'insights'));
 
--- 기존 기본 프로필이 있다면 shopping 타입으로 설정
-UPDATE api_key_profiles 
-SET api_type = 'shopping' 
-WHERE is_default = true AND api_type = 'shopping';
+-- 기존 기본 프로필이 있다면 shopping 타입으로 설정 (중복 제거)
+-- UPDATE api_key_profiles 
+-- SET api_type = 'shopping' 
+-- WHERE is_default = true AND api_type = 'shopping';
