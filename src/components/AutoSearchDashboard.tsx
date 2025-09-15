@@ -667,7 +667,7 @@ export default function AutoSearchDashboard() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-xl w-full sm:max-w-6xl h-[100dvh] sm:max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
+            className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-xl w-[92vw] sm:w-full max-w-lg sm:max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
@@ -695,7 +695,7 @@ export default function AutoSearchDashboard() {
             </div>
 
             {/* 히스토리 내용 */}
-            <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto h-[calc(100dvh-72px)] sm:max-h-[calc(90vh-80px)] overscroll-contain touch-pan-y">
+            <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-80px)] overscroll-contain touch-pan-y">
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
