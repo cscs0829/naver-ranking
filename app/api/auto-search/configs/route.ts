@@ -47,15 +47,7 @@ export async function POST(request: NextRequest) {
         interval_hours: interval_hours || 1,
         description
       })
-      .select(`
-        *,
-        api_key_profiles (
-          id,
-          name,
-          client_id,
-          is_active
-        )
-      `)
+      .select('*')
       .single();
 
     if (error) {
@@ -99,24 +91,7 @@ export async function GET() {
 
     const { data: configs, error } = await supabase
       .from('auto_search_configs')
-      .select(`
-        *,
-        api_key_profiles (
-          id,
-          name,
-          client_id,
-          is_active
-        ),
-        auto_search_logs (
-          id,
-          status,
-          started_at,
-          completed_at,
-          duration_ms,
-          results_count,
-          error_message
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
