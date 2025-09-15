@@ -264,6 +264,18 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           } else {
             resultsCount = resultsToInsert.length;
             console.log(`✅ 정확 매칭 ${resultsCount}개 결과 저장 완료`);
+
+            // 저장 검증: DB 카운트 확인
+            const { count: verifyCount, error: verifyError } = await supabase
+              .from('auto_search_results')
+              .select('*', { count: 'exact', head: true })
+              .eq('config_id', configId);
+
+            if (verifyError) {
+              console.warn('⚠️ 저장 검증 중 오류:', verifyError);
+            } else {
+              console.log(`🔎 DB 검증: config_id=${configId} 현재 저장된 결과 수 = ${verifyCount}`);
+            }
           }
         } else {
           resultsCount = 0;
