@@ -776,14 +776,8 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                           className="cursor-pointer mobile-touch-target mobile-card-spacing"
                         >
                           <div className="flex items-center justify-between mb-3">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                              resultIndex === 0 
-                                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
-                                : resultIndex < 3 
-                                  ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-md'
-                                  : 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
-                            }`}>
-                              {resultIndex === 0 ? '🥇 1등' : resultIndex === 1 ? '🥈 2등' : resultIndex === 2 ? '🥉 3등' : `#${resultIndex + 1}`}
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md`}>
+                              {result.page}페이지 {result.rank_in_page}번째
                             </span>
                             <div className="flex items-center space-x-2">
                               <Smartphone className="w-4 h-4 text-slate-400" />
@@ -822,20 +816,14 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                resultIndex === 0 
-                                  ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg' 
-                                  : resultIndex < 3 
-                                    ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-white shadow-md'
-                                    : 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200'
-                              }`}>
-                                {resultIndex === 0 ? '🥇 1등' : resultIndex === 1 ? '🥈 2등' : resultIndex === 2 ? '🥉 3등' : `#${resultIndex + 1}`}
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white`}>
+                                {result.page}페이지 {result.rank_in_page}번째
                               </span>
                               <span className="text-sm text-slate-600 dark:text-slate-400">
                                 {result.mall_name}
                               </span>
                               <span className="text-xs text-slate-500 dark:text-slate-400">
-                                (전체 {result.total_rank}위, 웹페이지 {result.page}페이지 {result.rank_in_page}번째)
+                                전체 {result.total_rank}위
                               </span>
                             </div>
                             <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
