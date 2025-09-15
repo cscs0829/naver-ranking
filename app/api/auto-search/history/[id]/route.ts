@@ -1,0 +1,182 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// 환경변수 체크
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('Supabase 환경변수가 설정되지 않았습니다.');
+}
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key'
+);
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const configId = parseInt(params.id);
+    
+    if (isNaN(configId)) {
+      return NextResponse.json(
+        { error: '유효하지 않은 설정 ID입니다.' },
+        { status: 400 }
+      );
+    }
+
+    // 설정 정보 조회
+    const { data: config, error: configError } = await supabase
+      .from('auto_search_configs')
+      .select('id, name, search_query, target_product_name, target_mall_name, target_brand')
+      .eq('id', configId)
+      .single();
+
+    if (configError || !config) {
+      return NextResponse.json(
+        { error: '설정을 찾을 수 없습니다.' },
+        { status: 404 }
+      );
+    }
+
+    // 해당 설정의 모든 검색 결과를 시간순으로 조회
+    const { data: results, error: resultsError } = await supabase
+      .from('auto_search_results')
+      .select(`
+        id,
+        created_at,
+        check_date,
+        page,
+        rank_in_page,
+        total_rank,
+        product_title,
+        mall_name,
+        brand,
+        price,
+        product_link,
+        is_exact_match,
+        match_confidence
+      `)
+      .eq('config_id', configId)
+      .order('created_at', { ascending: false });
+
+    if (resultsError) {
+      console.error('검색 결과 조회 오류:', resultsError);
+      return NextResponse.json(
+        { error: '검색 결과를 조회할 수 없습니다.' },
+        { status: 500 }
+      );
+    }
+
+    // 실행 로그 조회 (실행 시간 정보)
+    const { data: logs, error: logsError } = await supabase
+      .from('auto_search_logs')
+      .select(`
+        id,
+        status,
+        started_at,
+        completed_at,
+        duration_ms,
+        results_count,
+        error_message
+      `)
+      .eq('config_id', configId)
+      .order('started_at', { ascending: false });
+
+    if (logsError) {
+      console.error('실행 로그 조회 오류:', logsError);
+    }
+
+    // 날짜별로 그룹화하여 히스토리 데이터 구성
+    const historyByDate = results?.reduce((acc: any, result: any) => {
+      const dateKey = result.check_date;
+      
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          executions: []
+        };
+      }
+
+      // 같은 날짜의 결과들을 시간순으로 정렬
+      const existingExecution = acc[dateKey].executions.find((exec: any) => 
+        exec.hour === new Date(result.created_at).getHours()
+      );
+
+      if (existingExecution) {
+        existingExecution.results.push({
+          id: result.id,
+          time: result.created_at,
+          page: result.page,
+          rank_in_page: result.rank_in_page,
+          total_rank: result.total_rank,
+          product_title: result.product_title,
+          mall_name: result.mall_name,
+          brand: result.brand,
+          price: result.price,
+          product_link: result.product_link,
+          is_exact_match: result.is_exact_match,
+          match_confidence: result.match_confidence
+        });
+      } else {
+        acc[dateKey].executions.push({
+          hour: new Date(result.created_at).getHours(),
+          minute: new Date(result.created_at).getMinutes(),
+          second: new Date(result.created_at).getSeconds(),
+          results: [{
+            id: result.id,
+            time: result.created_at,
+            page: result.page,
+            rank_in_page: result.rank_in_page,
+            total_rank: result.total_rank,
+            product_title: result.product_title,
+            mall_name: result.mall_name,
+            brand: result.brand,
+            price: result.price,
+            product_link: result.product_link,
+            is_exact_match: result.is_exact_match,
+            match_confidence: result.match_confidence
+          }]
+        });
+      }
+
+      return acc;
+    }, {}) || {};
+
+    // 날짜별 정렬 (최신 날짜부터)
+    const sortedHistory = Object.values(historyByDate).sort((a: any, b: any) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    // 각 날짜 내에서 시간순 정렬
+    sortedHistory.forEach((dayData: any) => {
+      dayData.executions.sort((a: any, b: any) => {
+        if (a.hour !== b.hour) return b.hour - a.hour;
+        if (a.minute !== b.minute) return b.minute - a.minute;
+        return b.second - a.second;
+      });
+    });
+
+    return NextResponse.json({
+      success: true,
+      config: {
+        id: config.id,
+        name: config.name,
+        search_query: config.search_query,
+        target_product_name: config.target_product_name,
+        target_mall_name: config.target_mall_name,
+        target_brand: config.target_brand
+      },
+      history: sortedHistory,
+      logs: logs || [],
+      totalResults: results?.length || 0
+    });
+
+  } catch (error) {
+    console.error('히스토리 조회 오류:', error);
+    return NextResponse.json(
+      { error: '히스토리를 조회할 수 없습니다.' },
+      { status: 500 }
+    );
+  }
+}

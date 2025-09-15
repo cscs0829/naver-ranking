@@ -130,6 +130,18 @@ export async function GET() {
     }
 
     console.log('조회된 순위 결과 수:', latestRankings?.length || 0);
+    console.log('순위 결과 샘플:', latestRankings?.slice(0, 2));
+    
+    // 설정 상태 확인
+    console.log('총 설정 수:', totalConfigs);
+    console.log('활성 설정 수:', activeConfigs);
+    
+    // 각 결과의 config_id 확인
+    if (latestRankings && latestRankings.length > 0) {
+      const configIds = latestRankings.map(r => r.config_id);
+      console.log('결과들의 config_id들:', configIds);
+      console.log('고유한 config_id 개수:', new Set(configIds).size);
+    }
 
     // 스케줄별로 그룹화하여 최신 순위 결과 정리
     const scheduleRankings = latestRankings?.reduce((acc: any, result: any) => {
@@ -169,6 +181,11 @@ export async function GET() {
 
       return acc;
     }, {}) || {};
+
+    console.log('그룹화된 스케줄 수:', Object.keys(scheduleRankings).length);
+    console.log('각 스케줄별 상품 수:', Object.entries(scheduleRankings).map(([id, schedule]: [string, any]) => 
+      `설정 ${id}: ${schedule.rankings.length}개 상품`
+    ));
 
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
