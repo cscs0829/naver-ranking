@@ -9,7 +9,8 @@ import ApiKeyManager from '@/components/ApiKeyManager'
 import AutoSearchManager from '@/components/AutoSearchManager'
 import AutoSearchDashboard from '@/components/AutoSearchDashboard'
 import AutoSearchNotifications from '@/components/AutoSearchNotifications'
-import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun, Menu, X, Settings, FileText, Key, Clock } from 'lucide-react'
+import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Menu, X, Settings, FileText, Key, Clock } from 'lucide-react'
+import DarkModeToggle from '@/components/DarkModeToggle'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/utils/toast'
 
@@ -28,7 +29,6 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys' | 'auto-search' | 'dashboard' | 'notifications'>('search')
   const [mounted, setMounted] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const tabs: Array<{ id: 'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys' | 'auto-search' | 'dashboard' | 'notifications'; label: string; icon: React.ReactNode; description: string }> = [
@@ -44,24 +44,7 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true)
-    // theme init
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
-    const preferredDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    const next = (stored as any) || 'system'
-    setTheme(next)
-    const isDark = next === 'dark' || (next === 'system' && preferredDark)
-    document.documentElement.classList.toggle('dark', isDark)
   }, [])
-
-  const toggleTheme = () => {
-    const order: Array<'light' | 'dark' | 'system'> = ['light', 'dark', 'system']
-    const next = order[(order.indexOf(theme) + 1) % order.length]
-    setTheme(next)
-    localStorage.setItem('theme', next)
-    const preferredDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    const isDark = next === 'dark' || (next === 'system' && preferredDark)
-    document.documentElement.classList.toggle('dark', isDark)
-  }
 
   const handleSearch = async (searchData: SearchData) => {
     try {
@@ -258,17 +241,9 @@ export default function Home() {
               ))}
             </div>
 
-            {/* 테마 토글 */}
+            {/* 다크모드 토글 */}
             <div className="flex items-center space-x-2">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={toggleTheme}
-                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:shadow-md"
-                title={`테마: ${theme}`}
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </motion.button>
+              <DarkModeToggle />
             </div>
           </div>
         </div>
