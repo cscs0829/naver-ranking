@@ -205,7 +205,7 @@ export default function Home() {
       {/* 헤더 */}
       <header className="sticky top-0 z-40 w-full border-b border-slate-200/60 dark:border-slate-700/60 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18">
+          <div className="flex items-center justify-between h-16">
             {/* 로고 및 제목 */}
             <div className="flex items-center space-x-4">
               <motion.button
@@ -216,58 +216,58 @@ export default function Home() {
               >
                 <Menu className="w-5 h-5" />
               </motion.button>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 <motion.div 
                   className="relative"
                   whileHover={{ scale: 1.05 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                    <Search className="w-7 h-7 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                    <Search className="w-6 h-6 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse shadow-lg"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse shadow-lg"></div>
                 </motion.div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
                     네이버 데이터 검색기
                   </h1>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">실시간 데이터 분석</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">실시간 데이터 분석</p>
                 </div>
               </div>
             </div>
 
             {/* 데스크톱 네비게이션 */}
-            <div className="hidden lg:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-1">
               {tabs.map((tab) => (
                 <motion.button
                   key={tab.id}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-3 px-5 py-3 rounded-2xl font-semibold transition-all duration-300 ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:shadow-md'
                   }`}
                 >
-                  <div className={`p-1.5 rounded-lg ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-600'}`}>
+                  <div className={`p-1 rounded-md ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-600'}`}>
                     {tab.icon}
                   </div>
-                  <span>{tab.label}</span>
+                  <span className="text-sm">{tab.label}</span>
                 </motion.button>
               ))}
             </div>
 
             {/* 테마 토글 */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
-                className="p-3 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:shadow-md"
+                className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:shadow-md"
                 title={`테마: ${theme}`}
               >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </motion.button>
             </div>
           </div>
