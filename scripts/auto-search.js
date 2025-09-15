@@ -173,23 +173,37 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
 
       console.log(`🔑 API 키 프로필 사용: ${apiKeyProfile.name}`);
 
-      // 네이버 쇼핑 검색 실행 (올바른 시그니처로 호출)
-      const searchResults = await searchNaverShopping(
-        config.search_query,
-        {
-          clientId: apiKeyProfile.client_id,
-          clientSecret: apiKeyProfile.client_secret,
-          display: Math.min(config.max_pages * 20, 1000),
-          start: 1,
-          sort: 'sim'
+      // 네이버 쇼핑 검색 실행 (API 제한 준수: display<=100, start<=1000)
+      const maxWanted = Math.min((config.max_pages || 1) * 20, 1000);
+      const aggregatedItems = [];
+      let startIndex = 1; // 1-base
+      while (aggregatedItems.length < maxWanted && startIndex <= 1000) {
+        const remaining = maxWanted - aggregatedItems.length;
+        const display = Math.min(remaining, 100); // API limit
+        const batch = await searchNaverShopping(
+          config.search_query,
+          {
+            clientId: apiKeyProfile.client_id,
+            clientSecret: apiKeyProfile.client_secret,
+            display,
+            start: startIndex,
+            sort: 'sim'
+          }
+        );
+        if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
+          break;
         }
-      );
+        aggregatedItems.push(...batch.items);
+        startIndex += display; // 다음 구간
+        // 안전장치: 과도한 루프 방지
+        if (startIndex > 1000) break;
+      }
 
-      if (searchResults && searchResults.items) {
-        console.log(`📊 검색 결과: ${searchResults.items.length}개 상품`);
+      if (aggregatedItems.length > 0) {
+        console.log(`📊 검색 결과: ${aggregatedItems.length}개 상품`);
 
         // 정확 매칭 필터 적용
-        const matchedItems = searchResults.items
+        const matchedItems = aggregatedItems
           .filter(item => isExactTargetProduct(
             item,
             config.target_product_name,
@@ -254,7 +268,7 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             .from('auto_search_logs')
             .update({
               search_results: {
-                total_items: searchResults.total,
+                total_items: aggregatedItems.length,
                 items: matchedItems.slice(0, 10) // 처음 10개만 저장 (정확 매칭 기준)
               }
             })
