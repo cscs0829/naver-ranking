@@ -4,6 +4,13 @@ import * as XLSX from 'xlsx';
 
 export async function GET(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Supabase 클라이언트가 초기화되지 않았습니다.' 
+      }, { status: 500 });
+    }
+
     // 모든 스케줄 설정 조회
     const { data: configs, error: configsError } = await supabase
       .from('auto_search_configs')

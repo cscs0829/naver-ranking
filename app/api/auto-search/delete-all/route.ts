@@ -3,6 +3,13 @@ import { supabase } from '@/utils/supabase';
 
 export async function DELETE(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Supabase 클라이언트가 초기화되지 않았습니다.' 
+      }, { status: 500 });
+    }
+
     // 모든 자동검색 관련 데이터 삭제
     const deletePromises = [
       // 검색 결과 삭제

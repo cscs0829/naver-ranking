@@ -6,6 +6,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    if (!supabase) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Supabase 클라이언트가 초기화되지 않았습니다.' 
+      }, { status: 500 });
+    }
+
     const configId = parseInt(params.id);
     
     if (isNaN(configId)) {
