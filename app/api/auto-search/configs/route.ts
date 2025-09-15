@@ -79,6 +79,24 @@ export async function POST(request: NextRequest) {
 // 자동 검색 설정 목록 조회
 export async function GET() {
   try {
+    console.log('자동 검색 설정 조회 시작');
+    
+    // 먼저 테이블 존재 여부 확인
+    const { data: tableCheck, error: tableError } = await supabase
+      .from('auto_search_configs')
+      .select('id')
+      .limit(1);
+
+    if (tableError) {
+      console.error('테이블 확인 오류:', tableError);
+      return NextResponse.json(
+        { error: `테이블 오류: ${tableError.message}` },
+        { status: 500 }
+      );
+    }
+
+    console.log('테이블 확인 완료, 설정 조회 시작');
+
     const { data: configs, error } = await supabase
       .from('auto_search_configs')
       .select(`
@@ -102,14 +120,16 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('설정 조회 오류:', error);
       throw error;
     }
 
+    console.log('설정 조회 성공:', configs?.length || 0, '개');
     return NextResponse.json({ configs });
   } catch (error) {
     console.error('자동 검색 설정 조회 오류:', error);
     return NextResponse.json(
-      { error: '자동 검색 설정을 조회할 수 없습니다.' },
+      { error: `자동 검색 설정을 조회할 수 없습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}` },
       { status: 500 }
     );
   }
