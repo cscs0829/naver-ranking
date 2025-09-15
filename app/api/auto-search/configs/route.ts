@@ -34,6 +34,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // interval_hours 유효성 검사
+    if (interval_hours && (interval_hours < 0.5 || interval_hours > 8760)) {
+      return NextResponse.json(
+        { error: '실행 주기는 0.5시간부터 8760시간(1년) 사이여야 합니다.' },
+        { status: 400 }
+      );
+    }
+
     const { data: config, error } = await supabase
       .from('auto_search_configs')
       .insert({
@@ -44,7 +52,7 @@ export async function POST(request: NextRequest) {
         target_product_name,
         max_pages: max_pages || 10,
         profile_id: profile_id || null,
-        interval_hours: interval_hours || 1,
+        interval_hours: interval_hours ? parseFloat(interval_hours.toString()) : 1,
         description
       })
       .select('*')

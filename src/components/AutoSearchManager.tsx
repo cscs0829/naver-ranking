@@ -53,6 +53,7 @@ interface AutoSearchConfig {
 }
 
 const intervalOptions = [
+  { value: 0.5, label: '30분마다' },
   { value: 1, label: '1시간마다' },
   { value: 2, label: '2시간마다' },
   { value: 3, label: '3시간마다' },
@@ -77,7 +78,7 @@ export default function AutoSearchManager() {
     target_product_name: '',
     max_pages: 10,
     profile_id: '',
-    interval_hours: 0.5,
+    interval_hours: 1,
     description: ''
   });
 
@@ -163,11 +164,16 @@ export default function AutoSearchManager() {
         },
         body: JSON.stringify({
           ...formData,
-          profile_id: formData.profile_id ? parseInt(formData.profile_id) : null
+          profile_id: formData.profile_id ? parseInt(formData.profile_id) : null,
+          interval_hours: parseFloat(formData.interval_hours.toString())
         }),
       });
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status} 오류가 발생했습니다.`);
+      }
       
       if (data.success) {
         await fetchConfigs();

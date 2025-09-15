@@ -123,12 +123,13 @@ export async function GET() {
           is_active
         )
       `)
-      .order('created_at', { ascending: false })
-      .limit(50);
+      .order('created_at', { ascending: false });
 
     if (autoSearchError) {
       console.error('auto_search_results 조회 오류:', autoSearchError);
     }
+
+    console.log('조회된 순위 결과 수:', latestRankings?.length || 0);
 
     // 스케줄별로 그룹화하여 최신 순위 결과 정리
     const scheduleRankings = latestRankings?.reduce((acc: any, result: any) => {

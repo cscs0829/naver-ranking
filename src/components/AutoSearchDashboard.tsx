@@ -372,7 +372,13 @@ export default function AutoSearchDashboard() {
         </h3>
         <div className="space-y-6">
           {stats.scheduleRankings.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">순위 결과가 없습니다.</p>
+            <div className="text-center py-8">
+              <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-500 text-lg mb-2">순위 결과가 없습니다</p>
+              <p className="text-gray-400 text-sm">
+                자동 검색을 실행하면 여기에 순위 결과가 표시됩니다.
+              </p>
+            </div>
           ) : (
             stats.scheduleRankings.map((schedule) => (
               <div key={schedule.config_id} className="border border-gray-200 rounded-lg p-4">
