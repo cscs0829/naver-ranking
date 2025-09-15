@@ -22,19 +22,14 @@ export async function DELETE(
       }, { status: 400 });
     }
 
-    // 해당 설정의 검색 결과 삭제
+    // 해당 설정의 자동검색 결과 삭제
     const { error: resultsError } = await supabase
-      .from('search_results')
+      .from('auto_search_results')
       .delete()
-      .eq('search_query', (await supabase
-        .from('auto_search_configs')
-        .select('search_query')
-        .eq('id', configId)
-        .single()
-      ).data?.search_query);
+      .eq('config_id', configId);
 
     if (resultsError) {
-      console.error('검색 결과 삭제 오류:', resultsError);
+      console.error('자동검색 결과 삭제 오류:', resultsError);
     }
 
     // 해당 설정의 로그 삭제
@@ -45,6 +40,16 @@ export async function DELETE(
 
     if (logsError) {
       console.error('로그 삭제 오류:', logsError);
+    }
+
+    // 해당 설정의 알림 삭제
+    const { error: notificationsError } = await supabase
+      .from('auto_search_notifications')
+      .delete()
+      .eq('config_id', configId);
+
+    if (notificationsError) {
+      console.error('알림 삭제 오류:', notificationsError);
     }
 
     // 설정 자체는 삭제하지 않음 (사용자가 원할 경우 별도로 삭제)

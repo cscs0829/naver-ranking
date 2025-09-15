@@ -14,7 +14,8 @@ import {
   Target,
   Trash2,
   Download,
-  FileSpreadsheet
+  FileSpreadsheet,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 
@@ -78,11 +79,13 @@ interface DashboardStats {
 export default function AutoSearchDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // 통계 데이터 조회
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/auto-search/dashboard');
+      setLoading(true);
+      const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`);
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -90,6 +93,12 @@ export default function AutoSearchDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 수동 새로고침
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+    fetchStats();
   };
 
   // 전체 데이터 삭제
@@ -167,6 +176,15 @@ export default function AutoSearchDashboard() {
     fetchStats();
   }, []);
 
+  // 자동 새로고침 (30초마다)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 30000); // 30초마다 새로고침
+
+    return () => clearInterval(interval);
+  }, []);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -196,6 +214,13 @@ export default function AutoSearchDashboard() {
         
         {/* 액션 버튼들 */}
         <div className="flex justify-center gap-4 mt-4">
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            새로고침
+          </button>
           <button
             onClick={handleExportToExcel}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"

@@ -12,11 +12,13 @@ export async function DELETE(request: NextRequest) {
 
     // 모든 자동검색 관련 데이터 삭제
     const deletePromises = [
-      // 검색 결과 삭제
-      supabase.from('search_results').delete().neq('id', 0),
+      // 자동검색 결과 삭제
+      supabase.from('auto_search_results').delete().neq('id', 0),
       // 자동검색 로그 삭제
       supabase.from('auto_search_logs').delete().neq('id', 0),
-      // 자동검색 설정 삭제
+      // 자동검색 알림 삭제
+      supabase.from('auto_search_notifications').delete().neq('id', 0),
+      // 자동검색 설정 삭제 (마지막에 삭제)
       supabase.from('auto_search_configs').delete().neq('id', 0)
     ];
 
