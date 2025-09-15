@@ -145,6 +145,10 @@ export default function AutoSearchDashboard() {
       
       if (data.success) {
         toast('스케줄 데이터가 삭제되었습니다.', 'success');
+        // 히스토리 모달이 현재 해당 스케줄을 보고 있다면 닫고 상태 초기화
+        if (selectedSchedule && selectedSchedule.config_id === configId) {
+          closeHistoryModal();
+        }
         await fetchStats();
       } else {
         toast('오류가 발생했습니다: ' + data.error, 'error');
