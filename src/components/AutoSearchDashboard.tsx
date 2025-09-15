@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -86,6 +86,7 @@ export default function AutoSearchDashboard() {
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const visibilityRef = useRef<boolean>(true);
 
   // 통계 데이터 조회
   const fetchStats = async () => {
@@ -234,13 +235,32 @@ export default function AutoSearchDashboard() {
     fetchStats();
   }, []);
 
-  // 자동 새로고침 (30초마다)
+  // 자동 새로고침 (30초마다, 페이지가 보일 때만)
   useEffect(() => {
-    const interval = setInterval(() => {
-      fetchStats();
-    }, 30000); // 30초마다 새로고침
+    const tick = () => {
+      if (document.visibilityState === 'visible') {
+        visibilityRef.current = true;
+        fetchStats();
+      } else {
+        visibilityRef.current = false;
+      }
+    };
 
-    return () => clearInterval(interval);
+    const interval = setInterval(tick, 30000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        visibilityRef.current = true;
+        fetchStats();
+      } else {
+        visibilityRef.current = false;
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, []);
 
   if (loading) {
@@ -271,31 +291,31 @@ export default function AutoSearchDashboard() {
         <p className="text-gray-600">자동 검색 시스템의 전체 현황을 확인하세요</p>
         
         {/* 액션 버튼들 */}
-        <div className="flex justify-center gap-4 mt-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 px-4 sm:px-0">
           <button
             onClick={handleRefresh}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             새로고침
           </button>
           <button
             onClick={handleExportToExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
           >
             <FileSpreadsheet className="w-4 h-4" />
             엑셀 내보내기
           </button>
           <button
             onClick={handleDebugInfo}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
           >
             <Activity className="w-4 h-4" />
             디버그 정보
           </button>
           <button
             onClick={handleDeleteAllData}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
           >
             <Trash2 className="w-4 h-4" />
             전체 데이터 삭제
@@ -489,7 +509,7 @@ export default function AutoSearchDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-white">
+                    <h4 className="font-bold text-lg text-gray-900 dark:text-white break-words">
                       {schedule.config_name}
                     </h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -630,18 +650,18 @@ export default function AutoSearchDashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm"
-          onClick={closeHistoryModal}
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-0 sm:p-4 z-[99999] backdrop-blur-sm"
+          onClick={() => { /* 모바일에서 오버레이 클릭으로 닫히지 않음 */ }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-xl p-6 w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl relative border border-gray-200 dark:border-slate-700"
+            className="bg-white dark:bg-slate-800 rounded-none sm:rounded-xl w-full sm:max-w-6xl h-[100vh] sm:max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
               <div className="flex items-center gap-3">
                 <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <div>
@@ -665,6 +685,7 @@ export default function AutoSearchDashboard() {
             </div>
 
             {/* 히스토리 내용 */}
+            <div className="px-4 sm:px-6 pb-6 overflow-y-auto h-[calc(100vh-72px)] sm:max-h-[calc(90vh-80px)]">
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -776,6 +797,7 @@ export default function AutoSearchDashboard() {
                 <p className="text-red-500">히스토리를 불러올 수 없습니다.</p>
               </div>
             )}
+            </div>
           </motion.div>
         </motion.div>
       )}
