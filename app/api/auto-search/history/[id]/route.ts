@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// 항상 최신 데이터 반환
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // 환경변수 체크
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Supabase 환경변수가 설정되지 않았습니다.');
@@ -87,9 +91,11 @@ export async function GET(
       console.error('실행 로그 조회 오류:', logsError);
     }
 
-    // 날짜별로 그룹화하여 히스토리 데이터 구성
+    // 날짜별로 그룹화하여 히스토리 데이터 구성 (실행 단위는 created_at(초 단위)로 구분)
     const historyByDate = results?.reduce((acc: any, result: any) => {
       const dateKey = result.check_date;
+      const created = new Date(result.created_at);
+      const execKey = created.toISOString().slice(0, 19); // 초 단위로 동일 실행 묶음
       
       if (!acc[dateKey]) {
         acc[dateKey] = {
@@ -98,9 +104,9 @@ export async function GET(
         };
       }
 
-      // 같은 날짜의 결과들을 시간순으로 정렬
+      // 같은 실행 묶음 찾기 (초 단위 created_at 키)
       const existingExecution = acc[dateKey].executions.find((exec: any) => 
-        exec.hour === new Date(result.created_at).getHours()
+        exec.key === execKey
       );
 
       if (existingExecution) {
@@ -120,9 +126,11 @@ export async function GET(
         });
       } else {
         acc[dateKey].executions.push({
-          hour: new Date(result.created_at).getHours(),
-          minute: new Date(result.created_at).getMinutes(),
-          second: new Date(result.created_at).getSeconds(),
+          key: execKey,
+          timestamp: result.created_at,
+          hour: created.getHours(),
+          minute: created.getMinutes(),
+          second: created.getSeconds(),
           results: [{
             id: result.id,
             time: result.created_at,
@@ -150,11 +158,7 @@ export async function GET(
 
     // 각 날짜 내에서 시간순 정렬
     sortedHistory.forEach((dayData: any) => {
-      dayData.executions.sort((a: any, b: any) => {
-        if (a.hour !== b.hour) return b.hour - a.hour;
-        if (a.minute !== b.minute) return b.minute - a.minute;
-        return b.second - a.second;
-      });
+      dayData.executions.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     });
 
     return NextResponse.json({
@@ -170,6 +174,10 @@ export async function GET(
       history: sortedHistory,
       logs: logs || [],
       totalResults: results?.length || 0
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
+      }
     });
 
   } catch (error) {
