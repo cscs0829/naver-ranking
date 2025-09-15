@@ -13,10 +13,14 @@ const supabase = createClient(
 
 export async function GET() {
   try {
+    console.log('대시보드 API 호출됨');
+    
     // 전체 설정 수 조회
-    const { count: totalConfigs } = await supabase
+    const { count: totalConfigs, error: totalConfigsError } = await supabase
       .from('auto_search_configs')
       .select('*', { count: 'exact', head: true });
+    
+    console.log('전체 설정 수:', totalConfigs, '오류:', totalConfigsError);
 
     // 활성 설정 수 조회
     const { count: activeConfigs } = await supabase
