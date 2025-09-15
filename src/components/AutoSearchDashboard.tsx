@@ -86,6 +86,7 @@ export default function AutoSearchDashboard() {
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [showAllActivities, setShowAllActivities] = useState(false);
   const visibilityRef = useRef<boolean>(true);
 
   // 통계 데이터 조회
@@ -235,18 +236,8 @@ export default function AutoSearchDashboard() {
     fetchStats();
   }, []);
 
-  // 자동 새로고침 (30초마다, 페이지가 보일 때만)
+  // 자동 새로고침 제거: 탭이 보일 때만 1회 갱신
   useEffect(() => {
-    const tick = () => {
-      if (document.visibilityState === 'visible') {
-        visibilityRef.current = true;
-        fetchStats();
-      } else {
-        visibilityRef.current = false;
-      }
-    };
-
-    const interval = setInterval(tick, 30000);
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         visibilityRef.current = true;
@@ -256,11 +247,7 @@ export default function AutoSearchDashboard() {
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   if (loading) {
@@ -428,43 +415,39 @@ export default function AutoSearchDashboard() {
           {stats.recentActivity.length === 0 ? (
             <p className="text-gray-500 text-center py-4">최근 활동이 없습니다.</p>
           ) : (
-            stats.recentActivity.map((activity, index) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full ${
-                    activity.status === 'success' ? 'bg-green-100' : 
-                    activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'
-                  }`}>
-                    {activity.status === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : activity.status === 'error' ? (
-                      <XCircle className="w-4 h-4 text-red-600" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-yellow-600" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.config_name}</p>
-                    <p className="text-sm text-gray-500">
-                      "{activity.search_query}"
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
-                    </p>
+            <>
+              {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
+                <div key={activity.id} className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100' : activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'}` }>
+                        {activity.status === 'success' ? (
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        ) : activity.status === 'error' ? (
+                          <XCircle className="w-4 h-4 text-red-600" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-yellow-600" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{activity.config_name}</p>
+                        <p className="text-sm text-gray-500">"{activity.search_query}"</p>
+                        <p className="text-xs text-gray-400">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
+                      </div>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <p className="text-sm font-medium text-gray-900">{activity.results_count}개 결과</p>
+                      {activity.duration_ms && (<p className="text-xs text-gray-500">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
-                    {activity.results_count}개 결과
-                  </p>
-                  {activity.duration_ms && (
-                    <p className="text-xs text-gray-500">
-                      {(activity.duration_ms / 1000).toFixed(1)}초
-                    </p>
-                  )}
+              ))}
+              {stats.recentActivity.length > 1 && (
+                <div className="pt-2">
+                  <button onClick={() => setShowAllActivities(v=>!v)} className="w-full sm:w-auto px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700">{showAllActivities ? '접기' : '더보기'}</button>
                 </div>
-              </div>
-            ))
+              )}
+            </>
           )}
         </div>
       </motion.div>
@@ -742,45 +725,31 @@ export default function AutoSearchDashboard() {
                             
                             <div className="space-y-2">
                               {execution.results.map((result: any, resultIndex: number) => (
-                                <div key={resultIndex} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                      result.total_rank <= 10 ? 'bg-red-100 text-red-600' :
-                                      result.total_rank <= 50 ? 'bg-orange-100 text-orange-600' :
-                                      'bg-gray-100 text-gray-600'
-                                    }`}>
-                                      {result.total_rank}
-                                    </div>
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <p className="font-medium text-gray-900 truncate">
-                                          {result.product_title}
-                                        </p>
-                                        {result.is_exact_match && (
-                                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
-                                            정확 매칭
-                                          </span>
-                                        )}
-                                      </div>
-                                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                                        <span>{result.mall_name}</span>
-                                        {result.brand && <span>브랜드: {result.brand}</span>}
-                                        <span>{result.price}원</span>
-                                        <span className="text-blue-600">
-                                          {result.page}페이지 {result.rank_in_page}번째
-                                        </span>
-                                      </div>
-                                    </div>
+                                <div key={resultIndex} className="p-3 bg-white rounded-lg border border-gray-200">
+                                  <div className="flex items-center justify-between sm:hidden">
+                                    <span className="text-sm font-medium text-gray-900">
+                                      {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                    </span>
+                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">{result.page}페이지 {result.rank_in_page}번째</span>
                                   </div>
-                                  <a 
-                                    href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`}
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                                  >
-                                    <ExternalLink className="w-4 h-4" />
-                                    바로가기
-                                  </a>
+                                  <div className="hidden sm:flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${result.total_rank <= 10 ? 'bg-red-100 text-red-600' : result.total_rank <= 50 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`}>{result.total_rank}</div>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <p className="font-medium text-gray-900 truncate">{result.product_title}</p>
+                                          {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">정확 매칭</span>)}
+                                        </div>
+                                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                                          <span>{result.mall_name}</span>
+                                          {result.brand && <span>브랜드: {result.brand}</span>}
+                                          <span>{result.price}원</span>
+                                          <span className="text-blue-600">{result.page}페이지 {result.rank_in_page}번째</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
+                                  </div>
                                 </div>
                               ))}
                             </div>
