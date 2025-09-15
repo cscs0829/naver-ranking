@@ -74,12 +74,17 @@ export class NaverShoppingRankChecker {
   }
 
   extractProductInfo(product: NaverProduct): Partial<SearchResult> {
+    // HTML 태그 제거 함수
+    const removeHtmlTags = (text: string): string => {
+      return text.replace(/<[^>]*>/g, '')
+    }
+
     return {
-      product_title: product.title,
+      product_title: removeHtmlTags(product.title),
       product_link: product.link,
       product_id: product.productId,
-      mall_name: product.mallName,
-      brand: product.brand || product.maker,
+      mall_name: removeHtmlTags(product.mallName),
+      brand: removeHtmlTags(product.brand || product.maker || ''),
       price: product.lprice || product.hprice,
       category1: product.category1,
       category2: product.category2,
@@ -149,6 +154,85 @@ export class NaverShoppingRankChecker {
     return true
   }
 
+  // 자동검색용 엄격한 매칭 함수
+  isExactTargetProduct(
+    product: NaverProduct,
+    targetProductName?: string,
+    targetMallName?: string,
+    targetBrand?: string
+  ): boolean {
+    // HTML 태그 제거 함수
+    const removeHtmlTags = (text: string): string => {
+      return text.replace(/<[^>]*>/g, '')
+    }
+
+    // 상품명 매칭 로직 - 더 엄격한 매칭
+    if (targetProductName) {
+      const productTitle = removeHtmlTags(product.title).toLowerCase().trim()
+      const targetName = targetProductName.toLowerCase().trim()
+      
+      console.log(`[자동검색] 매칭 시도: "${productTitle}" vs "${targetName}"`)
+      
+      // 1. 정확한 매칭 (공백 정규화 후)
+      const normalizedProductTitle = productTitle.replace(/\s+/g, ' ')
+      const normalizedTargetName = targetName.replace(/\s+/g, ' ')
+      
+      if (normalizedProductTitle === normalizedTargetName) {
+        console.log(`✅ [자동검색] 정확한 매칭 성공`)
+        return true
+      }
+      
+      // 2. 타겟 상품명이 상품 제목에 정확히 포함되는지 확인 (단어 경계 고려)
+      const targetWords = normalizedTargetName.split(/\s+/).filter(word => word.length > 0)
+      if (targetWords.length > 0) {
+        // 모든 타겟 단어가 순서대로 포함되는지 확인
+        let lastIndex = 0
+        let allWordsFound = true
+        
+        for (const word of targetWords) {
+          const wordIndex = normalizedProductTitle.indexOf(word, lastIndex)
+          if (wordIndex === -1) {
+            allWordsFound = false
+            break
+          }
+          lastIndex = wordIndex + word.length
+        }
+        
+        if (allWordsFound) {
+          console.log(`✅ [자동검색] 순서대로 단어 매칭 성공`)
+          return true
+        }
+      }
+      
+      console.log(`❌ [자동검색] 상품명 매칭 실패: "${product.title}" vs "${targetProductName}"`)
+      return false
+    }
+
+    // 쇼핑몰 매칭 - 더 엄격하게
+    if (targetMallName) {
+      const productMallName = removeHtmlTags(product.mallName).toLowerCase().trim()
+      const targetMall = targetMallName.toLowerCase().trim()
+      
+      if (productMallName !== targetMall && !productMallName.includes(targetMall)) {
+        console.log(`❌ [자동검색] 쇼핑몰 매칭 실패: "${product.mallName}" vs "${targetMallName}"`)
+        return false
+      }
+    }
+
+    // 브랜드 매칭 - 더 엄격하게
+    if (targetBrand && product.brand) {
+      const productBrand = removeHtmlTags(product.brand).toLowerCase().trim()
+      const targetBrandName = targetBrand.toLowerCase().trim()
+      
+      if (productBrand !== targetBrandName && !productBrand.includes(targetBrandName)) {
+        console.log(`❌ [자동검색] 브랜드 매칭 실패: "${product.brand}" vs "${targetBrand}"`)
+        return false
+      }
+    }
+
+    return true
+  }
+
   async findProductRank(
     searchQuery: string,
     targetProductName?: string,
@@ -169,7 +253,8 @@ export class NaverShoppingRankChecker {
     targetProductName?: string,
     targetMallName?: string,
     targetBrand?: string,
-    maxPages: number = 10
+    maxPages: number = 10,
+    useExactMatching: boolean = false
   ): Promise<{ items: SearchResult[]; totalSearched: number; foundCount: number }> {
     const items: SearchResult[] = []
     let totalSearched = 0
@@ -211,7 +296,11 @@ export class NaverShoppingRankChecker {
         const product = response.items[i]
         console.log(`상품 ${i + 1} 검사 중: "${product.title}"`)
         
-        if (this.isTargetProduct(product, targetProductName, targetMallName, targetBrand)) {
+        const isMatch = useExactMatching 
+          ? this.isExactTargetProduct(product, targetProductName, targetMallName, targetBrand)
+          : this.isTargetProduct(product, targetProductName, targetMallName, targetBrand);
+        
+        if (isMatch) {
           console.log(`✅ 매칭된 상품 발견!`)
           const productInfo = this.extractProductInfo(product)
           

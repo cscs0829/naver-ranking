@@ -100,13 +100,14 @@ export async function POST(request: NextRequest) {
         apiKeyProfile.client_secret
       );
 
-      // 자동 검색에서는 정확히 매칭된 상품들만 찾기
+      // 자동 검색에서는 정확히 매칭된 상품들만 찾기 (엄격한 매칭 사용)
       const searchResult = await checker.findAllMatches(
         config.search_query,
         config.target_product_name,
         config.target_mall_name,
         config.target_brand,
-        config.max_pages
+        config.max_pages,
+        true // useExactMatching = true
       );
 
       if (searchResult.items && searchResult.items.length > 0) {
