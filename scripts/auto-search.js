@@ -160,8 +160,11 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
         }));
 
         const { error: insertError } = await supabase
-          .from('search_results')
-          .insert(resultsToInsert);
+          .from('auto_search_results')
+          .insert(resultsToInsert.map(result => ({
+            ...result,
+            config_id: configId
+          })));
 
         if (insertError) {
           console.error('검색 결과 저장 실패:', insertError);

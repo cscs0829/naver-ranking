@@ -97,8 +97,17 @@ jobs:
           export SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
           export SUPABASE_SERVICE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           
-          # 자동 검색 스크립트 실행
-          node scripts/auto-search.js
+          # 실행할 설정 ID들을 배열로 변환
+          CONFIGS="${{ steps.get-configs.outputs.configs }}"
+          echo "실행할 설정들: $CONFIGS"
+          
+          # 각 설정별로 자동 검색 실행
+          for config_id in $CONFIGS; do
+            if [ -n "$config_id" ]; then
+              echo "설정 $config_id 실행 중..."
+              node scripts/auto-search.js $config_id
+            fi
+          done
 
       - name: 실행 결과 요약
         if: always()
