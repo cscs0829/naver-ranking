@@ -15,6 +15,50 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// 유틸: HTML 태그/URL 제거 및 정규화
+function removeHtmlTags(text = '') {
+  return String(text).replace(/<[^>]*>/g, '');
+}
+
+function removeUrls(text = '') {
+  return String(text).replace(/https?:\/\/\S+/gi, '');
+}
+
+function normalizeWhitespace(text = '') {
+  return String(text).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeText(text = '') {
+  // 카테고리 접두부가 '@'로 구분되어 붙는 경우 뒤쪽 실제 제목만 사용
+  const withoutHtml = removeHtmlTags(text);
+  const withoutUrls = removeUrls(withoutHtml);
+  const splitted = withoutUrls.split('@');
+  const tail = splitted.length > 1 ? splitted[splitted.length - 1] : splitted[0];
+  return normalizeWhitespace(tail).toLowerCase();
+}
+
+// 자동검색용: 정확 일치 여부 판단
+function isExactTargetProduct(item, targetProductName, targetMallName, targetBrand) {
+  const productTitleNorm = normalizeText(item.title);
+  const mallNameNorm = normalizeText(item.mallName);
+  const brandNorm = normalizeText(item.brand);
+
+  const targetTitleNorm = normalizeText(targetProductName || '');
+  const targetMallNorm = normalizeText(targetMallName || '');
+  const targetBrandNorm = normalizeText(targetBrand || '');
+
+  if (targetTitleNorm && productTitleNorm !== targetTitleNorm) {
+    return false;
+  }
+  if (targetMallNorm && mallNameNorm !== targetMallNorm) {
+    return false;
+  }
+  if (targetBrandNorm && brandNorm !== targetBrandNorm) {
+    return false;
+  }
+  return true;
+}
+
 // 네이버 쇼핑 API 검색 함수
 async function searchNaverShopping(query, options = {}) {
   const { clientId, clientSecret, display = 100, start = 1, sort = 'sim' } = options;
@@ -138,8 +182,25 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
       if (searchResults && searchResults.items) {
         console.log(`📊 검색 결과: ${searchResults.items.length}개 상품`);
 
-        // 검색 결과를 데이터베이스에 저장
-        const resultsToInsert = searchResults.items.map((item, index) => ({
+        // 정확 매칭 필터 적용
+        const matchedItems = searchResults.items
+          .filter(item => isExactTargetProduct(
+            item,
+            config.target_product_name,
+            config.target_mall_name,
+            config.target_brand
+          ));
+
+        console.log(`🎯 정확 매칭 결과: ${matchedItems.length}개 상품`);
+
+        // 같은 설정의 기존 데이터 삭제 후 저장
+        await supabase
+          .from('auto_search_results')
+          .delete()
+          .eq('config_id', configId);
+
+        // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
+        const resultsToInsert = matchedItems.map((item, index) => ({
           search_query: config.search_query,
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
@@ -147,30 +208,38 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           page: Math.floor(index / 20) + 1,
           rank_in_page: (index % 20) + 1,
           total_rank: index + 1,
-          product_title: item.title,
-          mall_name: item.mallName,
-          brand: item.brand,
+          product_title: normalizeWhitespace(removeHtmlTags(item.title)),
+          mall_name: normalizeWhitespace(removeHtmlTags(item.mallName)),
+          brand: normalizeWhitespace(removeHtmlTags(item.brand || '')),
           price: item.lprice,
           product_link: item.link,
           product_id: item.productId,
           category1: item.category1,
           category2: item.category2,
           category3: item.category3,
+          is_exact_match: true,
+          match_confidence: 1.00,
+          check_date: new Date().toISOString().split('T')[0],
           created_at: new Date().toISOString()
         }));
 
-        const { error: insertError } = await supabase
-          .from('auto_search_results')
-          .insert(resultsToInsert.map(result => ({
-            ...result,
-            config_id: configId
-          })));
+        if (resultsToInsert.length > 0) {
+          const { error: insertError } = await supabase
+            .from('auto_search_results')
+            .insert(resultsToInsert.map(result => ({
+              ...result,
+              config_id: configId
+            })));
 
-        if (insertError) {
-          console.error('검색 결과 저장 실패:', insertError);
+          if (insertError) {
+            console.error('검색 결과 저장 실패:', insertError);
+          } else {
+            resultsCount = resultsToInsert.length;
+            console.log(`✅ 정확 매칭 ${resultsCount}개 결과 저장 완료`);
+          }
         } else {
-          resultsCount = resultsToInsert.length;
-          console.log(`✅ ${resultsCount}개 결과 저장 완료`);
+          resultsCount = 0;
+          console.log('⚠️ 정확 매칭되는 결과가 없습니다. 저장을 건너뜁니다.');
         }
 
         // 로그에 검색 결과 저장
@@ -180,7 +249,7 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             .update({
               search_results: {
                 total_items: searchResults.total,
-                items: searchResults.items.slice(0, 10) // 처음 10개만 저장
+                items: matchedItems.slice(0, 10) // 처음 10개만 저장 (정확 매칭 기준)
               }
             })
             .eq('id', log.id);
