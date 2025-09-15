@@ -66,8 +66,8 @@ jobs:
             else
               # 마지막 실행 시간을 초로 변환
               LAST_RUN_TIME=$(date -d "$LAST_RUN_AT" -u +%s 2>/dev/null || echo "0")
-              # interval_hours를 초로 변환
-              INTERVAL_SECONDS=$((INTERVAL_HOURS * 3600))
+              # interval_hours를 초로 변환 (소수점 처리)
+              INTERVAL_SECONDS=$(echo "$INTERVAL_HOURS * 3600" | bc)
               TIME_DIFF=$((CURRENT_TIME - LAST_RUN_TIME))
               
               echo "설정 $CONFIG_ID: 마지막 실행 후 $TIME_DIFF초 경과, 필요 간격: $INTERVAL_SECONDS초"
