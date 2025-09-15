@@ -10,6 +10,11 @@
 - 📊 **다중 검색어 비교**: 여러 검색어의 결과를 한 번에 비교
 - 💾 **데이터 저장**: 검색 결과를 데이터베이스에 자동 저장
 - 🔄 **자동 업데이트**: 같은 검색어로 재검색 시 기존 데이터 자동 삭제 후 새로 저장
+- ⏰ **자동 검색 스케줄링**: GitHub Actions를 활용한 정기 자동 검색
+- 📈 **키워드 분석**: 네이버 쇼핑인사이트를 활용한 키워드 트렌드 분석
+- 🔑 **API 키 관리**: 여러 네이버 API 키를 안전하게 관리
+- 📊 **대시보드**: 자동 검색 통계 및 현황 모니터링
+- 🔔 **알림 시스템**: 자동 검색 실행 결과 실시간 알림
 - 📱 **반응형 UI**: 모바일과 데스크톱에서 모두 사용 가능
 
 ## 기술 스택
@@ -150,17 +155,49 @@ Vercel 대시보드에서 Settings > Environment Variables에서 다음 변수�
 3. 최대 검색 페이지 수 설정
 4. "검색 시작" 버튼 클릭
 
-### 2. 결과 확인
+### 2. 자동 검색 스케줄링
+
+1. **자동 검색 탭**으로 이동
+2. **새 스케줄** 버튼 클릭
+3. 스케줄 정보 입력:
+   - 스케줄 이름
+   - 검색어
+   - 대상 쇼핑몰/브랜드/상품명 (선택)
+   - 실행 주기 (1시간마다, 2시간마다, 6시간마다, 12시간마다, 매일 등)
+   - 설명 (선택)
+4. **생성** 버튼 클릭
+
+#### 자동 검색 실행 주기 옵션
+- **1시간마다**: `0 */1 * * *`
+- **2시간마다**: `0 */2 * * *` (기본값)
+- **6시간마다**: `0 */6 * * *`
+- **12시간마다**: `0 */12 * * *`
+- **매일 자정**: `0 0 * * *`
+- **매주 일요일**: `0 0 * * 0`
+- **매월 1일**: `0 0 1 * *`
+
+### 3. GitHub Actions 설정
+
+자동 검색이 작동하려면 GitHub Secrets 설정이 필요합니다:
+
+1. **GitHub 저장소** > **Settings** > **Secrets and variables** > **Actions**
+2. 다음 Secrets 추가:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase 서비스 역할 키
+
+### 4. 결과 확인
 
 - 검색 결과는 자동으로 데이터베이스에 저장됩니다
 - 같은 검색어로 재검색하면 기존 데이터가 자동으로 업데이트됩니다
 - 여러 검색어의 결과를 한 번에 비교할 수 있습니다
+- 자동 검색 실행 로그를 확인할 수 있습니다
 
-### 3. 데이터 관리
+### 5. 데이터 관리
 
 - 각 검색 결과는 개별적으로 삭제 가능합니다
 - 검색어별로 그룹화되어 표시됩니다
 - 상품 링크를 클릭하면 네이버 쇼핑 페이지로 이동합니다
+- 자동 검색 스케줄을 활성화/비활성화할 수 있습니다
 
 ## API 엔드포인트
 
@@ -191,6 +228,53 @@ Vercel 대시보드에서 Settings > Environment Variables에서 다음 변수�
 **Query Parameters:**
 - `id`: 삭제할 결과의 ID
 
+## 자동 검색 API 엔드포인트
+
+### POST /api/auto-search/run
+자동 검색 실행
+
+**Request Body:**
+```json
+{
+  "scheduleId": 1,
+  "apiKeyProfileId": 1
+}
+```
+
+### GET /api/auto-search/configs
+자동 검색 설정 목록 조회
+
+### POST /api/auto-search/configs
+새 자동 검색 설정 생성
+
+### GET /api/auto-search/dashboard
+대시보드 통계 조회
+
+### GET /api/auto-search/notifications
+알림 목록 조회
+
+### POST /api/auto-search/notifications
+새 알림 생성
+
+**Request Body:**
+```json
+{
+  "name": "베트남 여행 자동 검색",
+  "search_query": "베트남 여행",
+  "target_mall_name": "하나투어",
+  "target_brand": "하나투어",
+  "target_product_name": "다낭",
+  "cron_expression": "0 */2 * * *",
+  "description": "2시간마다 베트남 여행 상품 순위 확인"
+}
+```
+
+### PUT /api/auto-search/schedules/{id}
+자동 검색 스케줄 수정
+
+### DELETE /api/auto-search/schedules/{id}
+자동 검색 스케줄 삭제
+
 ## 데이터베이스 스키마
 
 ### search_results 테이블
@@ -217,12 +301,68 @@ Vercel 대시보드에서 Settings > Environment Variables에서 다음 변수�
 | created_at | TIMESTAMP | 생성일시 |
 | updated_at | TIMESTAMP | 수정일시 |
 
+### auto_search_configs 테이블
+
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | SERIAL | 기본키 |
+| name | VARCHAR(255) | 설정 이름 |
+| search_query | VARCHAR(255) | 검색어 |
+| target_mall_name | VARCHAR(255) | 대상 쇼핑몰명 |
+| target_brand | VARCHAR(255) | 대상 브랜드명 |
+| target_product_name | VARCHAR(255) | 대상 상품명 |
+| max_pages | INTEGER | 최대 페이지 수 |
+| profile_id | INTEGER | API 키 프로필 ID (외래키) |
+| interval_hours | INTEGER | 실행 주기 (시간) |
+| is_active | BOOLEAN | 활성화 상태 |
+| last_run_at | TIMESTAMP | 마지막 실행 시간 |
+| next_run_at | TIMESTAMP | 다음 실행 시간 |
+| run_count | INTEGER | 실행 횟수 |
+| success_count | INTEGER | 성공 횟수 |
+| error_count | INTEGER | 실패 횟수 |
+| last_error | TEXT | 마지막 오류 메시지 |
+| description | TEXT | 설명 |
+| created_at | TIMESTAMP | 생성일시 |
+| updated_at | TIMESTAMP | 수정일시 |
+
+### auto_search_logs 테이블
+
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | SERIAL | 기본키 |
+| config_id | INTEGER | 설정 ID (외래키) |
+| status | VARCHAR(50) | 실행 상태 (running, success, error) |
+| started_at | TIMESTAMP | 시작 시간 |
+| completed_at | TIMESTAMP | 완료 시간 |
+| duration_ms | INTEGER | 실행 시간 (밀리초) |
+| results_count | INTEGER | 결과 개수 |
+| error_message | TEXT | 오류 메시지 |
+| search_results | JSONB | 검색 결과 |
+| created_at | TIMESTAMP | 생성일시 |
+
+### auto_search_notifications 테이블
+
+| 컬럼명 | 타입 | 설명 |
+|--------|------|------|
+| id | SERIAL | 기본키 |
+| type | VARCHAR(20) | 알림 타입 (success, error, warning, info) |
+| title | VARCHAR(255) | 알림 제목 |
+| message | TEXT | 알림 메시지 |
+| config_id | INTEGER | 설정 ID (외래키) |
+| priority | VARCHAR(20) | 우선순위 (low, normal, high, urgent) |
+| read | BOOLEAN | 읽음 상태 |
+| read_at | TIMESTAMP | 읽음 처리 시간 |
+| created_at | TIMESTAMP | 생성일시 |
+
 ## 주의사항
 
 1. **API 호출 제한**: 네이버 API는 초당 1회 호출 제한이 있습니다
 2. **검색 페이지 제한**: 한 번에 최대 1000개 상품까지 검색 가능합니다
 3. **데이터 저장**: 같은 검색어로 재검색하면 기존 데이터가 삭제됩니다
 4. **API 키 보안**: 환경변수에 API 키를 안전하게 보관하세요
+5. **자동 검색 제한**: GitHub Actions 무료 플랜은 월 2,000분 실행 제한이 있습니다
+6. **Supabase 제한**: 무료 플랜은 월 50,000회 API 요청 제한이 있습니다
+7. **자동 검색 실행**: GitHub Actions는 UTC 시간 기준으로 실행됩니다
 
 ## 라이선스
 

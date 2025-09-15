@@ -6,7 +6,10 @@ import ResultsList from '@/components/ResultsList'
 import KeywordAnalysisForm from '@/components/KeywordAnalysisForm'
 import KeywordResultsList from '@/components/KeywordResultsList'
 import ApiKeyManager from '@/components/ApiKeyManager'
-import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun, Menu, X, Settings, FileText, Key } from 'lucide-react'
+import AutoSearchManager from '@/components/AutoSearchManager'
+import AutoSearchDashboard from '@/components/AutoSearchDashboard'
+import AutoSearchNotifications from '@/components/AutoSearchNotifications'
+import { Search, BarChart3, Database, Sparkles, TrendingUp, Zap, Moon, Sun, Menu, X, Settings, FileText, Key, Clock } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from '@/utils/toast'
 
@@ -23,16 +26,19 @@ interface SearchData {
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys'>('search')
+  const [activeTab, setActiveTab] = useState<'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys' | 'auto-search' | 'dashboard' | 'notifications'>('search')
   const [mounted, setMounted] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const tabs: Array<{ id: 'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys'; label: string; icon: React.ReactNode; description: string }> = [
+  const tabs: Array<{ id: 'search' | 'results' | 'keyword-analysis' | 'keyword-results' | 'keys' | 'auto-search' | 'dashboard' | 'notifications'; label: string; icon: React.ReactNode; description: string }> = [
     { id: 'search', label: '순위 검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
     { id: 'results', label: '순위 결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
     { id: 'keyword-analysis', label: '키워드 분석', icon: <TrendingUp className="w-5 h-5" />, description: '네이버 쇼핑인사이트 키워드 분석' },
     { id: 'keyword-results', label: '키워드 결과', icon: <Database className="w-5 h-5" />, description: '저장된 키워드 분석 결과' },
+    { id: 'auto-search', label: '자동 검색', icon: <Clock className="w-5 h-5" />, description: '정기 자동 검색 스케줄 관리' },
+    { id: 'dashboard', label: '대시보드', icon: <BarChart3 className="w-5 h-5" />, description: '자동 검색 통계 및 현황' },
+    { id: 'notifications', label: '알림', icon: <Zap className="w-5 h-5" />, description: '자동 검색 알림 관리' },
     { id: 'keys', label: 'API 키', icon: <Key className="w-5 h-5" />, description: 'API 키 관리' },
   ]
 
@@ -449,6 +455,49 @@ export default function Home() {
             </motion.div>
           )}
 
+          {activeTab === 'auto-search' && (
+            <motion.div
+              key="auto-search"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
+            >
+              {/* 자동 검색 섹션 헤더 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-center space-y-6"
+              >
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="inline-flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl text-sm font-semibold shadow-lg shadow-violet-500/25"
+                >
+                  <Clock className="w-5 h-5 animate-pulse" />
+                  <span>자동 검색</span>
+                </motion.div>
+                <h2 className="text-4xl font-bold text-slate-900 dark:text-white">
+                  자동 검색 관리
+                </h2>
+                <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                  정기적으로 네이버 쇼핑 검색을 실행하고 결과를 자동으로 저장합니다
+                </p>
+              </motion.div>
+
+              {/* 자동 검색 매니저 */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300 p-8"
+              >
+                <AutoSearchManager />
+              </motion.div>
+            </motion.div>
+          )}
+
           {activeTab === 'keys' && (
             <motion.div
               key="keys"
@@ -488,6 +537,46 @@ export default function Home() {
                 className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300"
               >
                 <ApiKeyManager />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'dashboard' && (
+            <motion.div
+              key="dashboard"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
+            >
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300 p-6"
+              >
+                <AutoSearchDashboard />
+              </motion.div>
+            </motion.div>
+          )}
+
+          {activeTab === 'notifications' && (
+            <motion.div
+              key="notifications"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="space-y-10"
+            >
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 overflow-hidden hover:shadow-3xl transition-all duration-300 p-6"
+              >
+                <AutoSearchNotifications />
               </motion.div>
             </motion.div>
           )}

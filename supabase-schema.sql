@@ -107,3 +107,82 @@ CREATE TRIGGER update_api_key_profiles_updated_at
   BEFORE UPDATE ON api_key_profiles
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- =============================================
+-- 자동 검색 스케줄 테이블
+-- =============================================
+CREATE TABLE IF NOT EXISTS auto_search_schedules (
+  id SERIAL PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  name VARCHAR(255) NOT NULL,
+  search_query VARCHAR(255) NOT NULL,
+  target_mall_name VARCHAR(255),
+  target_brand VARCHAR(255),
+  target_product_name VARCHAR(255),
+  is_active BOOLEAN DEFAULT TRUE,
+  cron_expression VARCHAR(100) NOT NULL DEFAULT '0 */2 * * *', -- 기본 2시간마다
+  last_run_at TIMESTAMP WITH TIME ZONE,
+  next_run_at TIMESTAMP WITH TIME ZONE,
+  run_count INTEGER DEFAULT 0,
+  success_count INTEGER DEFAULT 0,
+  error_count INTEGER DEFAULT 0,
+  last_error_message TEXT,
+  description TEXT
+);
+
+ALTER TABLE auto_search_schedules ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all operations for all users" ON auto_search_schedules
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE TRIGGER update_auto_search_schedules_updated_at
+  BEFORE UPDATE ON auto_search_schedules
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- 자동 검색 실행 로그 테이블
+CREATE TABLE IF NOT EXISTS auto_search_logs (
+  id SERIAL PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  schedule_id INTEGER REFERENCES auto_search_schedules(id) ON DELETE CASCADE,
+  status VARCHAR(50) NOT NULL CHECK (status IN ('running', 'success', 'error')),
+  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  completed_at TIMESTAMP WITH TIME ZONE,
+  duration_ms INTEGER,
+  results_count INTEGER DEFAULT 0,
+  error_message TEXT,
+  execution_context JSONB
+);
+
+ALTER TABLE auto_search_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all operations for all users" ON auto_search_logs
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 알림 테이블 생성
+CREATE TABLE IF NOT EXISTS auto_search_notifications (
+  id SERIAL PRIMARY KEY,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  type VARCHAR(20) NOT NULL CHECK (type IN ('success', 'error', 'warning', 'info')),
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  config_id INTEGER REFERENCES auto_search_configs(id) ON DELETE CASCADE,
+  priority VARCHAR(20) DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+  read BOOLEAN DEFAULT FALSE,
+  read_at TIMESTAMP WITH TIME ZONE
+);
+
+ALTER TABLE auto_search_notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable all operations for all users" ON auto_search_notifications
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- 인덱스 생성
+CREATE INDEX IF NOT EXISTS idx_auto_search_schedules_active ON auto_search_schedules(is_active);
+CREATE INDEX IF NOT EXISTS idx_auto_search_schedules_next_run ON auto_search_schedules(next_run_at);
+CREATE INDEX IF NOT EXISTS idx_auto_search_logs_schedule_id ON auto_search_logs(schedule_id);
+CREATE INDEX IF NOT EXISTS idx_auto_search_logs_created_at ON auto_search_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_auto_search_notifications_read ON auto_search_notifications(read);
+CREATE INDEX IF NOT EXISTS idx_auto_search_notifications_created_at ON auto_search_notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_auto_search_notifications_config_id ON auto_search_notifications(config_id);

@@ -1,0 +1,60 @@
+name: 자동 검색 실행
+
+on:
+  schedule:
+    # 매 6시간마다 실행 (UTC 기준)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      schedule_id:
+        description: '실행할 스케줄 ID (선택사항)'
+        required: false
+        type: string
+      api_key_profile_id:
+        description: '사용할 API 키 프로필 ID (선택사항)'
+        required: false
+        type: string
+
+jobs:
+  auto-search:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 활성화된 설정 조회
+        id: get-configs
+        run: |
+          # 모든 활성화된 설정 조회
+          CONFIGS=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/auto_search_configs?is_active=eq.true&select=id" \
+            | jq -r '.[].id' | tr '\n' ' ')
+          
+          echo "configs=$CONFIGS" >> $GITHUB_OUTPUT
+          echo "발견된 활성 설정: $CONFIGS"
+
+      - name: 자동 검색 실행
+        if: steps.get-configs.outputs.configs != ''
+        run: |
+          # 환경변수 설정
+          export SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          export SUPABASE_SERVICE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          
+          # 자동 검색 스크립트 실행
+          node scripts/auto-search.js
+
+      - name: 실행 결과 요약
+        if: always()
+        run: |
+          echo "자동 검색 실행이 완료되었습니다."
+          echo "실행된 설정: ${{ steps.get-configs.outputs.configs }}"
