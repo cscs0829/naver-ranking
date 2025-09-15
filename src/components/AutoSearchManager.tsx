@@ -217,7 +217,7 @@ export default function AutoSearchManager() {
 
   // 설정 삭제
   const handleDelete = async (id: number) => {
-    if (!confirm('정말로 이 설정을 삭제하시겠습니까?')) return;
+    if (!confirm('정말로 이 설정을 삭제하시겠습니까?\n\n관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다.')) return;
 
     try {
       const response = await fetch(`/api/auto-search/configs/${id}`, {
@@ -228,7 +228,12 @@ export default function AutoSearchManager() {
       
       if (data.success) {
         await fetchConfigs();
-        toast('설정이 삭제되었습니다.', 'success');
+        
+        // 삭제된 항목 수 표시
+        const deleted = data.deleted;
+        const message = `설정과 관련 데이터가 삭제되었습니다.\n\n삭제된 항목:\n• 설정: ${deleted.config}개\n• 결과: ${deleted.results}개\n• 로그: ${deleted.logs}개\n• 알림: ${deleted.notifications}개`;
+        
+        toast(message, 'success');
       } else {
         toast('오류가 발생했습니다: ' + data.error, 'error');
       }

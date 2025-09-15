@@ -737,7 +737,7 @@ export default function AutoSearchDashboard() {
                                     </div>
                                   </div>
                                   <a 
-                                    href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}`}
+                                    href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`}
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
