@@ -38,23 +38,27 @@ export async function GET(request: NextRequest) {
     // 각 분석 결과별로 시트 생성
     for (const result of results) {
       // 시트 데이터 준비
-      const sheetData = result.results?.map((trendResult: any, trendIndex: number) => {
-        return trendResult.data?.map((dataPoint: any, dataIndex: number) => ({
-          '분석명': result.analysis_name || '',
-          '시작일': result.start_date || '',
-          '종료일': result.end_date || '',
-          '시간단위': result.time_unit || '',
-          '디바이스': result.device || '',
-          '성별': result.gender || '',
-          '연령대': Array.isArray(result.ages) ? result.ages.join(', ') : (result.ages || ''),
-          '키워드제목': trendResult.title || '',
-          '키워드': Array.isArray(trendResult.keyword) ? trendResult.keyword.join(', ') : (trendResult.keyword || ''),
-          '기간': dataPoint.period || '',
-          '비율': dataPoint.ratio || 0,
-          '그룹': dataPoint.group || '',
-          '생성일시': result.created_at ? new Date(result.created_at).toLocaleString('ko-KR') : ''
-        })) || [];
-      }).flat() || [];
+      const sheetData = Array.isArray(result.results) 
+        ? result.results.map((trendResult: any, trendIndex: number) => {
+            return Array.isArray(trendResult.data) 
+              ? trendResult.data.map((dataPoint: any, dataIndex: number) => ({
+                  '분석명': result.analysis_name || '',
+                  '시작일': result.start_date || '',
+                  '종료일': result.end_date || '',
+                  '시간단위': result.time_unit || '',
+                  '디바이스': result.device || '',
+                  '성별': result.gender || '',
+                  '연령대': Array.isArray(result.ages) ? result.ages.join(', ') : (result.ages || ''),
+                  '키워드제목': trendResult.title || '',
+                  '키워드': Array.isArray(trendResult.keyword) ? trendResult.keyword.join(', ') : (trendResult.keyword || ''),
+                  '기간': dataPoint.period || '',
+                  '비율': dataPoint.ratio || 0,
+                  '그룹': dataPoint.group || '',
+                  '생성일시': result.created_at ? new Date(result.created_at).toLocaleString('ko-KR') : ''
+                }))
+              : [];
+          }).flat()
+        : [];
 
       // 시트 생성
       const worksheet = XLSX.utils.json_to_sheet(sheetData);
@@ -87,8 +91,10 @@ export async function GET(request: NextRequest) {
       results.map(result => ({
         '분석ID': result.id,
         '분석명': result.analysis_name || '',
-        '키워드수': result.results?.length || 0,
-        '데이터포인트수': result.results?.reduce((sum: number, trend: any) => sum + (trend.data?.length || 0), 0) || 0,
+        '키워드수': Array.isArray(result.results) ? result.results.length : 0,
+        '데이터포인트수': Array.isArray(result.results) 
+          ? result.results.reduce((sum: number, trend: any) => sum + (Array.isArray(trend.data) ? trend.data.length : 0), 0) 
+          : 0,
         '생성일시': result.created_at ? new Date(result.created_at).toLocaleString('ko-KR') : '',
         '업데이트일시': result.updated_at ? new Date(result.updated_at).toLocaleString('ko-KR') : ''
       }))
@@ -115,7 +121,7 @@ export async function GET(request: NextRequest) {
     // 응답 헤더 설정
     const headers = new Headers();
     headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    headers.set('Content-Disposition', `attachment; filename="키워드_분석_결과_${new Date().toISOString().split('T')[0]}.xlsx"`);
+    headers.set('Content-Disposition', `attachment; filename="keyword_analysis_results_${new Date().toISOString().split('T')[0]}.xlsx"`);
 
     return new NextResponse(excelBuffer, {
       status: 200,

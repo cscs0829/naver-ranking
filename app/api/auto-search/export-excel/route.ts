@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
     // 응답 헤더 설정
     const headers = new Headers();
     headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    headers.set('Content-Disposition', `attachment; filename="자동검색_결과_${new Date().toISOString().split('T')[0]}.xlsx"`);
+    headers.set('Content-Disposition', `attachment; filename="auto_search_results_${new Date().toISOString().split('T')[0]}.xlsx"`);
 
     return new NextResponse(excelBuffer, {
       status: 200,
