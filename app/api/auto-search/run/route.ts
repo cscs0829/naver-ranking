@@ -112,17 +112,15 @@ export async function POST(request: NextRequest) {
 
       if (searchResult.items && searchResult.items.length > 0) {
         // 자동 검색에서는 정확히 매칭된 상품들만 저장
-        // 같은 검색어와 설정의 기존 데이터 삭제
+        // 같은 설정의 기존 데이터 삭제
         await supabase
-          .from('search_results')
+          .from('auto_search_results')
           .delete()
-          .eq('search_query', config.search_query)
-          .eq('target_product_name', config.target_product_name || '')
-          .eq('target_mall_name', config.target_mall_name || '')
-          .eq('target_brand', config.target_brand || '');
+          .eq('config_id', configId);
 
-        // 매칭된 상품들을 search_results 테이블에 저장
+        // 매칭된 상품들을 auto_search_results 테이블에 저장
         const resultsToInsert = searchResult.items.map(item => ({
+          config_id: configId,
           search_query: config.search_query,
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
@@ -138,11 +136,14 @@ export async function POST(request: NextRequest) {
           product_id: item.product_id,
           category1: item.category1,
           category2: item.category2,
-          category3: item.category3
+          category3: item.category3,
+          is_exact_match: true,
+          match_confidence: 1.00,
+          check_date: new Date().toISOString().split('T')[0]
         }));
 
         const { error: insertError } = await supabase
-          .from('search_results')
+          .from('auto_search_results')
           .insert(resultsToInsert);
 
         if (insertError) {

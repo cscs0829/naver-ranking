@@ -138,7 +138,7 @@ export default function AutoSearchManager() {
       target_product_name: '',
       max_pages: 10,
       profile_id: defaultProfile ? defaultProfile.id.toString() : '',
-      interval_hours: 2,
+      interval_hours: 1,
       description: ''
     });
     setEditingConfig(null);

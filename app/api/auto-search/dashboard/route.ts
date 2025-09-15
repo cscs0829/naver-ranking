@@ -37,9 +37,9 @@ export async function GET() {
     const successRuns = configStats?.reduce((sum, config) => sum + (config.success_count || 0), 0) || 0;
     const errorRuns = configStats?.reduce((sum, config) => sum + (config.error_count || 0), 0) || 0;
 
-    // 검색 결과 수 조회 (search_results 테이블에서)
+    // 검색 결과 수 조회 (auto_search_results 테이블에서)
     const { count: totalResults } = await supabase
-      .from('search_results')
+      .from('auto_search_results')
       .select('*', { count: 'exact', head: true });
 
     // 최근 활동 조회 (auto_search_logs에서)
@@ -96,11 +96,8 @@ export async function GET() {
       error_message: activity.error_message
     })) || [];
 
-    // 스케줄별 최신 순위 결과 조회 (auto_search_results 테이블이 있으면 사용, 없으면 search_results 사용)
-    let latestRankings = null;
-    
-    // 먼저 auto_search_results 테이블에서 조회 시도
-    const { data: autoSearchResults, error: autoSearchError } = await supabase
+    // 스케줄별 최신 순위 결과 조회 (auto_search_results 테이블에서)
+    const { data: latestRankings, error: autoSearchError } = await supabase
       .from('auto_search_results')
       .select(`
         config_id,
@@ -129,53 +126,20 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (autoSearchError && autoSearchError.code === 'PGRST116') {
-      // auto_search_results 테이블이 없으면 search_results에서 조회
-      console.log('auto_search_results 테이블이 없습니다. search_results에서 조회합니다.');
-      const { data: searchResults } = await supabase
-        .from('search_results')
-        .select(`
-          search_query,
-          target_product_name,
-          target_mall_name,
-          target_brand,
-          product_title,
-          mall_name,
-          brand,
-          total_rank,
-          page,
-          rank_in_page,
-          price,
-          product_link,
-          created_at
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      
-      // search_results 데이터를 auto_search_results 형식으로 변환
-      latestRankings = searchResults?.map(result => ({
-        ...result,
-        config_id: null, // search_results에는 config_id가 없음
-        check_date: result.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
-        is_exact_match: true,
-        match_confidence: 1.00,
-        auto_search_configs: null
-      })) || [];
-    } else {
-      latestRankings = autoSearchResults || [];
+    if (autoSearchError) {
+      console.error('auto_search_results 조회 오류:', autoSearchError);
     }
 
     // 스케줄별로 그룹화하여 최신 순위 결과 정리
     const scheduleRankings = latestRankings?.reduce((acc: any, result: any) => {
-      const configId = result.config_id || (result.auto_search_configs as any)?.id;
+      const configId = result.config_id;
       
-      // config_id가 없으면 검색어로 그룹화 (search_results에서 조회한 경우)
-      const groupKey = configId || result.search_query;
+      if (!configId) return acc; // config_id가 없으면 건너뛰기
       
-      if (!acc[groupKey]) {
-        acc[groupKey] = {
+      if (!acc[configId]) {
+        acc[configId] = {
           config_id: configId,
-          config_name: (result.auto_search_configs as any)?.name || result.search_query || 'Unknown',
+          config_name: (result.auto_search_configs as any)?.name || 'Unknown',
           search_query: result.search_query,
           target_product_name: result.target_product_name,
           target_mall_name: result.target_mall_name,
@@ -187,7 +151,7 @@ export async function GET() {
         };
       }
 
-      acc[groupKey].rankings.push({
+      acc[configId].rankings.push({
         product_title: result.product_title,
         mall_name: result.mall_name,
         brand: result.brand,

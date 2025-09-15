@@ -403,18 +403,20 @@ export default function AutoSearchDashboard() {
                       </p>
                     )}
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">
-                      마지막 체크: {new Date(schedule.latest_check).toLocaleString('ko-KR')}
-                    </p>
-                    <p className="text-sm font-medium text-blue-600">
-                      {schedule.rankings.length}개 상품 발견
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-sm text-gray-500">
+                        마지막 체크: {new Date(schedule.latest_check).toLocaleString('ko-KR')}
+                      </p>
+                      <p className="text-sm font-medium text-blue-600">
+                        {schedule.rankings.length}개 상품 발견
+                      </p>
+                    </div>
                     <button
                       onClick={() => handleDeleteScheduleData(schedule.config_id, schedule.config_name)}
-                      className="mt-2 flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
+                      className="flex items-center gap-1 px-3 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4" />
                       삭제
                     </button>
                   </div>
