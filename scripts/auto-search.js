@@ -213,11 +213,13 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
 
         console.log(`🎯 정확 매칭 결과: ${matchedItems.length}개 상품`);
 
-        // 같은 설정의 기존 데이터 삭제 후 저장
+        // 같은 설정의 '오늘' 데이터만 교체하고, 과거 이력은 보존
+        const todayStr = new Date().toISOString().split('T')[0];
         await supabase
           .from('auto_search_results')
           .delete()
-          .eq('config_id', configId);
+          .eq('config_id', configId)
+          .eq('check_date', todayStr);
 
         // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
         const resultsToInsert = matchedItems.map((item) => {
@@ -246,7 +248,7 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           category3: item.category3,
           is_exact_match: true,
           match_confidence: 1.00,
-          check_date: new Date().toISOString().split('T')[0],
+          check_date: todayStr,
           created_at: new Date().toISOString()
           };
         });
