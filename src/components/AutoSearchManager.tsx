@@ -52,8 +52,9 @@ interface AutoSearchConfig {
 }
 
 const intervalOptions = [
-  { value: 1, label: '1시간마다' },
+  { value: 1, label: '1시간마다 (최소)' },
   { value: 2, label: '2시간마다' },
+  { value: 3, label: '3시간마다' },
   { value: 6, label: '6시간마다' },
   { value: 12, label: '12시간마다' },
   { value: 24, label: '매일' },

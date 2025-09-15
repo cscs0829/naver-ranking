@@ -2,8 +2,8 @@ name: 자동 검색 실행
 
 on:
   schedule:
-    # 매 15분마다 체크하여 설정된 interval_hours에 따라 실행
-    - cron: '*/15 * * * *'
+    # 매 1시간마다 체크하여 설정된 interval_hours에 따라 실행
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       schedule_id:
