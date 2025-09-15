@@ -93,12 +93,14 @@ export default function AutoSearchManager() {
     }
   };
 
-  // API 키 프로필 목록 조회
+  // API 키 프로필 목록 조회 (쇼핑 검색 API 타입만)
   const fetchApiKeyProfiles = async () => {
     try {
       const response = await fetch('/api/keys');
       const data = await response.json();
-      setApiKeyProfiles(data.profiles || []);
+      // 쇼핑 검색 API 타입만 필터링
+      const shoppingProfiles = (data.profiles || []).filter((profile: any) => profile.api_type === 'shopping');
+      setApiKeyProfiles(shoppingProfiles);
     } catch (error) {
       console.error('API 키 프로필 조회 오류:', error);
     }
@@ -109,8 +111,24 @@ export default function AutoSearchManager() {
     fetchApiKeyProfiles();
   }, []);
 
+  // API 키 프로필이 로드된 후 기본 프로필로 폼 초기화
+  useEffect(() => {
+    if (apiKeyProfiles.length > 0 && !formData.profile_id) {
+      const defaultProfile = apiKeyProfiles.find(profile => profile.is_default);
+      if (defaultProfile) {
+        setFormData(prev => ({
+          ...prev,
+          profile_id: defaultProfile.id.toString()
+        }));
+      }
+    }
+  }, [apiKeyProfiles]);
+
   // 폼 초기화
   const resetForm = () => {
+    // 기본 프로필 찾기 (is_default가 true인 프로필)
+    const defaultProfile = apiKeyProfiles.find(profile => profile.is_default);
+    
     setFormData({
       name: '',
       search_query: '',
@@ -118,7 +136,7 @@ export default function AutoSearchManager() {
       target_brand: '',
       target_product_name: '',
       max_pages: 10,
-      profile_id: '',
+      profile_id: defaultProfile ? defaultProfile.id.toString() : '',
       interval_hours: 2,
       description: ''
     });
@@ -240,6 +258,9 @@ export default function AutoSearchManager() {
 
   // 수정 폼 열기
   const handleEdit = (config: AutoSearchConfig) => {
+    // 기본 프로필 찾기 (is_default가 true인 프로필)
+    const defaultProfile = apiKeyProfiles.find(profile => profile.is_default);
+    
     setFormData({
       name: config.name,
       search_query: config.search_query,
@@ -247,7 +268,7 @@ export default function AutoSearchManager() {
       target_brand: config.target_brand || '',
       target_product_name: config.target_product_name || '',
       max_pages: config.max_pages,
-      profile_id: config.profile_id?.toString() || '',
+      profile_id: config.profile_id?.toString() || (defaultProfile ? defaultProfile.id.toString() : ''),
       interval_hours: config.interval_hours,
       description: config.description || ''
     });
@@ -427,18 +448,12 @@ export default function AutoSearchManager() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              resetForm();
-            }
-          }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative mx-4 sm:mx-0 border border-gray-200"
-            onClick={(e) => e.stopPropagation()}
           >
             {/* 닫기 버튼 */}
             <button
@@ -563,20 +578,25 @@ export default function AutoSearchManager() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  API 키 프로필
+                  API 키 프로필 (쇼핑 검색 API)
                 </label>
                 <select
                   value={formData.profile_id}
                   onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  required
                 >
-                  <option value="">기본 프로필 사용</option>
                   {apiKeyProfiles.map((profile) => (
                     <option key={profile.id} value={profile.id}>
-                      {profile.name} ({profile.is_active ? '활성' : '비활성'})
+                      {profile.name} {profile.is_default ? '(기본)' : ''} ({profile.is_active ? '활성' : '비활성'})
                     </option>
                   ))}
                 </select>
+                {apiKeyProfiles.length === 0 && (
+                  <p className="text-sm text-red-600 mt-1">
+                    쇼핑 검색 API 프로필이 없습니다. API 키 관리에서 프로필을 생성해주세요.
+                  </p>
+                )}
               </div>
 
               <div>
