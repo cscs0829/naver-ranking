@@ -220,14 +220,21 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           .eq('config_id', configId);
 
         // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
-        const resultsToInsert = matchedItems.map((item, index) => ({
+        const resultsToInsert = matchedItems.map((item) => {
+          // 원본 집합에서의 인덱스를 기준으로 순위 계산
+          const originalIndex = aggregatedItems.indexOf(item);
+          const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
+          const page = originalIndex >= 0 ? Math.floor(originalIndex / 20) + 1 : 0;
+          const rankInPage = originalIndex >= 0 ? (originalIndex % 20) + 1 : 0;
+
+          return {
           search_query: config.search_query,
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           target_product_name: config.target_product_name,
-          page: Math.floor(index / 20) + 1,
-          rank_in_page: (index % 20) + 1,
-          total_rank: index + 1,
+          page,
+          rank_in_page: rankInPage,
+          total_rank: totalRank,
           product_title: normalizeWhitespace(removeHtmlTags(item.title)),
           mall_name: normalizeWhitespace(removeHtmlTags(item.mallName)),
           brand: normalizeWhitespace(removeHtmlTags(item.brand || '')),
@@ -241,7 +248,8 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           match_confidence: 1.00,
           check_date: new Date().toISOString().split('T')[0],
           created_at: new Date().toISOString()
-        }));
+          };
+        });
 
         if (resultsToInsert.length > 0) {
           const { error: insertError } = await supabase

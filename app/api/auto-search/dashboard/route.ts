@@ -188,7 +188,8 @@ export async function GET() {
       ));
     }
 
-    const scheduleRankings = latestRankings || [];
+    // 결과가 전혀 없는 설정은 UI에서 혼란을 줄 수 있어 숨김 처리
+    const scheduleRankings = (latestRankings || []).filter((s: any) => (s.rankings?.length || 0) > 0);
 
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
