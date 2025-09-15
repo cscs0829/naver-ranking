@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS auto_search_configs (
   target_product_name VARCHAR(255),
   max_pages INTEGER DEFAULT 10,
   profile_id INTEGER REFERENCES api_key_profiles(id),
-  interval_hours DECIMAL(4,2) DEFAULT 2.00,
+  interval_hours INTEGER DEFAULT 2,
   is_active BOOLEAN DEFAULT TRUE,
   last_run_at TIMESTAMP WITH TIME ZONE,
   next_run_at TIMESTAMP WITH TIME ZONE,

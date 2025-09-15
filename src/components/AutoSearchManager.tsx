@@ -53,7 +53,6 @@ interface AutoSearchConfig {
 }
 
 const intervalOptions = [
-  { value: 0.5, label: '30분마다 (최소)' },
   { value: 1, label: '1시간마다' },
   { value: 2, label: '2시간마다' },
   { value: 3, label: '3시간마다' },
@@ -139,7 +138,7 @@ export default function AutoSearchManager() {
       target_product_name: '',
       max_pages: 10,
       profile_id: defaultProfile ? defaultProfile.id.toString() : '',
-      interval_hours: 0.5,
+      interval_hours: 2,
       description: ''
     });
     setEditingConfig(null);
