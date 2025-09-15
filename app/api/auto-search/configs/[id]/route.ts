@@ -98,42 +98,39 @@ export async function DELETE(
     console.log(`설정 ${configId} 삭제 시작...`);
 
     // 1. 해당 설정의 자동검색 결과 삭제
-    const { error: resultsError, count: resultsCount } = await supabase
+    const { error: resultsError } = await supabase
       .from('auto_search_results')
       .delete()
-      .eq('config_id', configId)
-      .select('*', { count: 'exact' });
+      .eq('config_id', configId);
 
     if (resultsError) {
       console.error('자동검색 결과 삭제 오류:', resultsError);
     } else {
-      console.log(`자동검색 결과 ${resultsCount || 0}개 삭제 완료`);
+      console.log(`자동검색 결과 삭제 완료`);
     }
 
     // 2. 해당 설정의 로그 삭제
-    const { error: logsError, count: logsCount } = await supabase
+    const { error: logsError } = await supabase
       .from('auto_search_logs')
       .delete()
-      .eq('config_id', configId)
-      .select('*', { count: 'exact' });
+      .eq('config_id', configId);
 
     if (logsError) {
       console.error('로그 삭제 오류:', logsError);
     } else {
-      console.log(`로그 ${logsCount || 0}개 삭제 완료`);
+      console.log(`로그 삭제 완료`);
     }
 
     // 3. 해당 설정의 알림 삭제
-    const { error: notificationsError, count: notificationsCount } = await supabase
+    const { error: notificationsError } = await supabase
       .from('auto_search_notifications')
       .delete()
-      .eq('config_id', configId)
-      .select('*', { count: 'exact' });
+      .eq('config_id', configId);
 
     if (notificationsError) {
       console.error('알림 삭제 오류:', notificationsError);
     } else {
-      console.log(`알림 ${notificationsCount || 0}개 삭제 완료`);
+      console.log(`알림 삭제 완료`);
     }
 
     // 4. 마지막으로 설정 자체 삭제
@@ -150,13 +147,7 @@ export async function DELETE(
 
     return NextResponse.json({ 
       success: true,
-      message: `자동 검색 설정과 관련된 모든 데이터가 삭제되었습니다.`,
-      deleted: {
-        results: resultsCount || 0,
-        logs: logsCount || 0,
-        notifications: notificationsCount || 0,
-        config: 1
-      }
+      message: `자동 검색 설정과 관련된 모든 데이터가 삭제되었습니다.`
     });
 
   } catch (error) {
