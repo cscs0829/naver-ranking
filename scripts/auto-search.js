@@ -198,6 +198,15 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           .eq('id', log.id);
       }
 
+      // 설정의 last_run_at 업데이트
+      await supabase
+        .from('auto_search_configs')
+        .update({
+          last_run_at: new Date().toISOString(),
+          success_count: (config.success_count || 0) + 1
+        })
+        .eq('id', configId);
+
       console.log(`✅ 설정 ${configId} 자동 검색 완료 (${resultsCount}개 결과)`);
 
     } catch (error) {
@@ -217,6 +226,16 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           })
           .eq('id', log.id);
       }
+
+      // 설정의 last_run_at 업데이트 (실패해도 실행 시간은 기록)
+      await supabase
+        .from('auto_search_configs')
+        .update({
+          last_run_at: new Date().toISOString(),
+          error_count: (config.error_count || 0) + 1,
+          last_error: errorMessage
+        })
+        .eq('id', configId);
 
       throw error;
     }

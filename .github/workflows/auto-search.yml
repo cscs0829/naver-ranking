@@ -2,8 +2,8 @@ name: 자동 검색 실행
 
 on:
   schedule:
-    # 매 6시간마다 실행 (UTC 기준)
-    - cron: '0 */6 * * *'
+    # 매 15분마다 체크하여 설정된 interval_hours에 따라 실행
+    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       schedule_id:
@@ -32,17 +32,62 @@ jobs:
       - name: 의존성 설치
         run: npm ci
 
-      - name: 활성화된 설정 조회
+      - name: 활성화된 설정 조회 및 실행 시간 확인
         id: get-configs
         run: |
-          # 모든 활성화된 설정 조회
-          CONFIGS=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+          # 모든 활성화된 설정 조회 (interval_hours 포함)
+          CONFIGS_JSON=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/auto_search_configs?is_active=eq.true&select=id" \
-            | jq -r '.[].id' | tr '\n' ' ')
+            "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/auto_search_configs?is_active=eq.true&select=id,interval_hours,last_run_at" \
+            | jq -r '.')
           
-          echo "configs=$CONFIGS" >> $GITHUB_OUTPUT
-          echo "발견된 활성 설정: $CONFIGS"
+          echo "설정 조회 결과: $CONFIGS_JSON"
+          
+          # 실행할 설정들 필터링
+          EXECUTE_CONFIGS=""
+          
+          # 현재 시간 (UTC)
+          CURRENT_TIME=$(date -u +%s)
+          echo "현재 시간 (UTC): $(date -u)"
+          
+          # 각 설정별로 실행 시간 확인
+          echo "$CONFIGS_JSON" | jq -r '.[] | @base64' | while read -r config; do
+            CONFIG_DATA=$(echo "$config" | base64 -d)
+            CONFIG_ID=$(echo "$CONFIG_DATA" | jq -r '.id')
+            INTERVAL_HOURS=$(echo "$CONFIG_DATA" | jq -r '.interval_hours')
+            LAST_RUN_AT=$(echo "$CONFIG_DATA" | jq -r '.last_run_at')
+            
+            echo "설정 $CONFIG_ID: interval_hours=$INTERVAL_HOURS, last_run_at=$LAST_RUN_AT"
+            
+            # 마지막 실행 시간이 없거나 설정된 간격이 지났으면 실행
+            if [ "$LAST_RUN_AT" = "null" ] || [ -z "$LAST_RUN_AT" ]; then
+              echo "설정 $CONFIG_ID: 첫 실행"
+              EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
+            else
+              # 마지막 실행 시간을 초로 변환
+              LAST_RUN_TIME=$(date -d "$LAST_RUN_AT" -u +%s 2>/dev/null || echo "0")
+              INTERVAL_SECONDS=$((INTERVAL_HOURS * 3600))
+              TIME_DIFF=$((CURRENT_TIME - LAST_RUN_TIME))
+              
+              echo "설정 $CONFIG_ID: 마지막 실행 후 $TIME_DIFF초 경과, 필요 간격: $INTERVAL_SECONDS초"
+              
+              if [ $TIME_DIFF -ge $INTERVAL_SECONDS ]; then
+                echo "설정 $CONFIG_ID: 실행 시간 도달"
+                EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
+              else
+                echo "설정 $CONFIG_ID: 아직 실행 시간이 아님"
+              fi
+            fi
+          done
+          
+          # 실행할 설정이 있으면 실행
+          if [ -n "$EXECUTE_CONFIGS" ]; then
+            echo "configs=$EXECUTE_CONFIGS" >> $GITHUB_OUTPUT
+            echo "실행할 설정: $EXECUTE_CONFIGS"
+          else
+            echo "configs=" >> $GITHUB_OUTPUT
+            echo "실행할 설정이 없습니다."
+          fi
 
       - name: 자동 검색 실행
         if: steps.get-configs.outputs.configs != ''
