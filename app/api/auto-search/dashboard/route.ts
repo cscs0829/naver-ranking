@@ -96,96 +96,99 @@ export async function GET() {
       error_message: activity.error_message
     })) || [];
 
-    // 스케줄별 최신 순위 결과 조회 (auto_search_results 테이블에서)
-    const { data: latestRankings, error: autoSearchError } = await supabase
-      .from('auto_search_results')
-      .select(`
-        config_id,
-        search_query,
-        target_product_name,
-        target_mall_name,
-        target_brand,
-        product_title,
-        mall_name,
-        brand,
-        total_rank,
-        page,
-        rank_in_page,
-        price,
-        product_link,
-        created_at,
-        check_date,
-        is_exact_match,
-        match_confidence,
-        auto_search_configs (
-          id,
-          name,
-          is_active
-        )
-      `)
+    // 모든 활성화된 설정 조회
+    const { data: allActiveConfigs, error: configsError } = await supabase
+      .from('auto_search_configs')
+      .select('*')
+      .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-    if (autoSearchError) {
-      console.error('auto_search_results 조회 오류:', autoSearchError);
-    }
-
-    console.log('조회된 순위 결과 수:', latestRankings?.length || 0);
-    console.log('순위 결과 샘플:', latestRankings?.slice(0, 2));
+    // 각 설정별로 최신 순위 결과 조회
+    let scheduleRankingsData: any = {};
     
-    // 설정 상태 확인
-    console.log('총 설정 수:', totalConfigs);
-    console.log('활성 설정 수:', activeConfigs);
-    
-    // 각 결과의 config_id 확인
-    if (latestRankings && latestRankings.length > 0) {
-      const configIds = latestRankings.map(r => r.config_id);
-      console.log('결과들의 config_id들:', configIds);
-      console.log('고유한 config_id 개수:', new Set(configIds).size);
-    }
+    if (allActiveConfigs && allActiveConfigs.length > 0) {
+      for (const config of allActiveConfigs) {
+        const { data: configResults, error: resultsError } = await supabase
+          .from('auto_search_results')
+          .select(`
+            config_id,
+            search_query,
+            target_product_name,
+            target_mall_name,
+            target_brand,
+            product_title,
+            mall_name,
+            brand,
+            total_rank,
+            page,
+            rank_in_page,
+            price,
+            product_link,
+            created_at,
+            check_date,
+            is_exact_match,
+            match_confidence
+          `)
+          .eq('config_id', config.id)
+          .order('created_at', { ascending: false });
 
-    // 스케줄별로 그룹화하여 최신 순위 결과 정리
-    const scheduleRankings = latestRankings?.reduce((acc: any, result: any) => {
-      const configId = result.config_id;
-      
-      if (!configId) return acc; // config_id가 없으면 건너뛰기
-      
-      if (!acc[configId]) {
-        acc[configId] = {
-          config_id: configId,
-          config_name: (result.auto_search_configs as any)?.name || 'Unknown',
-          search_query: result.search_query,
-          target_product_name: result.target_product_name,
-          target_mall_name: result.target_mall_name,
-          target_brand: result.target_brand,
-          is_active: (result.auto_search_configs as any)?.is_active || true,
-          latest_check: result.created_at,
-          check_date: result.check_date,
-          rankings: []
-        };
+        if (!resultsError && configResults) {
+          // 결과가 있는 설정
+          if (configResults.length > 0) {
+            scheduleRankingsData[config.id] = {
+              config_id: config.id,
+              config_name: config.name,
+              search_query: config.search_query,
+              target_product_name: config.target_product_name,
+              target_mall_name: config.target_mall_name,
+              target_brand: config.target_brand,
+              is_active: config.is_active,
+              latest_check: configResults[0].created_at,
+              rankings: configResults.map(result => ({
+                total_rank: result.total_rank,
+                page: result.page,
+                rank_in_page: result.rank_in_page,
+                product_title: result.product_title,
+                mall_name: result.mall_name,
+                brand: result.brand,
+                price: result.price,
+                product_link: result.product_link,
+                check_date: result.check_date,
+                is_exact_match: result.is_exact_match,
+                match_confidence: result.match_confidence
+              }))
+            };
+          } else {
+            // 결과가 없는 설정 (빈 상태)
+            scheduleRankingsData[config.id] = {
+              config_id: config.id,
+              config_name: config.name,
+              search_query: config.search_query,
+              target_product_name: config.target_product_name,
+              target_mall_name: config.target_mall_name,
+              target_brand: config.target_brand,
+              is_active: config.is_active,
+              latest_check: config.last_run_at || config.created_at,
+              rankings: []
+            };
+          }
+        }
       }
+    }
 
-      acc[configId].rankings.push({
-        product_title: result.product_title,
-        mall_name: result.mall_name,
-        brand: result.brand,
-        total_rank: result.total_rank,
-        page: result.page,
-        rank_in_page: result.rank_in_page,
-        price: result.price,
-        product_link: result.product_link,
-        checked_at: result.created_at,
-        check_date: result.check_date,
-        is_exact_match: result.is_exact_match || true,
-        match_confidence: result.match_confidence || 1.00
-      });
+    const latestRankings = Object.values(scheduleRankingsData);
 
-      return acc;
-    }, {}) || {};
+    console.log('활성 설정 수:', allActiveConfigs?.length || 0);
+    console.log('스케줄별 순위 결과 수:', latestRankings?.length || 0);
+    
+    // 각 스케줄별 상품 수 로깅
+    if (latestRankings && latestRankings.length > 0) {
+      console.log('각 스케줄별 상품 수:', latestRankings.map((schedule: any) => 
+        `설정 ${schedule.config_id}: ${schedule.rankings.length}개 상품`
+      ));
+    }
 
-    console.log('그룹화된 스케줄 수:', Object.keys(scheduleRankings).length);
-    console.log('각 스케줄별 상품 수:', Object.entries(scheduleRankings).map(([id, schedule]: [string, any]) => 
-      `설정 ${id}: ${schedule.rankings.length}개 상품`
-    ));
+    const scheduleRankings = latestRankings || [];
 
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
@@ -196,7 +199,7 @@ export async function GET() {
       totalResults: totalResults || 0,
       recentActivity: formattedRecentActivity,
       topConfigs: topConfigsWithRate,
-      scheduleRankings: Object.values(scheduleRankings)
+      scheduleRankings: scheduleRankings
     };
 
     return NextResponse.json(dashboardStats);
