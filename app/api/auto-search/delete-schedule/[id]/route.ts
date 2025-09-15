@@ -52,11 +52,26 @@ export async function DELETE(
       console.error('알림 삭제 오류:', notificationsError);
     }
 
-    // 설정 자체는 삭제하지 않음 (사용자가 원할 경우 별도로 삭제)
+    // 설정의 실행 통계 초기화 (설정은 유지하되 통계만 리셋)
+    const { error: resetError } = await supabase
+      .from('auto_search_configs')
+      .update({
+        run_count: 0,
+        success_count: 0,
+        error_count: 0,
+        last_run_at: null,
+        last_error: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', configId);
+
+    if (resetError) {
+      console.error('설정 통계 초기화 오류:', resetError);
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: '스케줄 데이터가 삭제되었습니다.' 
+      message: '스케줄 데이터가 삭제되었습니다. (설정은 유지됨)' 
     });
 
   } catch (error) {
