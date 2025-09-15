@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 
-type ToastVariant = 'success' | 'error' | 'info'
+type ToastVariant = 'success' | 'error' | 'info' | 'warning'
 
 interface ToastItem {
   id: number
@@ -34,8 +34,17 @@ export default function ToastContainer() {
     return () => timers.forEach(clearTimeout)
   }, [toasts])
 
-  const iconFor = (v: ToastVariant) => v === 'success' ? <CheckCircle className="w-4 h-4" /> : v === 'error' ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />
-  const clsFor = (v: ToastVariant) => v === 'success' ? 'from-emerald-500 to-teal-500' : v === 'error' ? 'from-rose-500 to-pink-500' : 'from-blue-500 to-indigo-500'
+  const iconFor = (v: ToastVariant) => 
+    v === 'success' ? <CheckCircle className="w-4 h-4" /> : 
+    v === 'error' ? <AlertCircle className="w-4 h-4" /> : 
+    v === 'warning' ? <AlertTriangle className="w-4 h-4" /> : 
+    <Info className="w-4 h-4" />
+  
+  const clsFor = (v: ToastVariant) => 
+    v === 'success' ? 'from-emerald-500 to-teal-500' : 
+    v === 'error' ? 'from-rose-500 to-pink-500' : 
+    v === 'warning' ? 'from-amber-500 to-orange-500' : 
+    'from-blue-500 to-indigo-500'
 
   return (
     <div className="fixed top-4 right-4 z-[60] space-y-2">

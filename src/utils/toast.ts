@@ -1,4 +1,4 @@
-export type ToastVariant = 'success' | 'error' | 'info'
+export type ToastVariant = 'success' | 'error' | 'info' | 'warning'
 
 export function toast(message: string, variant: ToastVariant = 'info') {
   if (typeof window === 'undefined') return
