@@ -91,16 +91,21 @@ export default function AutoSearchDashboard() {
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
 
-  // 모달 열릴 때: 내부 스크롤 최상단 + 배경 스크롤 잠금(ResultsList 모바일 모달과 동일 체감)
+  // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
     if (selectedSchedule) {
       const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+      const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+      if (isMobile) {
+        document.body.style.overflow = 'hidden';
+      }
       setTimeout(() => {
         try { modalScrollRef.current?.scrollTo({ top: 0 }); } catch {}
       }, 0);
       return () => {
-        document.body.style.overflow = originalOverflow;
+        if (isMobile) {
+          document.body.style.overflow = originalOverflow;
+        }
       };
     }
   }, [selectedSchedule]);
