@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { SearchResult } from '@/utils/supabase'
-import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor, Users, Globe } from 'lucide-react'
+import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor, Users, Globe, FileSpreadsheet } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Lottie from 'lottie-react'
 import emptyAnim from './empty-state.json'
@@ -140,49 +140,30 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     }
   }
 
-  const handleExportCsv = () => {
+  const handleExportExcel = async () => {
     if (!results || results.length === 0) {
       toast('내보낼 데이터가 없습니다.', 'info')
       return
     }
-    const rows: string[] = []
-    const header = [
-      'id','analysis_name','start_date','end_date','time_unit','device','gender','ages','keyword_title','period','ratio'
-    ]
-    rows.push(header.join(','))
-    results.forEach(r => {
-      const base = [
-        String(r.id),
-        JSON.stringify(r.analysis_name),
-        r.start_date,
-        r.end_date,
-        r.time_unit,
-        r.device || '',
-        r.gender || '',
-        Array.isArray(r.ages) ? r.ages.join('|') : (r.ages || ''),
-      ]
-      r.results.forEach(series => {
-        series.data.forEach(d => {
-          const row = [
-            ...base,
-            JSON.stringify(series.title),
-            d.period,
-            String(d.ratio)
-          ]
-          rows.push(row.map(v => typeof v === 'string' ? v.replace(/\n/g,' ').replace(/"/g,'"') : v).join(','))
-        })
-      })
-    })
-    const csv = rows.join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `keyword-analysis-${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+
+    try {
+      const response = await fetch('/api/keyword-analysis/export-excel');
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `키워드_분석_결과_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast('엑셀 파일이 다운로드되었습니다.', 'success');
+    } catch (error) {
+      console.error('엑셀 내보내기 오류:', error);
+      toast('엑셀 파일 생성 중 오류가 발생했습니다.', 'error');
+    }
   }
 
   // 단일 비교 차트용 데이터 변환
@@ -214,8 +195,8 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
         <div className="space-y-6">
           {/* 액션 바 */}
           <div className="flex items-center justify-end gap-2">
-            <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={handleExportCsv} className="px-4 py-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
-              <Download className="w-4 h-4" /> 내보내기(CSV)
+            <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={handleExportExcel} className="px-4 py-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4" /> 내보내기(엑셀)
             </motion.button>
             <motion.button whileHover={{scale:1.05}} whileTap={{scale:0.95}} onClick={handleDeleteAll} className="px-4 py-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300 flex items-center gap-2">
               <Trash2 className="w-4 h-4" /> 전체 삭제

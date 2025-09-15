@@ -11,7 +11,10 @@ import {
   Activity,
   Zap,
   Calendar,
-  Target
+  Target,
+  Trash2,
+  Download,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -88,6 +91,76 @@ export default function AutoSearchDashboard() {
     }
   };
 
+  // 전체 데이터 삭제
+  const handleDeleteAllData = async () => {
+    if (!confirm('정말로 모든 자동검색 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auto-search/delete-all', {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('모든 데이터가 삭제되었습니다.');
+        await fetchStats();
+      } else {
+        alert('오류가 발생했습니다: ' + data.error);
+      }
+    } catch (error) {
+      console.error('데이터 삭제 오류:', error);
+      alert('데이터를 삭제할 수 없습니다.');
+    }
+  };
+
+  // 스케줄별 데이터 삭제
+  const handleDeleteScheduleData = async (configId: number, configName: string) => {
+    if (!confirm(`"${configName}" 스케줄의 모든 데이터를 삭제하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/auto-search/delete-schedule/${configId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        alert('스케줄 데이터가 삭제되었습니다.');
+        await fetchStats();
+      } else {
+        alert('오류가 발생했습니다: ' + data.error);
+      }
+    } catch (error) {
+      console.error('스케줄 데이터 삭제 오류:', error);
+      alert('데이터를 삭제할 수 없습니다.');
+    }
+  };
+
+  // 엑셀 내보내기
+  const handleExportToExcel = async () => {
+    try {
+      const response = await fetch('/api/auto-search/export-excel');
+      const blob = await response.blob();
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `자동검색_결과_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('엑셀 내보내기 오류:', error);
+      alert('엑셀 파일을 생성할 수 없습니다.');
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, []);
@@ -118,6 +191,24 @@ export default function AutoSearchDashboard() {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">자동 검색 대시보드</h2>
         <p className="text-gray-600">자동 검색 시스템의 전체 현황을 확인하세요</p>
+        
+        {/* 액션 버튼들 */}
+        <div className="flex justify-center gap-4 mt-4">
+          <button
+            onClick={handleExportToExcel}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            엑셀 내보내기
+          </button>
+          <button
+            onClick={handleDeleteAllData}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            전체 데이터 삭제
+          </button>
+        </div>
       </div>
 
       {/* 주요 통계 카드 */}
@@ -284,7 +375,7 @@ export default function AutoSearchDashboard() {
             stats.scheduleRankings.map((schedule) => (
               <div key={schedule.config_id} className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <div>
+                  <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                       {schedule.config_name}
                       <span className={`px-2 py-1 rounded-full text-xs ${
@@ -319,6 +410,13 @@ export default function AutoSearchDashboard() {
                     <p className="text-sm font-medium text-blue-600">
                       {schedule.rankings.length}개 상품 발견
                     </p>
+                    <button
+                      onClick={() => handleDeleteScheduleData(schedule.config_id, schedule.config_name)}
+                      className="mt-2 flex items-center gap-1 px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors text-sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      삭제
+                    </button>
                   </div>
                 </div>
                 

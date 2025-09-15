@@ -15,6 +15,7 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
+import { toast } from '@/utils/toast';
 
 interface AutoSearchConfig {
   id: number;
@@ -187,25 +188,25 @@ export default function AutoSearchManager() {
             
             const runData = await runResponse.json();
             if (runData.success) {
-              alert('설정이 생성되었고 즉시 실행되었습니다!');
+              toast('설정이 생성되었고 즉시 실행되었습니다!', 'success');
             } else {
-              alert('설정이 생성되었지만 실행 중 오류가 발생했습니다: ' + runData.error);
+              toast('설정이 생성되었지만 실행 중 오류가 발생했습니다: ' + runData.error, 'error');
             }
           } catch (runError) {
             console.error('즉시 실행 오류:', runError);
-            alert('설정이 생성되었지만 즉시 실행 중 오류가 발생했습니다.');
+            toast('설정이 생성되었지만 즉시 실행 중 오류가 발생했습니다.', 'error');
           }
         } else {
-          alert(editingConfig ? '설정이 수정되었습니다.' : '설정이 생성되었습니다.');
+          toast(editingConfig ? '설정이 수정되었습니다.' : '설정이 생성되었습니다.', 'success');
         }
         
         resetForm();
       } else {
-        alert('오류가 발생했습니다: ' + data.error);
+        toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('설정 저장 오류:', error);
-      alert('설정을 저장할 수 없습니다.');
+      toast('설정을 저장할 수 없습니다.', 'error');
     }
   };
 
@@ -222,12 +223,13 @@ export default function AutoSearchManager() {
       
       if (data.success) {
         await fetchConfigs();
+        toast('설정이 삭제되었습니다.', 'success');
       } else {
-        alert('오류가 발생했습니다: ' + data.error);
+        toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('설정 삭제 오류:', error);
-      alert('설정을 삭제할 수 없습니다.');
+      toast('설정을 삭제할 수 없습니다.', 'error');
     }
   };
 
@@ -248,12 +250,13 @@ export default function AutoSearchManager() {
       
       if (data.success) {
         await fetchConfigs();
+        toast(`설정이 ${!config.is_active ? '활성화' : '비활성화'}되었습니다.`, 'success');
       } else {
-        alert('오류가 발생했습니다: ' + data.error);
+        toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('설정 토글 오류:', error);
-      alert('설정 상태를 변경할 수 없습니다.');
+      toast('설정 상태를 변경할 수 없습니다.', 'error');
     }
   };
 
