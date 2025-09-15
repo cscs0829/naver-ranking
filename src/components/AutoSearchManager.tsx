@@ -217,7 +217,8 @@ export default function AutoSearchManager() {
 
   // 설정 삭제
   const handleDelete = async (id: number) => {
-    if (!confirm('정말로 이 설정을 삭제하시겠습니까?\n\n관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다.')) return;
+    // 토스트로 확인 메시지 표시
+    toast('정말로 이 설정을 삭제하시겠습니까? 관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다.', 'warning');
 
     try {
       const response = await fetch(`/api/auto-search/configs/${id}`, {

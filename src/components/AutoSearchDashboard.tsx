@@ -109,10 +109,9 @@ export default function AutoSearchDashboard() {
 
   // 전체 데이터 삭제
   const handleDeleteAllData = async () => {
-    if (!confirm('정말로 모든 자동검색 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      return;
-    }
-
+    // 토스트로 확인 메시지 표시
+    toast('모든 자동검색 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 페이지를 새로고침하면 다시 확인할 수 있습니다.', 'warning');
+    
     try {
       const response = await fetch('/api/auto-search/delete-all', {
         method: 'DELETE',
@@ -121,7 +120,7 @@ export default function AutoSearchDashboard() {
       const data = await response.json();
       
       if (data.success) {
-        toast('모든 데이터가 삭제되었습니다.', 'success');
+        toast('모든 자동검색 데이터가 삭제되었습니다. (설정은 유지됨)', 'success');
         await fetchStats();
       } else {
         toast('오류가 발생했습니다: ' + data.error, 'error');
@@ -134,9 +133,8 @@ export default function AutoSearchDashboard() {
 
   // 스케줄별 데이터 삭제
   const handleDeleteScheduleData = async (configId: number, configName: string) => {
-    if (!confirm(`"${configName}" 스케줄의 모든 데이터를 삭제하시겠습니까?`)) {
-      return;
-    }
+    // 토스트로 확인 메시지 표시
+    toast(`"${configName}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`, 'warning');
 
     try {
       const response = await fetch(`/api/auto-search/delete-schedule/${configId}`, {
@@ -186,7 +184,7 @@ export default function AutoSearchDashboard() {
       
       if (data.success) {
         console.log('디버그 정보:', data.debug);
-        alert(`디버그 정보가 콘솔에 출력되었습니다.\n\n설정: ${data.debug.configs.count}개\n결과: ${data.debug.results.count}개\n로그: ${data.debug.logs.count}개`);
+        toast(`디버그 정보가 콘솔에 출력되었습니다.\n설정: ${data.debug.configs.count}개, 결과: ${data.debug.results.count}개, 로그: ${data.debug.logs.count}개`, 'info');
       } else {
         toast('디버그 정보를 가져올 수 없습니다: ' + data.error, 'error');
       }
