@@ -201,6 +201,16 @@ export async function POST(request: NextRequest) {
           .eq('id', log.id);
       }
 
+      // 설정 누적 카운터 및 실행시각 갱신
+      await supabase
+        .from('auto_search_configs')
+        .update({
+          last_run_at: new Date().toISOString(),
+          run_count: (config.run_count || 0) + 1,
+          success_count: (config.success_count || 0) + 1
+        })
+        .eq('id', configId);
+
       // 성공 알림 생성
       await supabase
         .from('auto_search_notifications')
@@ -247,6 +257,17 @@ export async function POST(request: NextRequest) {
           config_id: configId,
           priority: 'high'
         });
+
+      // 설정 누적 카운터(실패) 및 실행시각 갱신
+      await supabase
+        .from('auto_search_configs')
+        .update({
+          last_run_at: new Date().toISOString(),
+          run_count: (config.run_count || 0) + 1,
+          error_count: (config.error_count || 0) + 1,
+          last_error: errorMessage
+        })
+        .eq('id', configId);
 
       return NextResponse.json(
         { 
