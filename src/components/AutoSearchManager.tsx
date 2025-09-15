@@ -152,6 +152,34 @@ export default function AutoSearchManager() {
       
       if (data.success) {
         await fetchConfigs();
+        
+        // 새 설정 생성 시 즉시 실행
+        if (!editingConfig && data.config?.id) {
+          try {
+            const runResponse = await fetch('/api/auto-search/run', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                configId: data.config.id
+              }),
+            });
+            
+            const runData = await runResponse.json();
+            if (runData.success) {
+              alert('설정이 생성되었고 즉시 실행되었습니다!');
+            } else {
+              alert('설정이 생성되었지만 실행 중 오류가 발생했습니다: ' + runData.error);
+            }
+          } catch (runError) {
+            console.error('즉시 실행 오류:', runError);
+            alert('설정이 생성되었지만 즉시 실행 중 오류가 발생했습니다.');
+          }
+        } else {
+          alert(editingConfig ? '설정이 수정되었습니다.' : '설정이 생성되었습니다.');
+        }
+        
         resetForm();
       } else {
         alert('오류가 발생했습니다: ' + data.error);
