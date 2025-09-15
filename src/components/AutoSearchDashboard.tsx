@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -90,6 +91,7 @@ export default function AutoSearchDashboard() {
   const visibilityRef = useRef<boolean>(true);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
+  const modalContainerRef = useRef<HTMLDivElement | null>(null);
 
   // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
@@ -108,6 +110,88 @@ export default function AutoSearchDashboard() {
         }
       };
     }
+  }, [selectedSchedule]);
+
+  // ESC 키로 모달 닫기 (순위결과 모달 로직 참고)
+  useEffect(() => {
+    if (!selectedSchedule) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeHistoryModal();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [selectedSchedule]);
+
+  // 포커스 트랩 및 탭 순환
+  useEffect(() => {
+    if (!selectedSchedule) return;
+    const container = modalContainerRef.current;
+    if (!container) return;
+
+    const focusableSelectors = [
+      'a[href]','button:not([disabled])','textarea:not([disabled])','input:not([disabled])','select:not([disabled])','[tabindex]:not([tabindex="-1"])'
+    ].join(',');
+
+    const focusable = Array.from(container.querySelectorAll<HTMLElement>(focusableSelectors));
+    const firstEl = focusable[0];
+    const lastEl = focusable[focusable.length - 1];
+    if (firstEl) firstEl.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      if (focusable.length === 0) return;
+      if (e.shiftKey) {
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl?.focus();
+        }
+      } else {
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSchedule]);
+
+  // 스와이프 다운으로 닫기 (모바일 UX)
+  useEffect(() => {
+    if (!selectedSchedule) return;
+    let startY = 0; let currentY = 0; let isDragging = false;
+    const overlay = modalContainerRef.current?.parentElement; // overlay는 컨테이너의 부모
+    if (!overlay) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      isDragging = true;
+      startY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging) return;
+      currentY = e.touches[0].clientY;
+    };
+    const onTouchEnd = () => {
+      if (!isDragging) return;
+      const delta = currentY - startY;
+      if (delta > 80) {
+        closeHistoryModal();
+      }
+      isDragging = false;
+      startY = 0; currentY = 0;
+    };
+
+    overlay.addEventListener('touchstart', onTouchStart, { passive: true });
+    overlay.addEventListener('touchmove', onTouchMove, { passive: true });
+    overlay.addEventListener('touchend', onTouchEnd);
+    return () => {
+      overlay.removeEventListener('touchstart', onTouchStart as any);
+      overlay.removeEventListener('touchmove', onTouchMove as any);
+      overlay.removeEventListener('touchend', onTouchEnd as any);
+    };
   }, [selectedSchedule]);
 
   // 통계 데이터 조회
@@ -654,28 +738,37 @@ export default function AutoSearchDashboard() {
         </div>
       </motion.div>
 
-      {/* 히스토리 모달 */}
-      {selectedSchedule && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-0 sm:p-4 z-[99999] backdrop-blur-sm"
-          onClick={closeHistoryModal}
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-xl w-[92vw] sm:w-full max-w-lg sm:max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {/* 히스토리 모달 - Portal/AnimatePresence 사용 (순위결과 모달 로직 참고) */}
+      {typeof window !== 'undefined' ? createPortal(
+          <AnimatePresence>
+            {selectedSchedule && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/70 flex items-center justify-center p-0 sm:p-4 z-[99999] backdrop-blur-sm"
+              onClick={closeHistoryModal}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="history-modal-title"
+              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-xl w-[92vw] sm:w-full max-w-lg sm:max-w-6xl max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
+                onClick={(e) => e.stopPropagation()}
+                style={{ position: 'relative', zIndex: 10000, maxHeight: '90vh' }}
+                ref={modalContainerRef}
+              >
             {/* 모달 헤더 */}
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
               <div className="flex items-center gap-3">
                 <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  <h3 id="history-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
                     {selectedSchedule.config_name} 실행 히스토리
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-slate-400">
@@ -796,7 +889,9 @@ export default function AutoSearchDashboard() {
             </div>
           </motion.div>
         </motion.div>
-      )}
+            )}
+      </AnimatePresence>
+      , document.body) : null}
     </div>
   );
 }
