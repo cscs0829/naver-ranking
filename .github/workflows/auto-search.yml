@@ -4,8 +4,6 @@ on:
   schedule:
     # 매 1시간마다 체크하여 설정된 interval_hours에 따라 실행
     - cron: '0 * * * *'
-    # 디버그/안정성 확보용 임시 주기(15분마다). 필요시 제거 가능
-    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       schedule_id:
@@ -30,11 +28,6 @@ jobs:
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
 
-      - name: 러너 도구 설치 (jq, bc)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y jq bc
-
       - name: Node.js 설정
         uses: actions/setup-node@v4
         with:
@@ -47,7 +40,6 @@ jobs:
       - name: 활성화된 설정 조회 및 실행 시간 확인
         id: get-configs
         run: |
-          echo "트리거: $GITHUB_EVENT_NAME, 현재 UTC 시간: $(date -u)"
           # 모든 활성화된 설정 조회 (interval_hours 포함)
           CONFIGS_JSON=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
