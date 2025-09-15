@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { searchNaverShopping } from '@/utils/naver-api';
+import { NaverShoppingRankChecker } from '@/utils/naver-api';
 
 // 환경변수 체크
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -94,48 +94,64 @@ export async function POST(request: NextRequest) {
         throw new Error('활성화된 API 키 프로필을 찾을 수 없습니다.');
       }
 
-      // 네이버 쇼핑 검색 실행
-      const searchResults = await searchNaverShopping({
-        query: config.search_query,
-        display: Math.min(config.max_pages * 20, 1000),
-        start: 1,
-        sort: 'sim'
-      }, {
-        clientId: apiKeyProfile.client_id,
-        clientSecret: apiKeyProfile.client_secret
-      });
+      // 네이버 쇼핑 순위 검색 실행 (자동 검색용 - 정확히 매칭된 상품만 저장)
+      const checker = new NaverShoppingRankChecker(
+        apiKeyProfile.client_id,
+        apiKeyProfile.client_secret
+      );
 
-      if (searchResults && searchResults.items) {
-        // 검색 결과를 데이터베이스에 저장
-        const resultsToInsert = searchResults.items.map((item: any, index: number) => ({
+      // 자동 검색에서는 정확히 매칭된 상품들만 찾기
+      const searchResult = await checker.findAllMatches(
+        config.search_query,
+        config.target_product_name,
+        config.target_mall_name,
+        config.target_brand,
+        config.max_pages
+      );
+
+      if (searchResult.items && searchResult.items.length > 0) {
+        // 자동 검색에서는 정확히 매칭된 상품들만 auto_search_results 테이블에 저장
+        // 같은 설정의 기존 데이터 삭제 (오늘 날짜)
+        await supabase
+          .from('auto_search_results')
+          .delete()
+          .eq('config_id', configId)
+          .eq('check_date', new Date().toISOString().split('T')[0]);
+
+        // 매칭된 상품들을 auto_search_results 테이블에 저장
+        const resultsToInsert = searchResult.items.map(item => ({
+          config_id: configId,
           search_query: config.search_query,
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           target_product_name: config.target_product_name,
-          page: Math.floor(index / 20) + 1,
-          rank_in_page: (index % 20) + 1,
-          total_rank: index + 1,
-          product_title: item.title,
-          mall_name: item.mallName,
+          page: item.page,
+          rank_in_page: item.rank_in_page,
+          total_rank: item.total_rank,
+          product_title: item.product_title,
+          mall_name: item.mall_name,
           brand: item.brand,
-          price: item.lprice,
-          product_link: item.link,
-          product_id: item.productId,
+          price: item.price,
+          product_link: item.product_link,
+          product_id: item.product_id,
           category1: item.category1,
           category2: item.category2,
           category3: item.category3,
-          created_at: new Date().toISOString()
+          is_exact_match: true, // 자동 검색에서는 정확히 매칭된 것만 저장
+          match_confidence: 1.00,
+          check_date: new Date().toISOString().split('T')[0]
         }));
 
         const { error: insertError } = await supabase
-          .from('search_results')
+          .from('auto_search_results')
           .insert(resultsToInsert);
 
         if (insertError) {
           console.error('검색 결과 저장 실패:', insertError);
-        } else {
-          resultsCount = resultsToInsert.length;
+          throw new Error('검색 결과 저장에 실패했습니다.');
         }
+
+        resultsCount = searchResult.items.length;
 
         // 로그에 검색 결과 저장
         if (log) {
@@ -143,8 +159,33 @@ export async function POST(request: NextRequest) {
             .from('auto_search_logs')
             .update({
               search_results: {
-                total_items: searchResults.total,
-                items: searchResults.items.slice(0, 10) // 처음 10개만 저장
+                total_items: resultsCount,
+                items: searchResult.items.slice(0, 10), // 처음 10개만 저장
+                found_products: searchResult.items.map(item => ({
+                  product_title: item.product_title,
+                  mall_name: item.mall_name,
+                  brand: item.brand,
+                  total_rank: item.total_rank,
+                  page: item.page,
+                  rank_in_page: item.rank_in_page
+                }))
+              }
+            })
+            .eq('id', log.id);
+        }
+      } else {
+        // 매칭된 상품이 없는 경우에도 로그 업데이트
+        resultsCount = 0;
+        console.log(`자동 검색 완료: "${config.search_query}" - 매칭된 상품 없음`);
+        
+        if (log) {
+          await supabase
+            .from('auto_search_logs')
+            .update({
+              search_results: {
+                total_items: 0,
+                items: [],
+                found_products: []
               }
             })
             .eq('id', log.id);

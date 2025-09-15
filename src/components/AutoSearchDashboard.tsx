@@ -23,12 +23,18 @@ interface DashboardStats {
   totalResults: number;
   recentActivity: Array<{
     id: number;
+    config_id: number;
     config_name: string;
+    search_query: string;
+    target_product_name?: string;
+    target_mall_name?: string;
+    target_brand?: string;
     status: string;
     started_at: string;
     completed_at?: string;
     results_count: number;
     duration_ms?: number;
+    error_message?: string;
   }>;
   topConfigs: Array<{
     id: number;
@@ -37,6 +43,31 @@ interface DashboardStats {
     run_count: number;
     success_count: number;
     success_rate: number;
+  }>;
+  scheduleRankings: Array<{
+    config_id: number;
+    config_name: string;
+    search_query: string;
+    target_product_name?: string;
+    target_mall_name?: string;
+    target_brand?: string;
+    is_active: boolean;
+    latest_check: string;
+    check_date: string;
+    rankings: Array<{
+      product_title: string;
+      mall_name: string;
+      brand?: string;
+      total_rank: number;
+      page: number;
+      rank_in_page: number;
+      price: string;
+      product_link: string;
+      checked_at: string;
+      check_date: string;
+      is_exact_match: boolean;
+      match_confidence: number;
+    }>;
   }>;
 }
 
@@ -212,6 +243,9 @@ export default function AutoSearchDashboard() {
                   <div>
                     <p className="font-medium text-gray-900">{activity.config_name}</p>
                     <p className="text-sm text-gray-500">
+                      "{activity.search_query}"
+                    </p>
+                    <p className="text-xs text-gray-400">
                       {new Date(activity.started_at).toLocaleString('ko-KR')}
                     </p>
                   </div>
@@ -232,11 +266,135 @@ export default function AutoSearchDashboard() {
         </div>
       </motion.div>
 
-      {/* 상위 설정 */}
+      {/* 스케줄별 순위 결과 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
+        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5" />
+          스케줄별 순위 결과
+        </h3>
+        <div className="space-y-6">
+          {stats.scheduleRankings.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">순위 결과가 없습니다.</p>
+          ) : (
+            stats.scheduleRankings.map((schedule) => (
+              <div key={schedule.config_id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                      {schedule.config_name}
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        schedule.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {schedule.is_active ? '활성' : '비활성'}
+                      </span>
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      검색어: <span className="font-medium">"{schedule.search_query}"</span>
+                    </p>
+                    {schedule.target_product_name && (
+                      <p className="text-sm text-gray-600">
+                        대상 상품: <span className="font-medium">"{schedule.target_product_name}"</span>
+                      </p>
+                    )}
+                    {schedule.target_mall_name && (
+                      <p className="text-sm text-gray-600">
+                        대상 쇼핑몰: <span className="font-medium">"{schedule.target_mall_name}"</span>
+                      </p>
+                    )}
+                    {schedule.target_brand && (
+                      <p className="text-sm text-gray-600">
+                        대상 브랜드: <span className="font-medium">"{schedule.target_brand}"</span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-500">
+                      마지막 체크: {new Date(schedule.latest_check).toLocaleString('ko-KR')}
+                    </p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {schedule.rankings.length}개 상품 발견
+                    </p>
+                  </div>
+                </div>
+                
+                {schedule.rankings.length > 0 ? (
+                  <div className="space-y-2">
+                    {schedule.rankings.slice(0, 5).map((ranking, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            ranking.total_rank <= 10 ? 'bg-red-100 text-red-600' :
+                            ranking.total_rank <= 50 ? 'bg-orange-100 text-orange-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {ranking.total_rank}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium text-gray-900 truncate">
+                                {ranking.product_title}
+                              </p>
+                              {ranking.is_exact_match && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                  정확 매칭
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-gray-500">
+                              <span>{ranking.mall_name}</span>
+                              {ranking.brand && <span>브랜드: {ranking.brand}</span>}
+                              <span>{ranking.price}원</span>
+                              {ranking.match_confidence < 1.00 && (
+                                <span className="text-orange-600">
+                                  신뢰도: {(ranking.match_confidence * 100).toFixed(0)}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-gray-900">
+                            {ranking.page}페이지 {ranking.rank_in_page}번째
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {ranking.check_date}
+                          </p>
+                          <a 
+                            href={ranking.product_link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            상품 보기 →
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                    {schedule.rankings.length > 5 && (
+                      <p className="text-sm text-gray-500 text-center py-2">
+                        ... 외 {schedule.rankings.length - 5}개 상품 더
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">매칭된 상품이 없습니다.</p>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </motion.div>
+
+      {/* 상위 설정 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
         className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">

@@ -36,20 +36,34 @@ export async function GET() {
     const totalRuns = configStats?.reduce((sum, config) => sum + (config.run_count || 0), 0) || 0;
     const successRuns = configStats?.reduce((sum, config) => sum + (config.success_count || 0), 0) || 0;
     const errorRuns = configStats?.reduce((sum, config) => sum + (config.error_count || 0), 0) || 0;
-    const totalResults = 0; // 검색 결과 수는 별도로 계산 필요
 
-    // 최근 활동 조회 (auto_search_configs에서)
+    // 검색 결과 수 조회 (auto_search_results 테이블에서)
+    const { count: totalResults } = await supabase
+      .from('auto_search_results')
+      .select('*', { count: 'exact', head: true });
+
+    // 최근 활동 조회 (auto_search_logs에서)
     const { data: recentActivity } = await supabase
-      .from('auto_search_configs')
+      .from('auto_search_logs')
       .select(`
         id,
-        name,
-        last_run_at,
-        success_count,
-        error_count,
-        run_count
+        config_id,
+        status,
+        started_at,
+        completed_at,
+        duration_ms,
+        results_count,
+        error_message,
+        auto_search_configs (
+          id,
+          name,
+          search_query,
+          target_product_name,
+          target_mall_name,
+          target_brand
+        )
       `)
-      .order('last_run_at', { ascending: false })
+      .order('started_at', { ascending: false })
       .limit(10);
 
     // 상위 설정 조회 (실행 횟수 기준 상위 5개)
@@ -68,13 +82,87 @@ export async function GET() {
     // 최근 활동 데이터 포맷
     const formattedRecentActivity = recentActivity?.map(activity => ({
       id: activity.id,
-      config_name: activity.name || 'Unknown',
-      status: activity.error_count > 0 ? 'error' : 'success',
-      started_at: activity.last_run_at,
-      completed_at: activity.last_run_at,
-      results_count: 0, // 검색 결과 수는 별도 계산 필요
-      duration_ms: 0 // 실행 시간은 별도 계산 필요
+      config_id: activity.config_id,
+      config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
+      search_query: (activity.auto_search_configs as any)?.search_query || '',
+      target_product_name: (activity.auto_search_configs as any)?.target_product_name || '',
+      target_mall_name: (activity.auto_search_configs as any)?.target_mall_name || '',
+      target_brand: (activity.auto_search_configs as any)?.target_brand || '',
+      status: activity.status,
+      started_at: activity.started_at,
+      completed_at: activity.completed_at,
+      results_count: activity.results_count || 0,
+      duration_ms: activity.duration_ms || 0,
+      error_message: activity.error_message
     })) || [];
+
+    // 스케줄별 최신 순위 결과 조회 (auto_search_results 테이블에서)
+    const { data: latestRankings } = await supabase
+      .from('auto_search_results')
+      .select(`
+        config_id,
+        search_query,
+        target_product_name,
+        target_mall_name,
+        target_brand,
+        product_title,
+        mall_name,
+        brand,
+        total_rank,
+        page,
+        rank_in_page,
+        price,
+        product_link,
+        created_at,
+        check_date,
+        is_exact_match,
+        match_confidence,
+        auto_search_configs (
+          id,
+          name,
+          is_active
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    // 스케줄별로 그룹화하여 최신 순위 결과 정리
+    const scheduleRankings = latestRankings?.reduce((acc: any, result: any) => {
+      const configId = result.config_id || (result.auto_search_configs as any)?.id;
+      if (!configId) return acc;
+
+      if (!acc[configId]) {
+        acc[configId] = {
+          config_id: configId,
+          config_name: (result.auto_search_configs as any)?.name || 'Unknown',
+          search_query: result.search_query,
+          target_product_name: result.target_product_name,
+          target_mall_name: result.target_mall_name,
+          target_brand: result.target_brand,
+          is_active: (result.auto_search_configs as any)?.is_active || false,
+          latest_check: result.created_at,
+          check_date: result.check_date,
+          rankings: []
+        };
+      }
+
+      acc[configId].rankings.push({
+        product_title: result.product_title,
+        mall_name: result.mall_name,
+        brand: result.brand,
+        total_rank: result.total_rank,
+        page: result.page,
+        rank_in_page: result.rank_in_page,
+        price: result.price,
+        product_link: result.product_link,
+        checked_at: result.created_at,
+        check_date: result.check_date,
+        is_exact_match: result.is_exact_match,
+        match_confidence: result.match_confidence
+      });
+
+      return acc;
+    }, {}) || {};
 
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
@@ -82,9 +170,10 @@ export async function GET() {
       totalRuns,
       successRuns,
       errorRuns,
-      totalResults,
+      totalResults: totalResults || 0,
       recentActivity: formattedRecentActivity,
-      topConfigs: topConfigsWithRate
+      topConfigs: topConfigsWithRate,
+      scheduleRankings: Object.values(scheduleRankings)
     };
 
     return NextResponse.json(dashboardStats);
