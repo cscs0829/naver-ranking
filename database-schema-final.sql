@@ -1,5 +1,6 @@
--- 네이버 랭킹 시스템 통합 데이터베이스 스키마
+-- 네이버 랭킹 시스템 최종 통합 데이터베이스 스키마
 -- 이 SQL을 Supabase SQL Editor에서 실행하세요
+-- 모든 기능이 포함된 완전한 스키마입니다.
 
 -- =============================================
 -- 1. 공통 함수 및 트리거
@@ -62,7 +63,7 @@ BEGIN
 END $$;
 
 -- =============================================
--- 3. 순위 검색 결과 테이블
+-- 3. 순위 검색 결과 테이블 (수동 검색용)
 -- =============================================
 CREATE TABLE IF NOT EXISTS search_results (
   id SERIAL PRIMARY KEY,
@@ -504,4 +505,5 @@ BEGIN
     RAISE NOTICE '생성된 테이블: api_key_profiles, search_results, auto_search_configs, auto_search_results, auto_search_logs, keyword_analysis_results, auto_search_notifications';
     RAISE NOTICE '생성된 뷰: auto_search_dashboard_stats';
     RAISE NOTICE '생성된 함수: get_rank_history';
+    RAISE NOTICE '이 스키마는 모든 기능을 포함한 최종 통합 버전입니다.';
 END $$;

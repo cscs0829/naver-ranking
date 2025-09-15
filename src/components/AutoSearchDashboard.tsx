@@ -425,7 +425,7 @@ export default function AutoSearchDashboard() {
                       "{activity.search_query}"
                     </p>
                     <p className="text-xs text-gray-400">
-                      {new Date(activity.started_at).toLocaleString('ko-KR')}
+                      {new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
                     </p>
                   </div>
                 </div>
@@ -548,7 +548,8 @@ export default function AutoSearchDashboard() {
                               day: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit',
-                              second: '2-digit'
+                              second: '2-digit',
+                              timeZone: 'Asia/Seoul'
                             })} 기준
                           </p>
                           <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
@@ -674,14 +675,15 @@ export default function AutoSearchDashboard() {
                   </div>
                 ) : (
                   historyData.history.map((dayData: any, dayIndex: number) => (
-                    <div key={dayIndex} className="border border-gray-200 rounded-lg p-4">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-blue-600" />
+                    <div key={dayIndex} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-800">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                         {new Date(dayData.date).toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
-                          weekday: 'long'
+                          weekday: 'long',
+                          timeZone: 'Asia/Seoul'
                         })}
                       </h4>
                       

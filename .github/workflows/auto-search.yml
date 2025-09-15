@@ -50,36 +50,36 @@ jobs:
           CURRENT_TIME=$(date -u +%s)
           echo "현재 시간 (UTC): $(date -u)"
           
-          # 각 설정별로 실행 시간 확인
-          echo "$CONFIGS_JSON" | jq -r '.[] | @base64' | while read -r config; do
-            CONFIG_DATA=$(echo "$config" | base64 -d)
-            CONFIG_ID=$(echo "$CONFIG_DATA" | jq -r '.id')
-            INTERVAL_HOURS=$(echo "$CONFIG_DATA" | jq -r '.interval_hours')
-            LAST_RUN_AT=$(echo "$CONFIG_DATA" | jq -r '.last_run_at')
+        # 각 설정별로 실행 시간 확인
+        while IFS= read -r config; do
+          CONFIG_DATA=$(echo "$config" | base64 -d)
+          CONFIG_ID=$(echo "$CONFIG_DATA" | jq -r '.id')
+          INTERVAL_HOURS=$(echo "$CONFIG_DATA" | jq -r '.interval_hours')
+          LAST_RUN_AT=$(echo "$CONFIG_DATA" | jq -r '.last_run_at')
+          
+          echo "설정 $CONFIG_ID: interval_hours=$INTERVAL_HOURS, last_run_at=$LAST_RUN_AT"
+          
+          # 마지막 실행 시간이 없거나 설정된 간격이 지났으면 실행
+          if [ "$LAST_RUN_AT" = "null" ] || [ -z "$LAST_RUN_AT" ]; then
+            echo "설정 $CONFIG_ID: 첫 실행"
+            EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
+          else
+            # 마지막 실행 시간을 초로 변환
+            LAST_RUN_TIME=$(date -d "$LAST_RUN_AT" -u +%s 2>/dev/null || echo "0")
+            # interval_hours를 초로 변환
+            INTERVAL_SECONDS=$((INTERVAL_HOURS * 3600))
+            TIME_DIFF=$((CURRENT_TIME - LAST_RUN_TIME))
             
-            echo "설정 $CONFIG_ID: interval_hours=$INTERVAL_HOURS, last_run_at=$LAST_RUN_AT"
+            echo "설정 $CONFIG_ID: 마지막 실행 후 $TIME_DIFF초 경과, 필요 간격: $INTERVAL_SECONDS초"
             
-            # 마지막 실행 시간이 없거나 설정된 간격이 지났으면 실행
-            if [ "$LAST_RUN_AT" = "null" ] || [ -z "$LAST_RUN_AT" ]; then
-              echo "설정 $CONFIG_ID: 첫 실행"
+            if [ $TIME_DIFF -ge $INTERVAL_SECONDS ]; then
+              echo "설정 $CONFIG_ID: 실행 시간 도달"
               EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
             else
-              # 마지막 실행 시간을 초로 변환
-              LAST_RUN_TIME=$(date -d "$LAST_RUN_AT" -u +%s 2>/dev/null || echo "0")
-              # interval_hours를 초로 변환
-              INTERVAL_SECONDS=$((INTERVAL_HOURS * 3600))
-              TIME_DIFF=$((CURRENT_TIME - LAST_RUN_TIME))
-              
-              echo "설정 $CONFIG_ID: 마지막 실행 후 $TIME_DIFF초 경과, 필요 간격: $INTERVAL_SECONDS초"
-              
-              if [ $TIME_DIFF -ge $INTERVAL_SECONDS ]; then
-                echo "설정 $CONFIG_ID: 실행 시간 도달"
-                EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
-              else
-                echo "설정 $CONFIG_ID: 아직 실행 시간이 아님"
-              fi
+              echo "설정 $CONFIG_ID: 아직 실행 시간이 아님"
             fi
-          done
+          fi
+        done <<< "$(echo "$CONFIGS_JSON" | jq -r '.[] | @base64')"
           
           # 실행할 설정이 있으면 실행
           if [ -n "$EXECUTE_CONFIGS" ]; then
