@@ -47,6 +47,11 @@ function isExactTargetProduct(item, targetProductName, targetMallName, targetBra
   const targetMallNorm = normalizeText(targetMallName || '');
   const targetBrandNorm = normalizeText(targetBrand || '');
 
+  // 타겟 정보가 하나도 없으면 매칭하지 않음 (엄격 모드)
+  if (!targetTitleNorm && !targetMallNorm && !targetBrandNorm) {
+    return false;
+  }
+
   if (targetTitleNorm && productTitleNorm !== targetTitleNorm) {
     return false;
   }
@@ -168,16 +173,17 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
 
       console.log(`🔑 API 키 프로필 사용: ${apiKeyProfile.name}`);
 
-      // 네이버 쇼핑 검색 실행
-      const searchResults = await searchNaverShopping({
-        query: config.search_query,
-        display: Math.min(config.max_pages * 20, 1000),
-        start: 1,
-        sort: 'sim'
-      }, {
-        clientId: apiKeyProfile.client_id,
-        clientSecret: apiKeyProfile.client_secret
-      });
+      // 네이버 쇼핑 검색 실행 (올바른 시그니처로 호출)
+      const searchResults = await searchNaverShopping(
+        config.search_query,
+        {
+          clientId: apiKeyProfile.client_id,
+          clientSecret: apiKeyProfile.client_secret,
+          display: Math.min(config.max_pages * 20, 1000),
+          start: 1,
+          sort: 'sim'
+        }
+      );
 
       if (searchResults && searchResults.items) {
         console.log(`📊 검색 결과: ${searchResults.items.length}개 상품`);
