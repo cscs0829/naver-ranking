@@ -698,9 +698,20 @@ export default function AutoSearchDashboard() {
                               <div className="flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-gray-500" />
                                 <span className="font-medium text-gray-900">
-                                  {execution.hour.toString().padStart(2, '0')}:
-                                  {execution.minute.toString().padStart(2, '0')}:
-                                  {execution.second.toString().padStart(2, '0')}
+                                  {(() => {
+                                    const firstTime = execution?.results?.[0]?.time;
+                                    const d = firstTime ? new Date(firstTime) : null;
+                                    return d
+                                      ? d.toLocaleString('ko-KR', {
+                                          timeZone: 'Asia/Seoul',
+                                          hour: '2-digit',
+                                          minute: '2-digit',
+                                          second: '2-digit'
+                                        })
+                                      : `${execution.hour.toString().padStart(2, '0')}:${execution.minute
+                                          .toString()
+                                          .padStart(2, '0')}:${execution.second.toString().padStart(2, '0')}`;
+                                  })()}
                                 </span>
                               </div>
                               <span className="text-sm text-gray-500">
