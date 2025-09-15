@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { 
   Clock, 
@@ -390,13 +391,13 @@ export default function AutoSearchManager() {
         )}
       </div>
 
-      {/* 스케줄 생성/수정 폼 */}
-      {showForm && (
+      {/* 스케줄 생성/수정 폼 - Portal 사용 */}
+      {showForm && typeof window !== 'undefined' && createPortal(
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[9999] backdrop-blur-sm"
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[99999] backdrop-blur-sm"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               resetForm();
@@ -407,7 +408,7 @@ export default function AutoSearchManager() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative mx-4 sm:mx-0 border border-gray-200 transform ring-1 ring-black ring-opacity-5"
+            className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative mx-4 sm:mx-0 border border-gray-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 닫기 버튼 */}
@@ -579,7 +580,8 @@ export default function AutoSearchManager() {
               </div>
             </form>
           </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
       )}
     </div>
   );
