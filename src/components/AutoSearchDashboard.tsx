@@ -737,13 +737,13 @@ export default function AutoSearchDashboard() {
                                     </div>
                                   </div>
                                   <a 
-                                    href={result.product_link} 
+                                    href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}`}
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors text-sm"
+                                    className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
                                   >
                                     <ExternalLink className="w-4 h-4" />
-                                    상품 보기
+                                    바로가기
                                   </a>
                                 </div>
                               ))}
