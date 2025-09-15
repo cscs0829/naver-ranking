@@ -112,12 +112,7 @@ export async function POST(request: NextRequest) {
 
       if (searchResult.items && searchResult.items.length > 0) {
         // 자동 검색에서는 정확히 매칭된 상품들만 저장
-        // 같은 설정의 기존 데이터 삭제
-        await supabase
-          .from('auto_search_results')
-          .delete()
-          .eq('config_id', configId);
-
+        // 히스토리 보존: 기존 데이터 삭제 없이 누적 저장
         // 매칭된 상품들을 auto_search_results 테이블에 저장
         const resultsToInsert = searchResult.items.map(item => ({
           config_id: configId,
