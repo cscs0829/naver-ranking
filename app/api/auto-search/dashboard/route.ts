@@ -24,31 +24,28 @@ export async function GET() {
       .select('*', { count: 'exact', head: true })
       .eq('is_active', true);
 
-    // 실행 통계 조회
-    const { data: runStats } = await supabase
-      .from('auto_search_logs')
-      .select('status, results_count');
+    // 실행 통계 조회 (auto_search_configs에서)
+    const { data: configStats } = await supabase
+      .from('auto_search_configs')
+      .select('run_count, success_count, error_count');
 
-    const totalRuns = runStats?.length || 0;
-    const successRuns = runStats?.filter(log => log.status === 'success').length || 0;
-    const errorRuns = runStats?.filter(log => log.status === 'error').length || 0;
-    const totalResults = runStats?.reduce((sum, log) => sum + (log.results_count || 0), 0) || 0;
+    const totalRuns = configStats?.reduce((sum, config) => sum + (config.run_count || 0), 0) || 0;
+    const successRuns = configStats?.reduce((sum, config) => sum + (config.success_count || 0), 0) || 0;
+    const errorRuns = configStats?.reduce((sum, config) => sum + (config.error_count || 0), 0) || 0;
+    const totalResults = 0; // 검색 결과 수는 별도로 계산 필요
 
-    // 최근 활동 조회 (최근 10개)
+    // 최근 활동 조회 (auto_search_configs에서)
     const { data: recentActivity } = await supabase
-      .from('auto_search_logs')
+      .from('auto_search_configs')
       .select(`
         id,
-        status,
-        started_at,
-        completed_at,
-        results_count,
-        duration_ms,
-        auto_search_configs (
-          name
-        )
+        name,
+        last_run_at,
+        success_count,
+        error_count,
+        run_count
       `)
-      .order('started_at', { ascending: false })
+      .order('last_run_at', { ascending: false })
       .limit(10);
 
     // 상위 설정 조회 (실행 횟수 기준 상위 5개)
@@ -67,12 +64,12 @@ export async function GET() {
     // 최근 활동 데이터 포맷
     const formattedRecentActivity = recentActivity?.map(activity => ({
       id: activity.id,
-      config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
-      status: activity.status,
-      started_at: activity.started_at,
-      completed_at: activity.completed_at,
-      results_count: activity.results_count || 0,
-      duration_ms: activity.duration_ms
+      config_name: activity.name || 'Unknown',
+      status: activity.error_count > 0 ? 'error' : 'success',
+      started_at: activity.last_run_at,
+      completed_at: activity.last_run_at,
+      results_count: 0, // 검색 결과 수는 별도 계산 필요
+      duration_ms: 0 // 실행 시간은 별도 계산 필요
     })) || [];
 
     const dashboardStats = {
