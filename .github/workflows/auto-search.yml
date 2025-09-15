@@ -37,6 +37,7 @@ jobs:
         run: |
           # 모든 활성화된 설정 조회
           CONFIGS=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/auto_search_configs?is_active=eq.true&select=id" \
             | jq -r '.[].id' | tr '\n' ' ')
           
