@@ -14,6 +14,11 @@ on:
         description: '사용할 API 키 프로필 ID (선택사항)'
         required: false
         type: string
+      force_run:
+        description: '간격 체크 무시하고 강제로 실행 (true/false)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   auto-search:
@@ -49,6 +54,14 @@ jobs:
           # 현재 시간 (UTC)
           CURRENT_TIME=$(date -u +%s)
           echo "현재 시간 (UTC): $(date -u)"
+
+          # 강제 실행 플래그
+          FORCE_RUN_INPUT="${{ github.event.inputs.force_run }}"
+          FORCE_RUN=false
+          if [ "$FORCE_RUN_INPUT" = "true" ] || [ "$FORCE_RUN_INPUT" = "True" ]; then
+            FORCE_RUN=true
+          fi
+          echo "강제 실행 여부: $FORCE_RUN"
           
           # 각 설정별로 실행 시간 확인
           while IFS= read -r config; do
@@ -59,8 +72,12 @@ jobs:
             
             echo "설정 $CONFIG_ID: interval_hours=$INTERVAL_HOURS, last_run_at=$LAST_RUN_AT"
             
+            # 강제 실행이면 무조건 실행
+            if [ "$FORCE_RUN" = true ]; then
+              echo "설정 $CONFIG_ID: 강제 실행 옵션으로 실행"
+              EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
             # 마지막 실행 시간이 없거나 설정된 간격이 지났으면 실행
-            if [ "$LAST_RUN_AT" = "null" ] || [ -z "$LAST_RUN_AT" ]; then
+            elif [ "$LAST_RUN_AT" = "null" ] || [ -z "$LAST_RUN_AT" ]; then
               echo "설정 $CONFIG_ID: 첫 실행"
               EXECUTE_CONFIGS="$EXECUTE_CONFIGS $CONFIG_ID"
             else
