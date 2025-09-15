@@ -228,8 +228,8 @@ export default function Home() {
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full animate-pulse shadow-lg"></div>
                 </motion.div>
                 <div>
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent">
-                    네이버 데이터 검색기
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-200 bg-clip-text text-transparent whitespace-nowrap">
+                    네이버 데이터 수집
                   </h1>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">실시간 데이터 분석</p>
                 </div>
@@ -592,7 +592,7 @@ export default function Home() {
                 <Search className="w-5 h-5 text-white" />
               </div>
               <span className="text-lg font-semibold text-slate-900 dark:text-white">
-                네이버 데이터 검색기
+                네이버 데이터 수집
               </span>
             </div>
             <div className="text-slate-600 dark:text-slate-400 space-y-1">
@@ -601,7 +601,7 @@ export default function Home() {
             </div>
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
               <p className="text-sm text-slate-500 dark:text-slate-500">
-                © 네이버 데이터 검색기. All rights reserved made by sean.
+                © 네이버 데이터 수집. All rights reserved made by sean.
               </p>
             </div>
           </div>

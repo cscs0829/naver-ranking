@@ -16,6 +16,7 @@ import {
   Download,
   FileSpreadsheet
 } from 'lucide-react';
+import { toast } from '@/utils/toast';
 
 interface DashboardStats {
   totalConfigs: number;
@@ -105,14 +106,14 @@ export default function AutoSearchDashboard() {
       const data = await response.json();
       
       if (data.success) {
-        alert('모든 데이터가 삭제되었습니다.');
+        toast('모든 데이터가 삭제되었습니다.', 'success');
         await fetchStats();
       } else {
-        alert('오류가 발생했습니다: ' + data.error);
+        toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('데이터 삭제 오류:', error);
-      alert('데이터를 삭제할 수 없습니다.');
+      toast('데이터를 삭제할 수 없습니다.', 'error');
     }
   };
 
@@ -130,14 +131,14 @@ export default function AutoSearchDashboard() {
       const data = await response.json();
       
       if (data.success) {
-        alert('스케줄 데이터가 삭제되었습니다.');
+        toast('스케줄 데이터가 삭제되었습니다.', 'success');
         await fetchStats();
       } else {
-        alert('오류가 발생했습니다: ' + data.error);
+        toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('스케줄 데이터 삭제 오류:', error);
-      alert('데이터를 삭제할 수 없습니다.');
+      toast('데이터를 삭제할 수 없습니다.', 'error');
     }
   };
 
@@ -155,9 +156,10 @@ export default function AutoSearchDashboard() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast('엑셀 파일이 다운로드되었습니다.', 'success');
     } catch (error) {
       console.error('엑셀 내보내기 오류:', error);
-      alert('엑셀 파일을 생성할 수 없습니다.');
+      toast('엑셀 파일을 생성할 수 없습니다.', 'error');
     }
   };
 
