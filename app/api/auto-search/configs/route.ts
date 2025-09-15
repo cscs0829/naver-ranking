@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         target_product_name,
         max_pages: max_pages || 10,
         profile_id: profile_id || null,
-        interval_hours: interval_hours || 2,
+        interval_hours: parseFloat(interval_hours) || 2.00,
         description
       })
       .select(`
