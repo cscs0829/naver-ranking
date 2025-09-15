@@ -90,6 +90,17 @@ export default function AutoSearchDashboard() {
   const visibilityRef = useRef<boolean>(true);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
 
+  // 히스토리 모달 열릴 때 배경 스크롤 잠금 (iOS 포함)
+  useEffect(() => {
+    if (selectedSchedule) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [selectedSchedule]);
+
   // 통계 데이터 조회
   const fetchStats = async () => {
     try {
@@ -503,7 +514,7 @@ export default function AutoSearchDashboard() {
                         e.stopPropagation();
                         setExpandedSchedules(prev => ({ ...prev, [schedule.config_id]: !prev[schedule.config_id] }));
                       }}
-                      className="px-2.5 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm"
+                      className="h-9 px-3 py-0 sm:py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
                     >
                       {expandedSchedules[schedule.config_id] ? '간단히' : '상세보기'}
                     </button>
@@ -512,7 +523,7 @@ export default function AutoSearchDashboard() {
                         e.stopPropagation();
                         handleDeleteScheduleData(schedule.config_id, schedule.config_name);
                       }}
-                      className="flex items-center gap-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+                      className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
                     >
                       <Trash2 className="w-4 h-4" />
                       삭제
@@ -642,6 +653,8 @@ export default function AutoSearchDashboard() {
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-0 sm:p-4 z-[99999] backdrop-blur-sm"
           onClick={() => { /* 모바일에서 오버레이 클릭으로 닫히지 않음 */ }}
+          onWheel={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
@@ -675,7 +688,7 @@ export default function AutoSearchDashboard() {
             </div>
 
             {/* 히스토리 내용 */}
-            <div className="px-4 sm:px-6 pb-6 overflow-y-auto h-[calc(100vh-72px)] sm:max-h-[calc(90vh-80px)]">
+            <div className="px-4 sm:px-6 pb-6 overflow-y-auto h-[calc(100vh-72px)] sm:max-h-[calc(90vh-80px)] overscroll-contain touch-pan-y">
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
