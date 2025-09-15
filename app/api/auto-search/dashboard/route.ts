@@ -62,7 +62,7 @@ export async function GET() {
     // 최근 활동 데이터 포맷
     const formattedRecentActivity = recentActivity?.map(activity => ({
       id: activity.id,
-      config_name: activity.auto_search_configs?.name || 'Unknown',
+      config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
       status: activity.status,
       started_at: activity.started_at,
       completed_at: activity.completed_at,

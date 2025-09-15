@@ -307,3 +307,12 @@ export class NaverShoppingRankChecker {
     }
   }
 }
+
+// 자동 검색용 간단한 함수
+export async function searchNaverShopping(
+  params: { query: string; display: number; start: number; sort: string },
+  credentials: { clientId: string; clientSecret: string }
+): Promise<NaverSearchResponse | null> {
+  const checker = new NaverShoppingRankChecker(credentials.clientId, credentials.clientSecret);
+  return await checker.searchProducts(params.query, params.start, params.display);
+}
