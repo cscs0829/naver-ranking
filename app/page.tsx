@@ -154,57 +154,23 @@ export default function Home() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <nav className="p-6 space-y-6">
-                {/* 빠른 이동 (그리드 타일) */}
-                <div>
-                  <h3 className="text-xs font-semibold text-slate-500 mb-3">빠른 이동</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {tabs.filter(t => ['search','results','auto-search','dashboard','keyword-analysis','keyword-results'].includes(t.id)).map((tab) => (
-                      <button
-                        key={`quick-${tab.id}`}
-                        onClick={() => { setActiveTab(tab.id); setSidebarOpen(false) }}
-                        className={`flex items-center gap-2 px-3 py-4 rounded-2xl transition-all duration-200 text-sm ${
-                          activeTab === tab.id
-                            ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
-                            : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
-                        }`}
-                      >
-                        <span className={`p-2 rounded-lg ${activeTab === tab.id ? 'bg-white/20' : 'bg-white dark:bg-slate-600/60'}`}>{tab.icon}</span>
-                        <span className="font-semibold">{tab.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 전체 메뉴 (리스트) */}
-                <div>
-                  <h3 className="text-xs font-semibold text-slate-500 mb-3">전체 메뉴</h3>
-                  <div className="space-y-2">
-                    {tabs.map((tab) => (
-                      <motion.button
-                        key={tab.id}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => {
-                          setActiveTab(tab.id)
-                          setSidebarOpen(false)
-                        }}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                          activeTab === tab.id
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/25'
-                            : 'hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg ${activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-600'}`}>
-                          {tab.icon}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-semibold truncate">{tab.label}</div>
-                          <div className="text-xs opacity-80 truncate">{tab.description}</div>
-                        </div>
-                      </motion.button>
-                    ))}
-                  </div>
+              <nav className="p-6">
+                <h3 className="text-xs font-semibold text-slate-500 mb-3">빠른 이동</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {tabs.filter(t => ['search','results','auto-search','dashboard','keyword-analysis','keyword-results'].includes(t.id)).map((tab) => (
+                    <button
+                      key={`quick-${tab.id}`}
+                      onClick={() => { setActiveTab(tab.id); setSidebarOpen(false) }}
+                      className={`flex items-center gap-2 px-3 py-4 rounded-2xl transition-all duration-200 text-sm ${
+                        activeTab === tab.id
+                          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-700/50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <span className={`p-2 rounded-lg ${activeTab === tab.id ? 'bg-white/20' : 'bg-white dark:bg-slate-600/60'}`}>{tab.icon}</span>
+                      <span className="font-semibold">{tab.label}</span>
+                    </button>
+                  ))}
                 </div>
               </nav>
             </motion.div>

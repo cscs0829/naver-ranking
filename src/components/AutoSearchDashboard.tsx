@@ -88,6 +88,7 @@ export default function AutoSearchDashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const visibilityRef = useRef<boolean>(true);
+  const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
 
   // 통계 데이터 조회
   const fetchStats = async () => {
@@ -485,62 +486,68 @@ export default function AutoSearchDashboard() {
             stats.scheduleRankings.map((schedule) => (
               <div 
                 key={schedule.config_id} 
-                className="border border-gray-200 dark:border-slate-700 rounded-lg p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800"
+                className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800"
                 onClick={() => handleScheduleClick(schedule)}
               >
                 {/* 헤더 */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                    <h4 className="font-bold text-lg text-gray-900 dark:text-white break-words">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
+                    <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white break-words">
                       {schedule.config_name}
                     </h4>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      schedule.is_active ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {schedule.is_active ? '활성' : '비활성'}
-                    </span>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteScheduleData(schedule.config_id, schedule.config_name);
-                    }}
-                    className="flex items-center gap-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    삭제
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedSchedules(prev => ({ ...prev, [schedule.config_id]: !prev[schedule.config_id] }));
+                      }}
+                      className="px-2.5 py-1.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs sm:text-sm"
+                    >
+                      {expandedSchedules[schedule.config_id] ? '간단히' : '상세보기'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteScheduleData(schedule.config_id, schedule.config_name);
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      삭제
+                    </button>
+                  </div>
                 </div>
 
                 {/* 검색 정보 */}
-                <div className="space-y-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-slate-400 w-20">검색어:</span>
-                    <span className="text-sm text-gray-900 dark:text-white font-medium">"{schedule.search_query}"</span>
+                {expandedSchedules[schedule.config_id] && (
+                  <div className="space-y-2 mb-3 sm:mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">검색어:</span>
+                      <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.search_query}"</span>
+                    </div>
+                    {schedule.target_product_name && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 상품:</span>
+                        <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_product_name}"</span>
+                      </div>
+                    )}
+                    {schedule.target_mall_name && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 쇼핑몰:</span>
+                        <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_mall_name}"</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  {schedule.target_product_name && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 상품:</span>
-                      <span className="text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_product_name}"</span>
-                    </div>
-                  )}
-                  
-                  {schedule.target_mall_name && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 쇼핑몰:</span>
-                      <span className="text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_mall_name}"</span>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {/* 최신 실행 정보 */}
                 {schedule.rankings.length > 0 ? (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold ${
                           schedule.rankings[0].total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
                           schedule.rankings[0].total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
                           'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
@@ -548,7 +555,7 @@ export default function AutoSearchDashboard() {
                           {schedule.rankings[0].total_rank}
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-slate-400">
+                          <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">
                             {new Date(schedule.latest_check).toLocaleString('ko-KR', {
                               year: 'numeric',
                               month: 'long',
@@ -559,16 +566,16 @@ export default function AutoSearchDashboard() {
                               timeZone: 'Asia/Seoul'
                             })} 기준
                           </p>
-                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                          <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium">
                             {schedule.rankings[0].page}페이지 {schedule.rankings[0].rank_in_page}번째
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500 dark:text-slate-500">
+                        <p className="text-[11px] sm:text-xs text-gray-500 dark:text-slate-500">
                           {schedule.rankings.length}개 상품 발견
                         </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        <p className="hidden sm:block text-xs text-blue-600 dark:text-blue-400 font-medium">
                           클릭하여 히스토리 보기
                         </p>
                       </div>
