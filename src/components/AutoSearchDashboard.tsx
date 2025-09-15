@@ -91,15 +91,13 @@ export default function AutoSearchDashboard() {
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
 
-  // 히스토리 모달 열릴 때 배경 스크롤 잠금 (iOS 포함)
+  // 모달 열릴 때: 내부 스크롤 최상단 + 배경 스크롤 잠금(ResultsList 모바일 모달과 동일 체감)
   useEffect(() => {
     if (selectedSchedule) {
       const originalOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      // 모달 열릴 때 내부 스크롤 최상단으로
       setTimeout(() => {
         try { modalScrollRef.current?.scrollTo({ top: 0 }); } catch {}
-        window.scrollTo({ top: 0 });
       }, 0);
       return () => {
         document.body.style.overflow = originalOverflow;
@@ -658,15 +656,13 @@ export default function AutoSearchDashboard() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-0 sm:p-4 z-[99999] backdrop-blur-sm"
-          onClick={() => { /* 모바일에서 오버레이 클릭으로 닫히지 않음 */ }}
-          onWheel={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
-          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+          onClick={closeHistoryModal}
         >
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-none sm:rounded-xl w-full sm:max-w-6xl h-[100dvh] sm:max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
+            className="bg-white dark:bg-slate-800 rounded-2xl sm:rounded-xl w-full sm:max-w-6xl h-[100dvh] sm:max-h-[90vh] overflow-hidden shadow-2xl relative border border-gray-200 dark:border-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
             {/* 모달 헤더 */}
