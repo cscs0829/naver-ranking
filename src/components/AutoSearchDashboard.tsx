@@ -443,7 +443,7 @@ export default function AutoSearchDashboard() {
         </div>
 
         {/* 스케줄별 순위 결과 스켈레톤 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
           <div className="h-6 w-40 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
           <div className="space-y-6">
             {[...Array(2)].map((_, i) => (
@@ -479,7 +479,7 @@ export default function AutoSearchDashboard() {
         </div>
 
         {/* 상위 설정 스켈레톤 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
           <div className="h-6 w-24 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
@@ -500,11 +500,11 @@ export default function AutoSearchDashboard() {
         </div>
 
         {/* 최근 활동 스켈레톤 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
           <div className="h-6 w-32 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
           <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="p-3 bg-white rounded-lg border border-gray-200">
+              <div key={i} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
@@ -543,8 +543,8 @@ export default function AutoSearchDashboard() {
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">실시간 결과</h2>
-        <p className="text-gray-600">자동 검색 시스템의 전체 현황을 확인하세요</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">실시간 결과</h2>
+        <p className="text-gray-600 dark:text-gray-400">자동 검색 시스템의 전체 현황을 확인하세요</p>
         
         {/* 액션 버튼들 */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 px-4 sm:px-0">
@@ -674,9 +674,9 @@ export default function AutoSearchDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+        className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Target className="w-5 h-5" />
           스케줄별 순위 결과
         </h3>
@@ -707,7 +707,7 @@ export default function AutoSearchDashboard() {
               >
                 {/* 헤더 */}
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
                     <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white break-words">
                       {schedule.config_name}
@@ -769,8 +769,8 @@ export default function AutoSearchDashboard() {
                           'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                         }`}>
                           {schedule.rankings[0].total_rank}
-                        </div>
-                        <div>
+                  </div>
+                  <div>
                           <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">
                             {new Date(schedule.latest_check).toLocaleString('ko-KR', {
                               year: 'numeric',
@@ -815,9 +815,9 @@ export default function AutoSearchDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+        className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5" />
           상위 설정
         </h3>
@@ -855,39 +855,39 @@ export default function AutoSearchDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+        className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
           <Activity className="w-5 h-5" />
           최근 활동
         </h3>
         <div className="space-y-3">
           {stats.recentActivity.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">최근 활동이 없습니다.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">최근 활동이 없습니다.</p>
           ) : (
             <>
               {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
-                <div key={activity.id} className="p-3 bg-white rounded-lg border border-gray-200">
+                <div key={activity.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100' : activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'}` }>
+                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100 dark:bg-green-900/30' : activity.status === 'error' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}` }>
                     {activity.status === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                     ) : activity.status === 'error' ? (
-                      <XCircle className="w-4 h-4 text-red-600" />
+                      <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
                     ) : (
-                      <Clock className="w-4 h-4 text-yellow-600" />
+                      <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{activity.config_name}</p>
-                        <p className="text-sm text-gray-500">"{activity.search_query}"</p>
-                        <p className="text-xs text-gray-400">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{activity.config_name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">"{activity.search_query}"</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
                       </div>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="text-sm font-medium text-gray-900">{activity.results_count}개 결과</p>
-                      {activity.duration_ms && (<p className="text-xs text-gray-500">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.results_count}개 결과</p>
+                      {activity.duration_ms && (<p className="text-xs text-gray-500 dark:text-gray-400">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
                     </div>
                   </div>
                 </div>
@@ -1009,7 +1009,7 @@ export default function AutoSearchDashboard() {
                             
                             <div className="space-y-2">
                               {execution.results.map((result: any, resultIndex: number) => (
-                                <div key={resultIndex} className="p-3 bg-white rounded-lg border border-gray-200">
+                                <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                   <div className="flex items-center justify-between sm:hidden">
                                     <span className="text-sm font-medium text-gray-900">
                                       {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}

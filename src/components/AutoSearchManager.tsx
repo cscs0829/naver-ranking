@@ -387,8 +387,8 @@ export default function AutoSearchManager() {
       {/* 헤더 */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">자동 검색 관리</h2>
-          <p className="text-gray-600">정기적으로 네이버 쇼핑 검색을 실행하고 결과를 저장합니다.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">자동 검색 관리</h2>
+          <p className="text-gray-600 dark:text-gray-400">정기적으로 네이버 쇼핑 검색을 실행하고 결과를 저장합니다.</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -413,13 +413,13 @@ export default function AutoSearchManager() {
               key={config.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     {getStatusIcon(config)}
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {config.name}
                     </h3>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -519,7 +519,7 @@ export default function AutoSearchManager() {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative mx-4 sm:mx-0 border border-gray-200"
+            className="bg-white dark:bg-slate-800 rounded-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative mx-4 sm:mx-0 border border-gray-200 dark:border-slate-700"
           >
             {/* 닫기 버튼 */}
             <button
@@ -531,10 +531,10 @@ export default function AutoSearchManager() {
             </button>
             
             <div className="border-b border-gray-200 pb-4 mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 pr-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white pr-8">
                 {editingConfig ? '설정 수정' : '새 설정 생성'}
               </h3>
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                 {editingConfig ? '기존 설정을 수정합니다.' : '새로운 자동 검색 설정을 생성합니다.'}
               </p>
             </div>
