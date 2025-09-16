@@ -582,15 +582,7 @@ export default function AutoSearchManager() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="찾고자 하는 상품명 (선택사항)"
                   autoComplete="on"
-                  list="product-suggestions"
                 />
-                <datalist id="product-suggestions">
-                  <option value="베트남 여행" />
-                  <option value="아이폰 케이스" />
-                  <option value="노트북" />
-                  <option value="운동화" />
-                  <option value="화장품" />
-                </datalist>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
