@@ -105,6 +105,8 @@ jobs:
           else
             echo "configs=" >> $GITHUB_OUTPUT
             echo "실행할 설정이 없습니다."
+            echo "현재 시간: $(date -u)"
+            echo "활성화된 설정 수: $(echo "$CONFIGS_JSON" | jq '. | length')"
           fi
 
       - name: 자동 검색 실행
