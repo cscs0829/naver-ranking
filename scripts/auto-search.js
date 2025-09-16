@@ -221,8 +221,9 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           // 원본 집합에서의 인덱스를 기준으로 순위 계산
           const originalIndex = aggregatedItems.indexOf(item);
           const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
-          const page = originalIndex >= 0 ? Math.floor(originalIndex / 20) + 1 : 0;
-          const rankInPage = originalIndex >= 0 ? (originalIndex % 20) + 1 : 0;
+          // 네이버 쇼핑 웹페이지는 1페이지에 40개씩 표시됨 (API는 100개씩 처리)
+          const page = originalIndex >= 0 ? Math.floor(originalIndex / 40) + 1 : 0;
+          const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
 
           return {
           search_query: config.search_query,
@@ -249,6 +250,12 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
         });
 
         if (resultsToInsert.length > 0) {
+          // 순위 계산 디버깅 로그
+          console.log('📊 순위 계산 디버깅:');
+          resultsToInsert.slice(0, 3).forEach((result, idx) => {
+            console.log(`  ${idx + 1}. 전체순위: ${result.total_rank}, 페이지: ${result.page}, 페이지내순위: ${result.rank_in_page}`);
+          });
+
           const { error: insertError } = await supabase
             .from('auto_search_results')
             .insert(resultsToInsert.map(result => ({

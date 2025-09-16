@@ -35,7 +35,7 @@ export default function Home() {
     { id: 'search', label: '순위 검색', icon: <Search className="w-5 h-5" />, description: '네이버 쇼핑 순위 검색' },
     { id: 'results', label: '순위 결과', icon: <BarChart3 className="w-5 h-5" />, description: '저장된 검색 결과' },
     { id: 'auto-search', label: '자동 검색', icon: <Clock className="w-5 h-5" />, description: '정기 자동 검색 스케줄 관리' },
-    { id: 'dashboard', label: '대시보드', icon: <BarChart3 className="w-5 h-5" />, description: '자동 검색 통계 및 현황' },
+    { id: 'dashboard', label: '실시간 결과', icon: <BarChart3 className="w-5 h-5" />, description: '자동 검색 통계 및 현황' },
     { id: 'keyword-analysis', label: '키워드 분석', icon: <TrendingUp className="w-5 h-5" />, description: '네이버 쇼핑인사이트 키워드 분석' },
     { id: 'keyword-results', label: '키워드 결과', icon: <Database className="w-5 h-5" />, description: '저장된 키워드 분석 결과' },
     { id: 'keys', label: 'API 키', icon: <Key className="w-5 h-5" />, description: 'API 키 관리' },

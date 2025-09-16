@@ -22,6 +22,8 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
+import { toast as sonnerToast } from 'sonner';
+import ConfirmationDialog from './ConfirmationDialog';
 
 interface DashboardStats {
   totalConfigs: number;
@@ -89,9 +91,14 @@ export default function AutoSearchDashboard() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const visibilityRef = useRef<boolean>(true);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  const [showDeleteScheduleDialog, setShowDeleteScheduleDialog] = useState(false);
+  const [deleteTargetSchedule, setDeleteTargetSchedule] = useState<any>(null);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
+  const [lastCheckTime, setLastCheckTime] = useState<string>(new Date().toISOString());
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
@@ -201,10 +208,26 @@ export default function AutoSearchDashboard() {
       const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`);
       const data = await response.json();
       setStats(data);
+      setLastCheckTime(new Date().toISOString()); // 마지막 체크 시간 업데이트
     } catch (error) {
       console.error('통계 조회 오류:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // DB 변경 확인
+  const checkForUpdates = async () => {
+    try {
+      const response = await fetch(`/api/auto-search/check-updates?lastCheck=${lastCheckTime}`);
+      const data = await response.json();
+      
+      if (data.hasUpdates) {
+        console.log('🔄 DB 변경 감지됨, 데이터 새로고침 중...', data.updateCount);
+        await fetchStats();
+      }
+    } catch (error) {
+      console.error('업데이트 확인 오류:', error);
     }
   };
 
@@ -214,11 +237,13 @@ export default function AutoSearchDashboard() {
     fetchStats();
   };
 
-  // 전체 데이터 삭제
+  // 전체 데이터 삭제 확인
+  const handleDeleteAllDataClick = () => {
+    setShowDeleteAllDialog(true);
+  };
+
+  // 전체 데이터 삭제 실행
   const handleDeleteAllData = async () => {
-    // 토스트로 확인 메시지 표시
-    toast('모든 자동검색 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. 페이지를 새로고침하면 다시 확인할 수 있습니다.', 'warning');
-    
     try {
       const response = await fetch('/api/auto-search/delete-all', {
         method: 'DELETE',
@@ -227,42 +252,47 @@ export default function AutoSearchDashboard() {
       const data = await response.json();
       
       if (data.success) {
-        toast('모든 자동검색 데이터가 삭제되었습니다. (설정은 유지됨)', 'success');
+        sonnerToast.success('모든 자동검색 데이터가 삭제되었습니다. (설정은 유지됨)');
         await fetchStats();
       } else {
-        toast('오류가 발생했습니다: ' + data.error, 'error');
+        sonnerToast.error('오류가 발생했습니다: ' + data.error);
       }
     } catch (error) {
       console.error('데이터 삭제 오류:', error);
-      toast('데이터를 삭제할 수 없습니다.', 'error');
+      sonnerToast.error('데이터를 삭제할 수 없습니다.');
     }
   };
 
-  // 스케줄별 데이터 삭제
-  const handleDeleteScheduleData = async (configId: number, configName: string) => {
-    // 토스트로 확인 메시지 표시
-    toast(`"${configName}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`, 'warning');
+  // 스케줄별 데이터 삭제 확인
+  const handleDeleteScheduleDataClick = (configId: number, configName: string) => {
+    setDeleteTargetSchedule({ configId, configName });
+    setShowDeleteScheduleDialog(true);
+  };
+
+  // 스케줄별 데이터 삭제 실행
+  const handleDeleteScheduleData = async () => {
+    if (!deleteTargetSchedule) return;
 
     try {
-      const response = await fetch(`/api/auto-search/delete-schedule/${configId}`, {
+      const response = await fetch(`/api/auto-search/delete-schedule/${deleteTargetSchedule.configId}`, {
         method: 'DELETE',
       });
 
       const data = await response.json();
       
       if (data.success) {
-        toast('스케줄 데이터가 삭제되었습니다.', 'success');
+        sonnerToast.success('스케줄 데이터가 삭제되었습니다.');
         // 히스토리 모달이 현재 해당 스케줄을 보고 있다면 닫고 상태 초기화
-        if (selectedSchedule && selectedSchedule.config_id === configId) {
+        if (selectedSchedule && selectedSchedule.config_id === deleteTargetSchedule.configId) {
           closeHistoryModal();
         }
         await fetchStats();
       } else {
-        toast('오류가 발생했습니다: ' + data.error, 'error');
+        sonnerToast.error('오류가 발생했습니다: ' + data.error);
       }
     } catch (error) {
       console.error('스케줄 데이터 삭제 오류:', error);
-      toast('데이터를 삭제할 수 없습니다.', 'error');
+      sonnerToast.error('데이터를 삭제할 수 없습니다.');
     }
   };
 
@@ -341,24 +371,137 @@ export default function AutoSearchDashboard() {
     fetchStats();
   }, []);
 
-  // 자동 새로고침 제거: 탭이 보일 때만 1회 갱신
+  // DB 변경 감지 기반 자동 새로고침
   useEffect(() => {
+    const startUpdateCheck = () => {
+      // 30초마다 DB 변경 확인
+      checkIntervalRef.current = setInterval(checkForUpdates, 30000);
+    };
+
+    const stopUpdateCheck = () => {
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+        checkIntervalRef.current = null;
+      }
+    };
+
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
         visibilityRef.current = true;
-        fetchStats();
+        // 탭이 보일 때 즉시 한 번 체크
+        checkForUpdates();
+        startUpdateCheck();
       } else {
         visibilityRef.current = false;
+        stopUpdateCheck();
       }
     };
+
+    // 초기 설정
+    if (document.visibilityState === 'visible') {
+      startUpdateCheck();
+    }
+
     document.addEventListener('visibilitychange', handleVisibility);
-    return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, []);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      stopUpdateCheck();
+    };
+  }, [lastCheckTime]); // lastCheckTime이 변경될 때마다 체크 로직 재시작
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="space-y-6">
+        {/* 헤더 스켈레톤 */}
+        <div className="text-center">
+          <div className="h-8 w-48 mx-auto rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-2" />
+          <div className="h-6 w-96 mx-auto rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 px-4 sm:px-0">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-12 rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+            ))}
+          </div>
+        </div>
+
+        {/* 통계 카드 스켈레톤 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-4 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-8 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="w-12 h-12 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+              </div>
+              <div className="mt-2">
+                <div className="h-4 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 최근 활동 스켈레톤 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="h-6 w-32 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-3 bg-white rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="space-y-1">
+                      <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-4 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-3 w-12 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 스케줄별 순위 결과 스켈레톤 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="h-6 w-40 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
+          <div className="space-y-6">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-6 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-9 w-20 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-9 w-16 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="space-y-1">
+                        <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-4 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="h-4 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -406,7 +549,7 @@ export default function AutoSearchDashboard() {
             디버그 정보
           </button>
           <button
-            onClick={handleDeleteAllData}
+            onClick={handleDeleteAllDataClick}
             className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
           >
             <Trash2 className="w-4 h-4" />
@@ -524,18 +667,18 @@ export default function AutoSearchDashboard() {
               {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
                 <div key={activity.id} className="p-3 bg-white rounded-lg border border-gray-200">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100' : activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'}` }>
-                        {activity.status === 'success' ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : activity.status === 'error' ? (
-                          <XCircle className="w-4 h-4 text-red-600" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-yellow-600" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{activity.config_name}</p>
+                    {activity.status === 'success' ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : activity.status === 'error' ? (
+                      <XCircle className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-yellow-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{activity.config_name}</p>
                         <p className="text-sm text-gray-500">"{activity.search_query}"</p>
                         <p className="text-xs text-gray-400">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
                       </div>
@@ -614,7 +757,7 @@ export default function AutoSearchDashboard() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteScheduleData(schedule.config_id, schedule.config_name);
+                        handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name);
                       }}
                       className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
                     >
@@ -672,10 +815,10 @@ export default function AutoSearchDashboard() {
                           </p>
                           <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium">
                             {schedule.rankings[0].page}페이지 {schedule.rankings[0].rank_in_page}번째
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
                         <p className="text-[11px] sm:text-xs text-gray-500 dark:text-slate-500">
                           {schedule.rankings.length}개 상품 발견
                         </p>
@@ -892,6 +1035,30 @@ export default function AutoSearchDashboard() {
             )}
       </AnimatePresence>
       , document.body) : null}
+
+      {/* 전체 삭제 확인 다이얼로그 */}
+      <ConfirmationDialog
+        isOpen={showDeleteAllDialog}
+        onClose={() => setShowDeleteAllDialog(false)}
+        onConfirm={handleDeleteAllData}
+        title="전체 데이터 삭제"
+        message="모든 자동검색 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다. (설정은 유지됩니다)"
+        confirmText="전체 삭제"
+        cancelText="취소"
+        type="danger"
+      />
+
+      {/* 스케줄 삭제 확인 다이얼로그 */}
+      <ConfirmationDialog
+        isOpen={showDeleteScheduleDialog}
+        onClose={() => setShowDeleteScheduleDialog(false)}
+        onConfirm={handleDeleteScheduleData}
+        title="스케줄 데이터 삭제"
+        message={`"${deleteTargetSchedule?.configName}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`}
+        confirmText="삭제"
+        cancelText="취소"
+        type="warning"
+      />
     </div>
   );
 }

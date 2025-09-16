@@ -9,6 +9,8 @@ import Lottie from 'lottie-react'
 // import { orderBy } from 'lodash'
 import emptyAnim from './empty-state.json'
 import { toast } from '@/utils/toast'
+import { toast as sonnerToast } from 'sonner'
+import ConfirmationDialog from './ConfirmationDialog'
 
 interface ResultsListProps {
   refreshTrigger: number
@@ -38,6 +40,9 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
   const [isMobile, setIsMobile] = useState(false)
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false)
 
   // HTML 태그 제거 함수
   const stripHtmlTags = (html: string): string => {
@@ -178,26 +183,52 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
     }
   }
 
-  // 개별 결과 삭제
-  const handleDelete = async (id: number) => {
-    if (!confirm('정말로 이 결과를 삭제하시겠습니까?')) {
-      return
-    }
+  // 개별 결과 삭제 확인
+  const handleDeleteClick = (id: number) => {
+    setDeleteTargetId(id)
+    setShowDeleteDialog(true)
+  }
+
+  // 개별 결과 삭제 실행
+  const handleDelete = async () => {
+    if (!deleteTargetId) return
 
     try {
-      const response = await fetch(`/api/results?id=${id}`, {
+      const response = await fetch(`/api/results?id=${deleteTargetId}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        setResults(prev => prev.filter(result => result.id !== id))
-        toast('결과가 삭제되었습니다.', 'success')
+        setResults(prev => prev.filter(result => result.id !== deleteTargetId))
+        sonnerToast.success('결과가 삭제되었습니다.')
       } else {
         const data = await response.json()
-        toast(data.error || '삭제에 실패했습니다.', 'error')
+        sonnerToast.error(data.error || '삭제에 실패했습니다.')
       }
     } catch (err) {
-      toast('삭제 중 오류가 발생했습니다.', 'error')
+      sonnerToast.error('삭제 중 오류가 발생했습니다.')
+    }
+  }
+
+  // 전체 삭제 확인
+  const handleDeleteAllClick = () => {
+    setShowDeleteAllDialog(true)
+  }
+
+  // 전체 삭제 실행
+  const handleDeleteAll = async () => {
+    try {
+      const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
+      const data = await res.json()
+      if(res.ok){ 
+        setResults([])
+        setError('')
+        sonnerToast.success('전체 삭제 완료')
+      } else { 
+        sonnerToast.error(data.error || '전체 삭제 실패')
+      }
+    } catch(e){ 
+      sonnerToast.error('전체 삭제 중 오류')
     }
   }
 
@@ -323,14 +354,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={async () => {
-                    if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
-                    try {
-                      const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
-                      const data = await res.json()
-                      if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
-                    } catch(e){ toast('전체 삭제 중 오류','error') }
-                  }}
+                  onClick={handleDeleteAllClick}
                   className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-2xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -396,14 +420,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={async () => {
-                        if(!confirm('정말 모든 데이터를 삭제하시겠습니까? 되돌릴 수 없습니다.')) return
-                        try {
-                          const res = await fetch('/api/results?deleteAll=true', { method: 'DELETE' })
-                          const data = await res.json()
-                          if(res.ok){ setResults([]); setError(''); toast('전체 삭제 완료','success') } else { toast(data.error || '전체 삭제 실패','error') }
-                        } catch(e){ toast('전체 삭제 중 오류','error') }
-                      }}
+                      onClick={handleDeleteAllClick}
                       className="px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl hover:from-red-600 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -868,7 +885,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleDelete(result.id!)}
+                              onClick={() => handleDeleteClick(result.id!)}
                               className="p-2 rounded-lg bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200"
                               title="삭제"
                             >
@@ -1121,7 +1138,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
-                        handleDelete(selectedResult.id!)
+                        handleDeleteClick(selectedResult.id!)
                         closeModal()
                       }}
                       className="px-4 py-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200 font-semibold"
@@ -1136,6 +1153,30 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
         </AnimatePresence>,
         document.body
       )}
+
+      {/* 개별 삭제 확인 다이얼로그 */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
+        title="결과 삭제"
+        message="정말로 이 결과를 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        type="danger"
+      />
+
+      {/* 전체 삭제 확인 다이얼로그 */}
+      <ConfirmationDialog
+        isOpen={showDeleteAllDialog}
+        onClose={() => setShowDeleteAllDialog(false)}
+        onConfirm={handleDeleteAll}
+        title="전체 삭제"
+        message="정말 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        confirmText="전체 삭제"
+        cancelText="취소"
+        type="danger"
+      />
     </div>
   )
 }
