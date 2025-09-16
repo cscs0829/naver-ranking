@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/utils/supabase';
-import * as XLSX from 'xlsx';
+
+// XLSX 라이브러리를 동적으로 import
+let XLSX: any;
 
 export async function GET(request: NextRequest) {
   try {
+    // XLSX 라이브러리 동적 import
+    if (!XLSX) {
+      XLSX = await import('xlsx');
+    }
+
     if (!supabase) {
       return NextResponse.json({ 
         success: false, 
@@ -115,7 +122,8 @@ export async function GET(request: NextRequest) {
     // 엑셀 파일 생성
     const excelBuffer = XLSX.write(workbook, { 
       type: 'buffer', 
-      bookType: 'xlsx' 
+      bookType: 'xlsx',
+      compression: true
     });
 
     // 응답 헤더 설정
@@ -130,9 +138,15 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('키워드 분석 엑셀 내보내기 오류:', error);
+    console.error('오류 상세:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    });
     return NextResponse.json({ 
       success: false, 
-      error: '엑셀 파일 생성 중 오류가 발생했습니다.' 
+      error: '엑셀 파일 생성 중 오류가 발생했습니다.',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }
