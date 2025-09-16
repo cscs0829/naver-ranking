@@ -442,31 +442,6 @@ export default function AutoSearchDashboard() {
           ))}
         </div>
 
-        {/* 최근 활동 스켈레톤 */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-          <div className="h-6 w-32 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="p-3 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
-                    <div className="space-y-1">
-                      <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-                      <div className="h-3 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-                      <div className="h-3 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="h-4 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-                    <div className="h-3 w-12 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* 스케줄별 순위 결과 스켈레톤 */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <div className="h-6 w-40 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
@@ -496,6 +471,52 @@ export default function AutoSearchDashboard() {
                       <div className="h-4 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
                       <div className="h-3 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
                     </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 상위 설정 스켈레톤 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="h-6 w-24 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="space-y-1">
+                      <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 최근 활동 스켈레톤 */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="h-6 w-32 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700 mb-4" />
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="p-3 bg-white rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="space-y-1">
+                      <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      <div className="h-3 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="h-4 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-3 w-12 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
                   </div>
                 </div>
               </div>
@@ -648,63 +669,11 @@ export default function AutoSearchDashboard() {
         </motion.div>
       </div>
 
-      {/* 최근 활동 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
-      >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5" />
-          최근 활동
-        </h3>
-        <div className="space-y-3">
-          {stats.recentActivity.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">최근 활동이 없습니다.</p>
-          ) : (
-            <>
-              {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
-                <div key={activity.id} className="p-3 bg-white rounded-lg border border-gray-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100' : activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'}` }>
-                    {activity.status === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : activity.status === 'error' ? (
-                      <XCircle className="w-4 h-4 text-red-600" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-yellow-600" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{activity.config_name}</p>
-                        <p className="text-sm text-gray-500">"{activity.search_query}"</p>
-                        <p className="text-xs text-gray-400">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
-                      </div>
-                    </div>
-                    <div className="text-left sm:text-right">
-                      <p className="text-sm font-medium text-gray-900">{activity.results_count}개 결과</p>
-                      {activity.duration_ms && (<p className="text-xs text-gray-500">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {stats.recentActivity.length > 1 && (
-                <div className="pt-2">
-                  <button onClick={() => setShowAllActivities(v=>!v)} className="w-full sm:w-auto px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700">{showAllActivities ? '접기' : '더보기'}</button>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </motion.div>
-
       {/* 스케줄별 순위 결과 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.4 }}
         className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -845,7 +814,7 @@ export default function AutoSearchDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
+        transition={{ delay: 0.5 }}
         className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -877,6 +846,58 @@ export default function AutoSearchDashboard() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+      </motion.div>
+
+      {/* 최근 활동 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5" />
+          최근 활동
+        </h3>
+        <div className="space-y-3">
+          {stats.recentActivity.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">최근 활동이 없습니다.</p>
+          ) : (
+            <>
+              {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
+                <div key={activity.id} className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100' : activity.status === 'error' ? 'bg-red-100' : 'bg-yellow-100'}` }>
+                    {activity.status === 'success' ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : activity.status === 'error' ? (
+                      <XCircle className="w-4 h-4 text-red-600" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-yellow-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{activity.config_name}</p>
+                        <p className="text-sm text-gray-500">"{activity.search_query}"</p>
+                        <p className="text-xs text-gray-400">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
+                      </div>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <p className="text-sm font-medium text-gray-900">{activity.results_count}개 결과</p>
+                      {activity.duration_ms && (<p className="text-xs text-gray-500">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {stats.recentActivity.length > 1 && (
+                <div className="pt-2">
+                  <button onClick={() => setShowAllActivities(v=>!v)} className="w-full sm:w-auto px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700">{showAllActivities ? '접기' : '더보기'}</button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </motion.div>
