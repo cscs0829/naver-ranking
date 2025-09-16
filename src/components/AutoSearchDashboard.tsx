@@ -823,24 +823,24 @@ export default function AutoSearchDashboard() {
         </h3>
         <div className="space-y-3">
           {stats.topConfigs.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">설정이 없습니다.</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-4">설정이 없습니다.</p>
           ) : (
             stats.topConfigs.map((config, index) => (
-              <div key={config.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={config.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600">#{index + 1}</span>
+                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">#{index + 1}</span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{config.name}</p>
-                    <p className="text-sm text-gray-500">{config.search_query}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{config.name}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{config.search_query}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {config.run_count}회 실행
                   </p>
-                  <p className="text-xs text-green-600">
+                  <p className="text-xs text-green-600 dark:text-green-400">
                     성공률 {config.success_rate}%
                   </p>
                 </div>
@@ -956,14 +956,14 @@ export default function AutoSearchDashboard() {
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="ml-3 text-gray-600">히스토리를 불러오는 중...</span>
+                <span className="ml-3 text-gray-600 dark:text-gray-400">히스토리를 불러오는 중...</span>
               </div>
             ) : historyData ? (
               <div className="space-y-6">
                 {historyData.history.length === 0 ? (
                   <div className="text-center py-12">
                     <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-500">실행 히스토리가 없습니다.</p>
+                    <p className="text-gray-500 dark:text-gray-400">실행 히스토리가 없습니다.</p>
                   </div>
                 ) : (
                   historyData.history.map((dayData: any, dayIndex: number) => (
@@ -981,11 +981,11 @@ export default function AutoSearchDashboard() {
                       
                       <div className="space-y-4">
                         {dayData.executions.map((execution: any, execIndex: number) => (
-                          <div key={execIndex} className="bg-gray-50 rounded-lg p-4">
+                          <div key={execIndex} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-gray-500" />
-                                <span className="font-medium text-gray-900">
+                                <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                <span className="font-medium text-gray-900 dark:text-white">
                                   {(() => {
                                     const firstTime = execution?.results?.[0]?.time;
                                     const d = firstTime ? new Date(firstTime) : null;
@@ -1002,7 +1002,7 @@ export default function AutoSearchDashboard() {
                                   })()}
                                 </span>
                               </div>
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {execution.results.length}개 상품 발견
                               </span>
                             </div>
@@ -1011,20 +1011,20 @@ export default function AutoSearchDashboard() {
                               {execution.results.map((result: any, resultIndex: number) => (
                                 <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                   <div className="flex items-center justify-between sm:hidden">
-                                    <span className="text-sm font-medium text-gray-900">
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                                       {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                     </span>
                                     <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">{result.page}페이지 {result.rank_in_page}번째</span>
                                   </div>
                                   <div className="hidden sm:flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${result.total_rank <= 10 ? 'bg-red-100 text-red-600' : result.total_rank <= 50 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-600'}`}>{result.total_rank}</div>
+                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${result.total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : result.total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>{result.total_rank}</div>
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                          <p className="font-medium text-gray-900 truncate">{result.product_title}</p>
-                                          {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">정확 매칭</span>)}
+                                          <p className="font-medium text-gray-900 dark:text-white truncate">{result.product_title}</p>
+                                          {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full font-medium">정확 매칭</span>)}
                                         </div>
-                                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                           <span>{result.mall_name}</span>
                                           {result.brand && <span>브랜드: {result.brand}</span>}
                                           <span>{result.price}원</span>
