@@ -57,7 +57,6 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     sortOrder: 'desc' as 'asc' | 'desc'
   })
   const [expandedResults, setExpandedResults] = useState<Set<number>>(new Set())
-  const [autoNavigated, setAutoNavigated] = useState(false)
 
   const fetchResults = async () => {
     try {
@@ -92,13 +91,6 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
     fetchResults()
   }, [refreshTrigger, filters, sortOptions])
 
-  // 데이터가 비어 있으면 키워드 분석 탭으로 유도
-  useEffect(() => {
-    if (!loading && !error && results.length === 0 && !autoNavigated) {
-      setAutoNavigated(true)
-      onNavigateToAnalysis()
-    }
-  }, [loading, error, results, autoNavigated, onNavigateToAnalysis])
 
   const handleDelete = async (id: number) => {
     if (!confirm('이 키워드 분석 결과를 삭제하시겠습니까?')) return
@@ -272,8 +264,30 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
             </motion.button>
           </div>
           {results.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-semibold">키워드 분석 결과가 없습니다</h3>
+            <div className="text-center py-16">
+              <div className="relative inline-block mb-6">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl flex items-center justify-center mx-auto">
+                  <BarChart3 className="w-10 h-10 text-blue-500" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                키워드 분석 결과가 없습니다
+              </h3>
+              <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                아직 키워드 분석 결과가 없습니다. 키워드 분석 탭에서 새로운 분석을 시작해보세요.
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={onNavigateToAnalysis}
+                  className="inline-flex items-center px-5 py-2.5 rounded-xl text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900/50 transition-all"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  키워드 분석하러 가기
+                </button>
+              </div>
             </div>
           ) : (
             results.map((result) => {

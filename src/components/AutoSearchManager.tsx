@@ -325,8 +325,59 @@ export default function AutoSearchManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="space-y-6">
+        {/* 헤더 스켈레톤 */}
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <div className="h-8 w-48 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+            <div className="h-5 w-96 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+          </div>
+          <div className="h-10 w-32 rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+        </div>
+
+        {/* 스케줄 목록 스켈레톤 */}
+        <div className="grid gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-6 h-6 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-6 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-6 w-16 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="h-4 w-64 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-4 w-48 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-4 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    {[...Array(4)].map((_, j) => (
+                      <div key={j} className="space-y-1">
+                        <div className="h-3 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                        <div className="h-4 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {[...Array(3)].map((_, k) => (
+                      <div key={k} className="h-6 w-20 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <div className="h-8 w-16 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-8 w-16 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-8 w-16 rounded-md animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

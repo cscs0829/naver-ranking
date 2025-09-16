@@ -32,6 +32,17 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
   const [profiles, setProfiles] = useState<{ id: number; name: string; is_default: boolean }[]>([])
   const [loadingProfiles, setLoadingProfiles] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // 모바일 감지
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
 
   // 프로필 목록 로드 (쇼핑검색 API만)
   useEffect(() => {
@@ -108,23 +119,25 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
           <p className="text-xs text-slate-500 dark:text-slate-400">최소 1자 이상 입력하세요.</p>
         </div>
 
-        {/* 고급 옵션 토글 */}
-        <div className="flex items-center justify-center">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center space-x-3 px-6 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-300 bg-slate-50 dark:bg-slate-700 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-600 hover:shadow-md"
-          >
-            <span className="font-semibold text-lg">고급 옵션</span>
-            <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
-          </motion.button>
-        </div>
+        {/* 고급 옵션 토글 - 모바일에서만 표시 */}
+        {isMobile && (
+          <div className="flex items-center justify-center">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center space-x-3 px-6 py-3 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-300 bg-slate-50 dark:bg-slate-700 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-600 hover:shadow-md"
+            >
+              <span className="font-semibold text-lg">고급 옵션</span>
+              <ChevronDown className={`w-5 h-5 transition-transform duration-300 ${showAdvanced ? 'rotate-180' : ''}`} />
+            </motion.button>
+          </div>
+        )}
 
         {/* 고급 옵션들 */}
         <AnimatePresence>
-          {showAdvanced && (
+          {(!isMobile || showAdvanced) && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -133,41 +146,6 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
               className="space-y-6 overflow-hidden"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* API 키 프로필 */}
-                <div className="space-y-3">
-                  <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
-                    사용할 API 키 프로필
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="profileId"
-                      value={formData.profileId ?? ''}
-                      onChange={(e) => handleInputChange('profileId', e.target.value ? parseInt(e.target.value) : undefined)}
-                      className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
-                      disabled={isLoading}
-                    >
-                      <option value="">기본 프로필 사용</option>
-                      {profiles.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                          {p.name === '트립페이지 네이버 API' ? ' (권장)' : p.is_default ? ' (기본)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                      <Sparkles className="w-5 h-5 text-slate-400" />
-                    </div>
-                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                      <ChevronDown className="w-5 h-5 text-slate-400" />
-                    </div>
-                  </div>
-                  {loadingProfiles && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">프로필 불러오는 중...</p>
-                  )}
-                  <p className="text-xs text-slate-500 dark:text-slate-400">선택하지 않으면 기본 프로필이 사용됩니다.</p>
-                </div>
-                
                 {/* 타겟 상품명 */}
                 <div className="space-y-3">
                   <label htmlFor="targetProductName" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -248,6 +226,40 @@ export default function SearchForm({ onSearch, isLoading }: SearchFormProps) {
                     브랜드명에 포함되어야 할 키워드
                   </p>
                 </div>
+
+                {/* API 키 프로필 */}
+                <div className="space-y-3">
+                  <label htmlFor="profileId" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Sparkles className="w-4 h-4 mr-2 text-blue-600" />
+                    사용할 API 키 프로필
+                    <span className="text-slate-400 text-xs ml-2">(선택사항)</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="profileId"
+                      value={formData.profileId ?? ''}
+                      onChange={(e) => handleInputChange('profileId', e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="w-full px-4 py-4 pl-12 border-2 border-slate-200 dark:border-slate-600 rounded-2xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white appearance-none"
+                      disabled={isLoading}
+                    >
+                      <option value="">기본 프로필 사용</option>
+                      {profiles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                          {p.name === '트립페이지 네이버 API' ? ' (권장)' : p.is_default ? ' (기본)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                      <Sparkles className="w-5 h-5 text-slate-400" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
+                    <Info className="w-3 h-3 mr-1" />
+                    특정 API 키 프로필을 사용할 때
+                  </p>
+                </div>
+
               </div>
 
               {/* 최대 검색 페이지 */}

@@ -129,8 +129,35 @@ export default function AutoSearchNotifications() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="space-y-6">
+        {/* 헤더 스켈레톤 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+            <div className="h-6 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+            <div className="h-8 w-8 rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+          </div>
+        </div>
+
+        {/* 알림 목록 스켈레톤 */}
+        <div className="space-y-3">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-4 h-4 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700 mt-1" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-3/4 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-3 w-1/2 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-3 w-1/4 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="h-6 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

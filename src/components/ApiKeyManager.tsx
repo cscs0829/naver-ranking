@@ -134,14 +134,63 @@ export default function ApiKeyManager() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 dark:border-blue-800"></div>
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 dark:border-blue-400 border-t-transparent absolute top-0 left-0"></div>
+      <div className="p-8 space-y-8">
+        {/* 헤더 스켈레톤 */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl animate-pulse bg-slate-200 dark:bg-slate-700" />
+          </div>
+          <div className="h-8 w-48 mx-auto rounded animate-pulse bg-slate-200 dark:bg-slate-700 mb-2" />
+          <div className="h-6 w-96 mx-auto rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
         </div>
-        <div className="mt-4 text-center">
-          <p className="text-lg font-semibold text-slate-800 dark:text-slate-200 animate-pulse">API 키를 불러오는 중...</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">잠시만 기다려주세요</p>
+
+        {/* 액션 버튼 스켈레톤 */}
+        <div className="flex justify-center">
+          <div className="h-16 w-80 rounded-3xl animate-pulse bg-slate-200 dark:bg-slate-700" />
+        </div>
+
+        {/* 프로필 카드 스켈레톤 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-200/60 dark:border-slate-700/60 p-6">
+              {/* 카드 헤더 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="space-y-2">
+                    <div className="h-6 w-32 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                    <div className="h-4 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-8 w-8 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+
+              {/* API 키 정보 */}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <div className="h-4 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-10 w-full rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-24 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  <div className="h-10 w-full rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+                </div>
+              </div>
+
+              {/* 통계 정보 */}
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                {[...Array(2)].map((_, j) => (
+                  <div key={j} className="text-center">
+                    <div className="h-8 w-16 mx-auto rounded animate-pulse bg-slate-200 dark:bg-slate-700 mb-2" />
+                    <div className="h-4 w-20 mx-auto rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )
