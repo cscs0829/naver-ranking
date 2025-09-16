@@ -86,14 +86,15 @@ export async function GET(request: NextRequest) {
       ...(recentResults || []),
       ...(recentLogs || []),
       ...(recentConfigs || [])
-    ].sort((a, b) => 
-      new Date(b.created_at || b.updated_at).getTime() - 
-      new Date(a.created_at || a.updated_at).getTime()
-    )[0];
+    ].sort((a, b) => {
+      const aTime = new Date('created_at' in a ? a.created_at : a.updated_at).getTime();
+      const bTime = new Date('created_at' in b ? b.created_at : b.updated_at).getTime();
+      return bTime - aTime;
+    })[0];
 
     return NextResponse.json({
       hasUpdates,
-      latestUpdate: latestUpdate ? (latestUpdate.created_at || latestUpdate.updated_at) : null,
+      latestUpdate: latestUpdate ? ('created_at' in latestUpdate ? latestUpdate.created_at : latestUpdate.updated_at) : null,
       updateCount: {
         results: recentResults?.length || 0,
         logs: recentLogs?.length || 0,
