@@ -539,7 +539,7 @@ export default function AutoSearchManager() {
               </p>
             </div>
             
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   설정 이름 *
@@ -560,54 +560,79 @@ export default function AutoSearchManager() {
                 </label>
                 <input
                   type="text"
+                  name="search_query"
                   value={formData.search_query}
                   onChange={(e) => setFormData({ ...formData, search_query: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="검색할 키워드를 입력하세요"
+                  autoComplete="on"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  타겟 상품명
+                </label>
+                <input
+                  type="text"
+                  name="target_product_name"
+                  value={formData.target_product_name}
+                  onChange={(e) => setFormData({ ...formData, target_product_name: e.target.value })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="찾고자 하는 상품명 (선택사항)"
+                  autoComplete="on"
+                  list="product-suggestions"
+                />
+                <datalist id="product-suggestions">
+                  <option value="베트남 여행" />
+                  <option value="아이폰 케이스" />
+                  <option value="노트북" />
+                  <option value="운동화" />
+                  <option value="화장품" />
+                </datalist>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    대상 쇼핑몰
+                    타겟 쇼핑몰
                   </label>
                   <input
                     type="text"
+                    name="target_mall_name"
                     value={formData.target_mall_name}
                     onChange={(e) => setFormData({ ...formData, target_mall_name: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="특정 쇼핑몰명 (선택사항)"
+                    autoComplete="on"
+                    list="mall-suggestions"
                   />
+                  <datalist id="mall-suggestions">
+                    <option value="하나투어" />
+                    <option value="트립" />
+                    <option value="패키지" />
+                    <option value="여행" />
+                    <option value="하나투어 트립 패키지 여행" />
+                  </datalist>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    대상 브랜드
+                    타겟 브랜드
                   </label>
                   <input
                     type="text"
+                    name="target_brand"
                     value={formData.target_brand}
                     onChange={(e) => setFormData({ ...formData, target_brand: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="특정 브랜드명 (선택사항)"
+                    autoComplete="on"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  대상 상품명
-                </label>
-                <input
-                  type="text"
-                  value={formData.target_product_name}
-                  onChange={(e) => setFormData({ ...formData, target_product_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="특정 상품명 (선택사항)"
-                />
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
