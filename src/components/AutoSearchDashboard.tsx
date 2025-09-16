@@ -379,7 +379,7 @@ export default function AutoSearchDashboard() {
     <div className="space-y-6">
       {/* 헤더 */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">자동 검색 대시보드</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">실시간 결과</h2>
         <p className="text-gray-600">자동 검색 시스템의 전체 현황을 확인하세요</p>
         
         {/* 액션 버튼들 */}
