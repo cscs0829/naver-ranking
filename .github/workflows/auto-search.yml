@@ -37,14 +37,27 @@ jobs:
       - name: 의존성 설치
         run: npm ci
 
+      - name: 필요한 도구 설치
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc jq
+
       - name: 활성화된 설정 조회 및 실행 시간 확인
         id: get-configs
         run: |
           # 모든 활성화된 설정 조회 (interval_hours 포함)
+          echo "Supabase URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          echo "API Key 존재 여부: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' }}"
+          
           CONFIGS_JSON=$(curl -s -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
             "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}/rest/v1/auto_search_configs?is_active=eq.true&select=id,interval_hours,last_run_at" \
             | jq -r '.')
+          
+          if [ $? -ne 0 ]; then
+            echo "설정 조회 실패"
+            exit 1
+          fi
           
           echo "설정 조회 결과: $CONFIGS_JSON"
           
