@@ -294,7 +294,7 @@ export default function AutoSearchManager() {
   // 상태 아이콘
   const getStatusIcon = (config: AutoSearchConfig) => {
     if (!config.is_active) {
-      return <Pause className="w-4 h-4 text-gray-400" />;
+      return <Pause className="w-4 h-4 text-gray-400 dark:text-gray-500" />;
     }
     
     if (config.error_count > 0 && config.success_count === 0) {
@@ -402,8 +402,8 @@ export default function AutoSearchManager() {
       {/* 스케줄 목록 */}
       <div className="grid gap-4">
         {configs.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            <Clock className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
             <p>등록된 자동 검색 설정이 없습니다.</p>
             <p>새 설정을 만들어보세요.</p>
           </div>
@@ -449,7 +449,7 @@ export default function AutoSearchManager() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-6 text-sm text-gray-500">
+                  <div className="flex items-center gap-6 text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>마지막 실행: {formatLastRun(config.last_run_at)}</span>
@@ -524,13 +524,13 @@ export default function AutoSearchManager() {
             {/* 닫기 버튼 */}
             <button
               onClick={resetForm}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+              className="absolute top-4 right-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
               title="닫기"
             >
               <XCircle className="w-6 h-6" />
             </button>
             
-            <div className="border-b border-gray-200 pb-4 mb-6">
+            <div className="border-b border-gray-200 dark:border-slate-700 pb-4 mb-6">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white pr-8">
                 {editingConfig ? '설정 수정' : '새 설정 생성'}
               </h3>
@@ -541,21 +541,21 @@ export default function AutoSearchManager() {
             
             <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   설정 이름 *
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="설정 이름을 입력하세요"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   검색어 *
                 </label>
                 <input
@@ -563,7 +563,7 @@ export default function AutoSearchManager() {
                   name="search_query"
                   value={formData.search_query}
                   onChange={(e) => setFormData({ ...formData, search_query: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="검색할 키워드를 입력하세요"
                   autoComplete="on"
                   required
@@ -571,7 +571,7 @@ export default function AutoSearchManager() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   타겟 상품명
                 </label>
                 <input
@@ -579,7 +579,7 @@ export default function AutoSearchManager() {
                   name="target_product_name"
                   value={formData.target_product_name}
                   onChange={(e) => setFormData({ ...formData, target_product_name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="찾고자 하는 상품명 (선택사항)"
                   autoComplete="on"
                 />
@@ -587,7 +587,7 @@ export default function AutoSearchManager() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     타겟 쇼핑몰
                   </label>
                   <input
@@ -595,7 +595,7 @@ export default function AutoSearchManager() {
                     name="target_mall_name"
                     value={formData.target_mall_name}
                     onChange={(e) => setFormData({ ...formData, target_mall_name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="특정 쇼핑몰명 (선택사항)"
                     autoComplete="on"
                     list="mall-suggestions"
@@ -610,7 +610,7 @@ export default function AutoSearchManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     타겟 브랜드
                   </label>
                   <input
@@ -618,7 +618,7 @@ export default function AutoSearchManager() {
                     name="target_brand"
                     value={formData.target_brand}
                     onChange={(e) => setFormData({ ...formData, target_brand: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder="특정 브랜드명 (선택사항)"
                     autoComplete="on"
                   />
@@ -628,7 +628,7 @@ export default function AutoSearchManager() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     최대 페이지 수
                   </label>
                   <input
@@ -637,18 +637,18 @@ export default function AutoSearchManager() {
                     max="50"
                     value={formData.max_pages}
                     onChange={(e) => setFormData({ ...formData, max_pages: parseInt(e.target.value) || 10 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     실행 주기
                   </label>
                   <select
                     value={formData.interval_hours}
                     onChange={(e) => setFormData({ ...formData, interval_hours: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   >
                     {intervalOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -660,13 +660,13 @@ export default function AutoSearchManager() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   API 키 프로필 (쇼핑 검색 API)
                 </label>
                 <select
                   value={formData.profile_id}
                   onChange={(e) => setFormData({ ...formData, profile_id: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   required
                 >
                   {apiKeyProfiles.map((profile) => (
@@ -683,23 +683,23 @@ export default function AutoSearchManager() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   설명
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="설정에 대한 설명을 입력하세요 (선택사항)"
                 />
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  className="px-6 py-3 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
                 >
                   취소
                 </button>
