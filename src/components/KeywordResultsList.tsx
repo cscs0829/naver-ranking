@@ -140,7 +140,16 @@ export default function KeywordResultsList({ refreshTrigger, onNavigateToAnalysi
 
     try {
       const response = await fetch('/api/keyword-analysis/export-excel');
-      const blob = await response.blob();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // 응답을 ArrayBuffer로 받아서 Blob 생성
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      });
       
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
