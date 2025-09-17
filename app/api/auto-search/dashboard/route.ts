@@ -107,79 +107,70 @@ export async function GET() {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-    // 활성 설정이 없다면 빈 배열 반환
-    let latestRankings: any[] = [];
-
+    // 각 설정별로 최신 순위 결과 조회 (최신 1개, 최소 컬럼만)
+    let scheduleRankingsData: any = {};
+    
     if (allActiveConfigs && allActiveConfigs.length > 0) {
-      const activeConfigIds = allActiveConfigs.map((c: any) => c.id);
+      for (const config of allActiveConfigs) {
+        const { data: configResults, error: resultsError } = await supabase
+          .from('auto_search_results')
+          .select(`
+            total_rank,
+            page,
+            rank_in_page,
+            product_title,
+            mall_name,
+            brand,
+            price,
+            product_link,
+            created_at
+          `)
+          .eq('config_id', config.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-      // 모든 활성 설정의 최신 결과를 한 번에 조회 (config_id, created_at로 정렬)
-      const { data: allResults, error: allResultsError } = await supabase
-        .from('auto_search_results')
-        .select(`
-          config_id,
-          total_rank,
-          page,
-          rank_in_page,
-          product_title,
-          mall_name,
-          brand,
-          price,
-          product_link,
-          created_at
-        `)
-        .in('config_id', activeConfigIds)
-        .order('config_id', { ascending: true })
-        .order('created_at', { ascending: false });
-
-      // config_id별 첫 번째 레코드(최신)만 취득
-      const firstResultByConfig: Record<number, any> = {};
-      if (!allResultsError && allResults) {
-        for (const row of allResults) {
-          if (firstResultByConfig[row.config_id] == null) {
-            firstResultByConfig[row.config_id] = row;
+        if (!resultsError && configResults) {
+          // 결과가 있는 설정
+          if (configResults.length > 0) {
+            scheduleRankingsData[config.id] = {
+              config_id: config.id,
+              config_name: config.name,
+              search_query: config.search_query,
+              target_product_name: config.target_product_name,
+              target_mall_name: config.target_mall_name,
+              target_brand: config.target_brand,
+              is_active: config.is_active,
+              latest_check: configResults[0].created_at,
+              rankings: configResults.map(result => ({
+                total_rank: result.total_rank,
+                page: result.page,
+                rank_in_page: result.rank_in_page,
+                product_title: result.product_title,
+                mall_name: result.mall_name,
+                brand: result.brand,
+                price: result.price,
+                product_link: result.product_link
+              }))
+            };
+          } else {
+            // 결과가 없는 설정 (빈 상태)
+            scheduleRankingsData[config.id] = {
+              config_id: config.id,
+              config_name: config.name,
+              search_query: config.search_query,
+              target_product_name: config.target_product_name,
+              target_mall_name: config.target_mall_name,
+              target_brand: config.target_brand,
+              is_active: config.is_active,
+              latest_check: config.last_run_at || config.created_at,
+              rankings: []
+            };
           }
         }
       }
-
-      // 스케줄 카드용 구조 생성
-      latestRankings = allActiveConfigs.map((config: any) => {
-        const top = firstResultByConfig[config.id];
-        if (top) {
-          return {
-            config_id: config.id,
-            config_name: config.name,
-            search_query: config.search_query,
-            target_product_name: config.target_product_name,
-            target_mall_name: config.target_mall_name,
-            target_brand: config.target_brand,
-            is_active: config.is_active,
-            latest_check: top.created_at,
-            rankings: [{
-              total_rank: top.total_rank,
-              page: top.page,
-              rank_in_page: top.rank_in_page,
-              product_title: top.product_title,
-              mall_name: top.mall_name,
-              brand: top.brand,
-              price: top.price,
-              product_link: top.product_link
-            }]
-          };
-        }
-        return {
-          config_id: config.id,
-          config_name: config.name,
-          search_query: config.search_query,
-          target_product_name: config.target_product_name,
-          target_mall_name: config.target_mall_name,
-          target_brand: config.target_brand,
-          is_active: config.is_active,
-          latest_check: config.last_run_at || config.created_at,
-          rankings: []
-        };
-      });
     }
+
+    const latestRankings = Object.values(scheduleRankingsData);
 
     console.log('활성 설정 수:', allActiveConfigs?.length || 0);
     console.log('스케줄별 순위 결과 수:', latestRankings?.length || 0);
