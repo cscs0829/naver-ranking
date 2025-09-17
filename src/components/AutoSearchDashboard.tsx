@@ -89,6 +89,9 @@ export default function AutoSearchDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [initialLoaded, setInitialLoaded] = useState(false);
+  const [slowLoading, setSlowLoading] = useState(false);
+  const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
   const [selectedSchedule, setSelectedSchedule] = useState<any>(null);
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -227,9 +230,24 @@ export default function AutoSearchDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`);
+      setSlowLoading(false);
+      const start = performance.now?.() ?? Date.now();
+      const slowTimer = setTimeout(() => setSlowLoading(true), 1500);
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`, { signal: controller.signal });
       const data = await response.json();
       setStats(data);
+      const end = performance.now?.() ?? Date.now();
+      const duration = Math.round(end - start);
+      setLastDurationMs(duration);
+      if (process.env.NODE_ENV !== 'production') {
+        try { console.debug(`[Dashboard] 응답 시간: ${duration}ms`); } catch {}
+      }
+      clearTimeout(timeout);
+      clearTimeout(slowTimer);
+      setInitialLoaded(true);
       setLastCheckTime(new Date().toISOString()); // 마지막 체크 시간 업데이트
     } catch (error) {
       console.error('통계 조회 오류:', error);
@@ -642,6 +660,16 @@ export default function AutoSearchDashboard() {
             ))}
           </div>
         </div>
+
+        {/* 느린 로딩 안내 (1.5초 이상 걸릴 때만 표시) */}
+        {slowLoading && (
+          <div className="mx-4 sm:mx-0 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm flex items-center justify-between">
+            <span>데이터를 불러오는 중입니다. 잠시만 기다려 주세요...</span>
+            {lastDurationMs != null && (
+              <span className="text-amber-700 dark:text-amber-300">(지연: ~{Math.max(2, Math.round(lastDurationMs/1000))}초)</span>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -890,12 +918,30 @@ export default function AutoSearchDashboard() {
               
               {/* 필터 액션 버튼들 */}
               <div className="flex justify-between items-center">
-                <div className="text-sm text-slate-600 dark:text-slate-400">
+                <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
                   {stats && (
-                    <span>
-                      {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
-                      {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
-                    </span>
+                    <>
+                      <motion.span
+                        key={applyFilters(stats.scheduleRankings).length}
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="inline-flex items-center"
+                      >
+                        {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
+                        {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
+                      </motion.span>
+                      {Object.values(filters).some(f => f) && (
+                        <motion.span
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                          className="px-2 py-0.5 rounded-full text-xs bg-blue-600 text-white shadow"
+                        >
+                          필터 적용됨
+                        </motion.span>
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="flex space-x-3">
@@ -925,7 +971,7 @@ export default function AutoSearchDashboard() {
           <Target className="w-5 h-5" />
           스케줄별 순위 결과
         </h3>
-        <div className="space-y-6">
+        <motion.div layout className="space-y-6">
           {stats.scheduleRankings.length === 0 ? (
             <div className="text-center py-8">
               <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -960,10 +1006,16 @@ export default function AutoSearchDashboard() {
               </motion.button>
             </div>
           ) : (
-            applyFilters(stats.scheduleRankings).map((schedule) => (
-              <div 
+            <AnimatePresence mode="popLayout">
+            {applyFilters(stats.scheduleRankings).map((schedule) => (
+              <motion.div 
                 key={schedule.config_id} 
-                className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800"
+                layout
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.2 }}
+                className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800"
                 onClick={() => handleScheduleClick(schedule)}
               >
                 {/* 헤더 */}
@@ -1073,10 +1125,11 @@ export default function AutoSearchDashboard() {
                     </p>
                   </div>
                 )}
-              </div>
-            ))
+              </motion.div>
+            ))}
+            </AnimatePresence>
           )}
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* 상위 설정 */}
@@ -1114,7 +1167,7 @@ export default function AutoSearchDashboard() {
                   </p>
                 </div>
               </div>
-            ))
+            ))}
           )}
         </div>
       </motion.div>
