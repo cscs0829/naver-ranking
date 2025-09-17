@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Node.js 런타임에서 실행 (ExcelJS 등 Node 전용 기능 사용을 위해 명시)
 export const runtime = 'nodejs';
+// 동적 렌더링 강제 활성화 (request.url 사용으로 인한 정적 렌더링 방지)
+export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 
 // Node 런타임에서 서비스 롤 키로 서버용 Supabase 클라이언트 생성
