@@ -231,7 +231,7 @@ export default function AutoSearchDashboard() {
     try {
       setLoading(true);
       setSlowLoading(false);
-      const start = performance.now?.() ?? Date.now();
+      const start = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
       const slowTimer = setTimeout(() => setSlowLoading(true), 1500);
 
       const controller = new AbortController();
@@ -239,7 +239,7 @@ export default function AutoSearchDashboard() {
       const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`, { signal: controller.signal });
       const data = await response.json();
       setStats(data);
-      const end = performance.now?.() ?? Date.now();
+      const end = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
       const duration = Math.round(end - start);
       setLastDurationMs(duration);
       if (process.env.NODE_ENV !== 'production') {
