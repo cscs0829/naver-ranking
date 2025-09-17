@@ -96,15 +96,12 @@ export default function AutoSearchDashboard() {
   const [historyData, setHistoryData] = useState<any>(null);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [showAllActivities, setShowAllActivities] = useState(false);
-  const visibilityRef = useRef<boolean>(true);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [showDeleteScheduleDialog, setShowDeleteScheduleDialog] = useState(false);
   const [deleteTargetSchedule, setDeleteTargetSchedule] = useState<any>(null);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
-  const [lastCheckTime, setLastCheckTime] = useState<string>(new Date().toISOString());
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 필터 상태 추가
   const [filters, setFilters] = useState({
@@ -247,7 +244,6 @@ export default function AutoSearchDashboard() {
       clearTimeout(timeout);
       clearTimeout(slowTimer);
       setInitialLoaded(true);
-      setLastCheckTime(new Date().toISOString()); // 마지막 체크 시간 업데이트
     } catch (error) {
       console.error('통계 조회 오류:', error);
     } finally {
@@ -343,20 +339,6 @@ export default function AutoSearchDashboard() {
     });
   };
 
-  // DB 변경 확인
-  const checkForUpdates = async () => {
-    try {
-      const response = await fetch(`/api/auto-search/check-updates?lastCheck=${lastCheckTime}`);
-      const data = await response.json();
-      
-      if (data.hasUpdates) {
-        console.log('🔄 DB 변경 감지됨, 데이터 새로고침 중...', data.updateCount);
-        await fetchStats();
-      }
-    } catch (error) {
-      console.error('업데이트 확인 오류:', error);
-    }
-  };
 
   // 수동 새로고침
   const handleRefresh = () => {
@@ -553,44 +535,6 @@ export default function AutoSearchDashboard() {
     fetchStats();
   }, []);
 
-  // DB 변경 감지 기반 자동 새로고침
-  useEffect(() => {
-    const startUpdateCheck = () => {
-      // 30초마다 DB 변경 확인
-      checkIntervalRef.current = setInterval(checkForUpdates, 30000);
-    };
-
-    const stopUpdateCheck = () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-        checkIntervalRef.current = null;
-      }
-    };
-
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        visibilityRef.current = true;
-        // 탭이 보일 때 즉시 한 번 체크
-        checkForUpdates();
-        startUpdateCheck();
-      } else {
-        visibilityRef.current = false;
-        stopUpdateCheck();
-      }
-    };
-
-    // 초기 설정
-    if (document.visibilityState === 'visible') {
-      startUpdateCheck();
-    }
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibility);
-      stopUpdateCheck();
-    };
-  }, [lastCheckTime]); // lastCheckTime이 변경될 때마다 체크 로직 재시작
 
   if (loading) {
     return (
