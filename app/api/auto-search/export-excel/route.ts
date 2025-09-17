@@ -88,35 +88,55 @@ export async function GET(request: NextRequest) {
     // 워크북 생성
     const workbook = new ExcelJS.Workbook();
 
+    // 시트명 중복 방지를 위한 Set
+    const usedSheetNames = new Set<string>();
+
     // 각 스케줄별로 시트 생성 (검색어 기준으로 그룹화)
     for (const config of configs) {
-      // 해당 스케줄의 검색 결과 조회 (히스토리 순서로)
-      const { data: results, error: resultsError } = await serverSupabase
-        .from('auto_search_results')
-        .select(`
-          product_title,
-          mall_name,
-          brand,
-          total_rank,
-          page,
-          rank_in_page,
-          price,
-          product_link,
-          created_at,
-          check_date,
-          is_exact_match,
-          match_confidence
-        `)
-        .eq('config_id', config.id)
-        .order('created_at', { ascending: true }); // 시간순으로 정렬
+      try {
+        // 해당 스케줄의 검색 결과 조회 (히스토리 순서로)
+        const { data: results, error: resultsError } = await serverSupabase
+          .from('auto_search_results')
+          .select(`
+            product_title,
+            mall_name,
+            brand,
+            total_rank,
+            page,
+            rank_in_page,
+            price,
+            product_link,
+            created_at,
+            check_date,
+            is_exact_match,
+            match_confidence
+          `)
+          .eq('config_id', config.id)
+          .order('created_at', { ascending: true }); // 시간순으로 정렬
 
-      if (resultsError) {
-        console.error(`스케줄 ${config.id} 결과 조회 오류:`, resultsError);
-        continue;
+        if (resultsError) {
+          console.error(`스케줄 ${config.id} 결과 조회 오류:`, resultsError);
+          continue;
+        }
+
+      // 시트명 설정 (검색어 기준, 특수문자 제거, 중복 방지)
+      let baseSheetName = config.search_query.replace(/[\\\/\?\*\[\]:]/g, '').substring(0, 25);
+      if (!baseSheetName || baseSheetName.trim() === '') {
+        baseSheetName = `스케줄_${config.id}`;
       }
-
-      // 시트명 설정 (검색어 기준, 특수문자 제거)
-      const sheetName = config.search_query.replace(/[\\\/\?\*\[\]:]/g, '').substring(0, 31);
+      
+      let sheetName = baseSheetName;
+      let counter = 1;
+      while (usedSheetNames.has(sheetName)) {
+        sheetName = `${baseSheetName}_${counter}`;
+        counter++;
+        // 시트명 길이 제한 (31자)
+        if (sheetName.length > 31) {
+          sheetName = `${baseSheetName.substring(0, 25)}_${counter}`;
+        }
+      }
+      
+      usedSheetNames.add(sheetName);
       const worksheet = workbook.addWorksheet(sheetName);
 
       if (!results || results.length === 0) {
@@ -187,6 +207,12 @@ export async function GET(request: NextRequest) {
           productLink: result.product_link || ''
         });
       });
+      
+      } catch (sheetError) {
+        console.error(`스케줄 ${config.id} 시트 생성 오류:`, sheetError);
+        // 개별 시트 오류는 로그만 남기고 계속 진행
+        continue;
+      }
     }
 
     // 엑셀 파일 생성 (Buffer 형태로 생성하여 Node 응답과 호환)
