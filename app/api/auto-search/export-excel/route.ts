@@ -33,12 +33,14 @@ export async function GET(request: NextRequest) {
     // 쿼리 파라미터 파싱
     const { searchParams } = new URL(request.url);
     const configIdParam = searchParams.get('configId');
+    const configIdsParam = searchParams.get('configIds');
     const searchQuery = searchParams.get('searchQuery');
     const targetProduct = searchParams.get('targetProduct');
     const targetMall = searchParams.get('targetMall');
     const targetBrand = searchParams.get('targetBrand');
     
     const targetConfigId = configIdParam ? Number(configIdParam) : null;
+    const targetConfigIds = configIdsParam ? configIdsParam.split(',').map(id => Number(id.trim())).filter(id => !isNaN(id)) : null;
 
     // 스케줄 설정 조회 (필터 적용)
     let configsQuery = serverSupabase
@@ -49,23 +51,28 @@ export async function GET(request: NextRequest) {
     // 특정 스케줄 ID가 있으면 해당 스케줄만
     if (targetConfigId) {
       configsQuery = configsQuery.eq('id', targetConfigId);
+    } else if (targetConfigIds && targetConfigIds.length > 0) {
+      // 여러 스케줄 ID가 있으면 해당 스케줄들만 조회
+      configsQuery = configsQuery.in('id', targetConfigIds);
     } else {
       // 활성 스케줄만 조회
       configsQuery = configsQuery.eq('is_active', true);
     }
 
-    // 필터 적용
-    if (searchQuery) {
-      configsQuery = configsQuery.ilike('search_query', `%${searchQuery}%`);
-    }
-    if (targetProduct) {
-      configsQuery = configsQuery.ilike('target_product_name', `%${targetProduct}%`);
-    }
-    if (targetMall) {
-      configsQuery = configsQuery.ilike('target_mall_name', `%${targetMall}%`);
-    }
-    if (targetBrand) {
-      configsQuery = configsQuery.ilike('target_brand', `%${targetBrand}%`);
+    // 필터 적용 (configIds가 전달된 경우에는 이미 필터링된 결과이므로 추가 필터링 불필요)
+    if (!targetConfigIds || targetConfigIds.length === 0) {
+      if (searchQuery) {
+        configsQuery = configsQuery.ilike('search_query', `%${searchQuery}%`);
+      }
+      if (targetProduct) {
+        configsQuery = configsQuery.ilike('target_product_name', `%${targetProduct}%`);
+      }
+      if (targetMall) {
+        configsQuery = configsQuery.ilike('target_mall_name', `%${targetMall}%`);
+      }
+      if (targetBrand) {
+        configsQuery = configsQuery.ilike('target_brand', `%${targetBrand}%`);
+      }
     }
 
     const { data: configs, error: configsError } = await configsQuery as any;

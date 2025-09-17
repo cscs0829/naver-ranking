@@ -424,7 +424,7 @@ export default function AutoSearchDashboard() {
     }
   };
 
-  // 엑셀 내보내기 (필터 적용)
+  // 엑셀 내보내기 (현재 표시된 모든 스케줄)
   const handleExportToExcel = async () => {
     try {
       const requestUrl = new URL('/api/auto-search/export-excel', window.location.origin);
@@ -433,18 +433,10 @@ export default function AutoSearchDashboard() {
       if (selectedSchedule && selectedSchedule.config_id) {
         requestUrl.searchParams.set('configId', String(selectedSchedule.config_id));
       } else {
-        // 필터가 적용된 경우 필터 파라미터 추가
-        if (filters.searchQuery) {
-          requestUrl.searchParams.set('searchQuery', filters.searchQuery);
-        }
-        if (filters.targetProduct) {
-          requestUrl.searchParams.set('targetProduct', filters.targetProduct);
-        }
-        if (filters.targetMall) {
-          requestUrl.searchParams.set('targetMall', filters.targetMall);
-        }
-        if (filters.targetBrand) {
-          requestUrl.searchParams.set('targetBrand', filters.targetBrand);
+        // 현재 표시된 모든 스케줄의 ID를 전달 (필터링된 결과)
+        const visibleConfigIds = filteredSchedules.map(schedule => schedule.config_id).join(',');
+        if (visibleConfigIds) {
+          requestUrl.searchParams.set('configIds', visibleConfigIds);
         }
       }
       
