@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+// Node.js 런타임에서 실행 (XLSX 등 Node 전용 기능 사용을 위해 명시)
+export const runtime = 'nodejs';
 import { supabase } from '@/utils/supabase';
 
 // XLSX 라이브러리를 동적으로 import
@@ -143,9 +146,9 @@ export async function GET(request: NextRequest) {
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     }
 
-    // 엑셀 파일 생성
-    const excelBuffer = XLSX.write(workbook, { 
-      type: 'buffer', 
+    // 엑셀 파일 생성 (ArrayBuffer 형태로 생성하여 Web Response와 호환)
+    const excelArrayBuffer = XLSX.write(workbook, {
+      type: 'array',
       bookType: 'xlsx',
       compression: true
     });
@@ -155,7 +158,8 @@ export async function GET(request: NextRequest) {
     headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     headers.set('Content-Disposition', `attachment; filename="auto_search_results_${new Date().toISOString().split('T')[0]}.xlsx"`);
 
-    return new NextResponse(excelBuffer, {
+    // ArrayBuffer 또는 Uint8Array를 본문으로 반환
+    return new Response(excelArrayBuffer, {
       status: 200,
       headers
     });

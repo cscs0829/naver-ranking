@@ -107,7 +107,7 @@ export async function GET() {
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
-    // 각 설정별로 최신 순위 결과 조회
+    // 각 설정별로 최신 순위 결과 조회 (최신 1개, 최소 컬럼만)
     let scheduleRankingsData: any = {};
     
     if (allActiveConfigs && allActiveConfigs.length > 0) {
@@ -115,26 +115,19 @@ export async function GET() {
         const { data: configResults, error: resultsError } = await supabase
           .from('auto_search_results')
           .select(`
-            config_id,
-            search_query,
-            target_product_name,
-            target_mall_name,
-            target_brand,
-            product_title,
-            mall_name,
-            brand,
             total_rank,
             page,
             rank_in_page,
+            product_title,
+            mall_name,
+            brand,
             price,
             product_link,
-            created_at,
-            check_date,
-            is_exact_match,
-            match_confidence
+            created_at
           `)
           .eq('config_id', config.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (!resultsError && configResults) {
           // 결과가 있는 설정
@@ -156,10 +149,7 @@ export async function GET() {
                 mall_name: result.mall_name,
                 brand: result.brand,
                 price: result.price,
-                product_link: result.product_link,
-                check_date: result.check_date,
-                is_exact_match: result.is_exact_match,
-                match_confidence: result.match_confidence
+                product_link: result.product_link
               }))
             };
           } else {
