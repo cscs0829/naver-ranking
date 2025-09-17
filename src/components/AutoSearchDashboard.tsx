@@ -433,11 +433,17 @@ export default function AutoSearchDashboard() {
       if (selectedSchedule && selectedSchedule.config_id) {
         requestUrl.searchParams.set('configId', String(selectedSchedule.config_id));
       } else {
-        // 현재 표시된 모든 스케줄의 ID를 전달 (필터링된 결과)
-        const visibleConfigIds = filteredSchedules.map(schedule => schedule.config_id).join(',');
-        if (visibleConfigIds) {
-          requestUrl.searchParams.set('configIds', visibleConfigIds);
+        // 필터가 적용된 경우에만 현재 표시된 스케줄 ID를 전달
+        // 아무것도 입력하지 않은 경우는 configIds를 전달하지 않아 모든 활성 스케줄을 가져옴
+        const hasActiveFilters = filters.searchQuery || filters.targetProduct || filters.targetMall || filters.targetBrand;
+        
+        if (hasActiveFilters) {
+          const visibleConfigIds = filteredSchedules.map(schedule => schedule.config_id).join(',');
+          if (visibleConfigIds) {
+            requestUrl.searchParams.set('configIds', visibleConfigIds);
+          }
         }
+        // 필터가 없으면 configIds를 전달하지 않음 (API에서 모든 활성 스케줄 조회)
       }
       
       const response = await fetch(requestUrl.toString());
