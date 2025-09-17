@@ -156,9 +156,9 @@ export async function GET(request: NextRequest) {
       XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
     }
 
-    // 엑셀 파일 생성 (ArrayBuffer 형태로 생성하여 Web Response와 호환)
-    const excelArrayBuffer = XLSX.write(workbook, {
-      type: 'array',
+    // 엑셀 파일 생성 (Buffer 형태로 생성하여 Node 응답과 호환)
+    const excelBuffer = XLSX.write(workbook, {
+      type: 'buffer',
       bookType: 'xlsx',
       compression: true
     });
@@ -168,8 +168,8 @@ export async function GET(request: NextRequest) {
     headers.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     headers.set('Content-Disposition', `attachment; filename="auto_search_results_${new Date().toISOString().split('T')[0]}.xlsx"`);
 
-    // ArrayBuffer 또는 Uint8Array를 본문으로 반환
-    return new Response(excelArrayBuffer, {
+    // Buffer 본문으로 반환 (NextResponse 사용)
+    return new NextResponse(excelBuffer, {
       status: 200,
       headers
     });
