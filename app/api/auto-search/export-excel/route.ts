@@ -15,9 +15,10 @@ let ExcelJS: any;
 
 export async function GET(request: NextRequest) {
   try {
-    // ExcelJS 라이브러리 동적 import
+    // ExcelJS 라이브러리 동적 import (CJS/ESM 호환)
     if (!ExcelJS) {
-      ExcelJS = await import('exceljs');
+      const exceljsModule: any = await import('exceljs');
+      ExcelJS = exceljsModule?.default ?? exceljsModule;
     }
 
     if (!serverSupabase) {
