@@ -970,9 +970,17 @@ export default function AutoSearchDashboard() {
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                 <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
-                    <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white break-words">
-                      {schedule.config_name}
-                    </h4>
+                    <div className="break-words">
+                      <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">
+                        {schedule.config_name}
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        검색어: "{schedule.search_query}"
+                        {schedule.target_product_name && (
+                          <span> | 대상상품: "{schedule.target_product_name}"</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
