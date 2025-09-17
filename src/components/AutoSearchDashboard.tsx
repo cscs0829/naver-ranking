@@ -1159,15 +1159,11 @@ export default function AutoSearchDashboard() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {config.run_count}회 실행
-                  </p>
-                  <p className="text-xs text-green-600 dark:text-green-400">
-                    성공률 {config.success_rate}%
-                  </p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{config.run_count}회 실행</p>
+                  <p className="text-xs text-green-600 dark:text-green-400">성공률 {config.success_rate}%</p>
                 </div>
               </div>
-            ))}
+            ))
           )}
         </div>
       </motion.div>
@@ -1504,9 +1500,9 @@ export default function AutoSearchDashboard() {
                                     </div>
                                     <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
                                   </div>
-                                </div>
-                                ))
-                              )}
+              </div>
+            ))
+          )}
                             </div>
                           </div>
                         ))}
