@@ -20,6 +20,17 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+    const limitParam = parseInt(searchParams.get('limit') || '300');
+    const sinceDaysParam = parseInt(searchParams.get('sinceDays') || '0');
+    const queryParam = searchParams.get('q') || '';
+    const mallParam = searchParams.get('mall') || '';
+    const brandParam = searchParams.get('brand') || '';
+    const exactOnlyParam = searchParams.get('exactOnly') === 'true';
+    const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const pageSizeParam = Math.max(1, Math.min(500, parseInt(searchParams.get('pageSize') || '200')));
+
     const configId = parseInt(params.id);
     
     if (isNaN(configId)) {
@@ -43,8 +54,8 @@ export async function GET(
       );
     }
 
-    // 해당 설정의 모든 검색 결과를 시간순으로 조회
-    const { data: results, error: resultsError } = await supabase
+    // 해당 설정의 검색 결과 조회 (최신 우선, 서버측 필터/페이징 적용)
+    let resultsQuery = supabase
       .from('auto_search_results')
       .select(`
         id,
@@ -63,6 +74,37 @@ export async function GET(
       `)
       .eq('config_id', configId)
       .order('created_at', { ascending: false });
+
+    if (sinceDaysParam > 0) {
+      const since = new Date();
+      since.setDate(since.getDate() - sinceDaysParam);
+      resultsQuery = resultsQuery.gte('created_at', since.toISOString());
+    }
+
+    if (queryParam) {
+      resultsQuery = resultsQuery.ilike('product_title', `%${queryParam}%`);
+    }
+    if (mallParam) {
+      resultsQuery = resultsQuery.ilike('mall_name', `%${mallParam}%`);
+    }
+    if (brandParam) {
+      resultsQuery = resultsQuery.ilike('brand', `%${brandParam}%`);
+    }
+    if (exactOnlyParam) {
+      resultsQuery = resultsQuery.eq('is_exact_match', true);
+    }
+
+    // 우선 페이지네이션 적용 (limit/offset 우선), 없으면 상한 limit 적용
+    let paginatedQuery = resultsQuery;
+    if (searchParams.has('page') || searchParams.has('pageSize')) {
+      const from = (pageParam - 1) * pageSizeParam;
+      const to = from + pageSizeParam - 1;
+      paginatedQuery = paginatedQuery.range(from, to);
+    } else {
+      paginatedQuery = paginatedQuery.limit(Math.min(Math.max(1, limitParam), 1000));
+    }
+
+    const { data: results, error: resultsError, count } = await paginatedQuery;
 
     if (resultsError) {
       console.error('검색 결과 조회 오류:', resultsError);
