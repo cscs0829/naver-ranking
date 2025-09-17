@@ -427,7 +427,11 @@ export default function AutoSearchDashboard() {
   // 엑셀 내보내기
   const handleExportToExcel = async () => {
     try {
-      const response = await fetch('/api/auto-search/export-excel');
+      const requestUrl = new URL('/api/auto-search/export-excel', window.location.origin);
+      if (selectedSchedule && selectedSchedule.config_id) {
+        requestUrl.searchParams.set('configId', String(selectedSchedule.config_id));
+      }
+      const response = await fetch(requestUrl.toString());
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -439,13 +443,13 @@ export default function AutoSearchDashboard() {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
       });
       
-      const url = window.URL.createObjectURL(blob);
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = blobUrl;
       a.download = `자동검색_결과_${new Date().toISOString().split('T')[0]}.xlsx`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(a);
       toast('엑셀 파일이 다운로드되었습니다.', 'success');
     } catch (error) {

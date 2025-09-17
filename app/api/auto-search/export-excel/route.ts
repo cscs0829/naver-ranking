@@ -21,12 +21,22 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // 모든 활성화된 스케줄 설정 조회
-    const { data: configs, error: configsError } = await supabase
+    // 특정 스케줄만 내보내기 위한 쿼리 파라미터
+    const { searchParams } = new URL(request.url);
+    const configIdParam = searchParams.get('configId');
+    const targetConfigId = configIdParam ? Number(configIdParam) : null;
+
+    // 스케줄 설정 조회 (특정 ID가 있으면 해당 스케줄만, 없으면 활성 스케줄 전부)
+    const baseQuery = supabase
       .from('auto_search_configs')
       .select('*')
-      .eq('is_active', true)
       .order('search_query');
+
+    const configsQuery = targetConfigId
+      ? baseQuery.eq('id', targetConfigId)
+      : baseQuery.eq('is_active', true);
+
+    const { data: configs, error: configsError } = await configsQuery as any;
 
     if (configsError) {
       console.error('설정 조회 오류:', configsError);
