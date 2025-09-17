@@ -113,7 +113,6 @@ export default function AutoSearchDashboard() {
     targetMall: '',
     targetBrand: ''
   });
-  const [showFilters, setShowFilters] = useState(false);
   const [filteredSchedules, setFilteredSchedules] = useState<any[]>([]);
   
   // 히스토리 모달 필터 상태
@@ -856,157 +855,6 @@ export default function AutoSearchDashboard() {
       </div>
 
       {/* 필터 섹션 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-6 border border-slate-200 dark:border-slate-600"
-      >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-3">
-              <Filter className="w-4 h-4 text-white" />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              스케줄 필터
-            </h3>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-3 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
-          >
-            <span>필터</span>
-            <motion.div
-              animate={{ rotate: showFilters ? 180 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronDown className="w-5 h-5" />
-            </motion.div>
-          </motion.button>
-        </div>
-
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 space-y-6 overflow-hidden"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Search className="w-4 h-4 mr-2 text-blue-600" />
-                    검색어
-                  </label>
-                  <input
-                    type="text"
-                    id="searchQueryFilter"
-                    value={filters.searchQuery}
-                    onChange={(e) => handleFilterChange({ ...filters, searchQuery: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="검색어로 필터링 (예: 푸꾸옥)"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label htmlFor="targetProductFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <Target className="w-4 h-4 mr-2 text-purple-600" />
-                    대상 상품
-                  </label>
-                  <input
-                    type="text"
-                    id="targetProductFilter"
-                    value={filters.targetProduct}
-                    onChange={(e) => handleFilterChange({ ...filters, targetProduct: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="대상 상품명으로 필터링 (예: 패키지 여행)"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label htmlFor="targetMallFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <BarChart3 className="w-4 h-4 mr-2 text-green-600" />
-                    대상 쇼핑몰
-                  </label>
-                  <input
-                    type="text"
-                    id="targetMallFilter"
-                    value={filters.targetMall}
-                    onChange={(e) => handleFilterChange({ ...filters, targetMall: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-green-100 dark:focus:ring-green-900/50 focus:border-green-500 dark:focus:border-green-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="대상 쇼핑몰명으로 필터링"
-                  />
-                </div>
-                <div className="space-y-3">
-                  <label htmlFor="targetBrandFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
-                    대상 브랜드
-                  </label>
-                  <input
-                    type="text"
-                    id="targetBrandFilter"
-                    value={filters.targetBrand}
-                    onChange={(e) => handleFilterChange({ ...filters, targetBrand: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="대상 브랜드명으로 필터링"
-                  />
-                </div>
-              </div>
-              
-              {/* 필터 액션 버튼들 */}
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  {stats && (
-                    <>
-                      <motion.span
-                        key={applyFilters(stats.scheduleRankings).length}
-                        initial={{ opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="inline-flex items-center"
-                      >
-                        {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
-                        {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
-                      </motion.span>
-                      {Object.values(filters).some(f => f) && (
-                        <motion.span
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-                          className="px-2 py-0.5 rounded-full text-xs bg-blue-600 text-white shadow"
-                        >
-                          필터 적용됨
-                        </motion.span>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="flex space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleExportToExcel}
-                    className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300 font-semibold flex items-center gap-2"
-                  >
-                    <FileSpreadsheet className="w-4 h-4" />
-                    엑셀 내보내기
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={resetFilters}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold"
-                  >
-                    초기화
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
 
       {/* 스케줄별 순위 결과 */}
       <motion.div
@@ -1015,10 +863,101 @@ export default function AutoSearchDashboard() {
         transition={{ delay: 0.4 }}
         className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
       >
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5" />
-          스케줄별 순위 결과
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            스케줄별 순위 결과
+          </h3>
+        </div>
+
+        {/* 스케줄 필터 */}
+        <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
+          
+          {/* 검색어 입력 */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={filters.searchQuery}
+              onChange={(e) => handleFilterChange({ ...filters, searchQuery: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              placeholder="검색어로 필터링"
+            />
+          </div>
+
+          {/* 고급 필터 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <input
+              type="text"
+              value={filters.targetProduct}
+              onChange={(e) => handleFilterChange({ ...filters, targetProduct: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              placeholder="대상 상품명으로 필터링"
+            />
+            <input
+              type="text"
+              value={filters.targetMall}
+              onChange={(e) => handleFilterChange({ ...filters, targetMall: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              placeholder="대상 쇼핑몰명으로 필터링"
+            />
+            <input
+              type="text"
+              value={filters.targetBrand}
+              onChange={(e) => handleFilterChange({ ...filters, targetBrand: e.target.value })}
+              className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+              placeholder="대상 브랜드명으로 필터링"
+            />
+          </div>
+          
+          {/* 필터 액션 버튼들 */}
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
+              {stats && (
+                <>
+                  <motion.span
+                    key={applyFilters(stats.scheduleRankings).length}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="inline-flex items-center"
+                  >
+                    {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
+                    {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
+                  </motion.span>
+                  {Object.values(filters).some(f => f) && (
+                    <motion.span
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                      className="px-2 py-0.5 rounded-full text-xs bg-blue-600 text-white shadow"
+                    >
+                      필터 적용됨
+                    </motion.span>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleExportToExcel}
+                className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300 font-semibold flex items-center gap-2"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                엑셀 내보내기
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={resetFilters}
+                className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold"
+              >
+                초기화
+              </motion.button>
+            </div>
+          </div>
+        </div>
         <motion.div layout className="space-y-6">
           {stats.scheduleRankings.length === 0 ? (
             <div className="text-center py-8">
