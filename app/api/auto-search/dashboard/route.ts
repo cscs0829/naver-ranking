@@ -152,8 +152,20 @@ export async function GET() {
                 product_link: result.product_link
               }))
             };
+          } else {
+            // 결과가 없는 설정 (빈 상태)
+            scheduleRankingsData[config.id] = {
+              config_id: config.id,
+              config_name: config.name,
+              search_query: config.search_query,
+              target_product_name: config.target_product_name,
+              target_mall_name: config.target_mall_name,
+              target_brand: config.target_brand,
+              is_active: config.is_active,
+              latest_check: config.last_run_at || config.created_at,
+              rankings: []
+            };
           }
-          // 결과가 없는 설정은 scheduleRankingsData에 포함하지 않음 (히스토리가 없는 스케줄 숨김)
         }
       }
     }
