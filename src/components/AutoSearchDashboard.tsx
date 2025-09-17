@@ -19,7 +19,10 @@ import {
   RefreshCw,
   X,
   History,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Filter,
+  ChevronDown
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { toast as sonnerToast } from 'sonner';
@@ -99,6 +102,25 @@ export default function AutoSearchDashboard() {
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
   const [lastCheckTime, setLastCheckTime] = useState<string>(new Date().toISOString());
   const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 필터 상태 추가
+  const [filters, setFilters] = useState({
+    searchQuery: '',
+    targetProduct: '',
+    targetMall: '',
+    targetBrand: ''
+  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [filteredSchedules, setFilteredSchedules] = useState<any[]>([]);
+  
+  // 히스토리 모달 필터 상태
+  const [historyFilters, setHistoryFilters] = useState({
+    searchQuery: '',
+    targetProduct: '',
+    targetMall: '',
+    targetBrand: ''
+  });
+  const [showHistoryFilters, setShowHistoryFilters] = useState(false);
 
   // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
@@ -214,6 +236,94 @@ export default function AutoSearchDashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 필터링 로직
+  const applyFilters = (schedules: any[]) => {
+    if (!schedules) return [];
+    
+    return schedules.filter(schedule => {
+      // 검색어 필터
+      if (filters.searchQuery && !schedule.search_query.toLowerCase().includes(filters.searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 상품 필터
+      if (filters.targetProduct && !schedule.target_product_name?.toLowerCase().includes(filters.targetProduct.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 몰 필터
+      if (filters.targetMall && !schedule.target_mall_name?.toLowerCase().includes(filters.targetMall.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 브랜드 필터
+      if (filters.targetBrand && !schedule.target_brand?.toLowerCase().includes(filters.targetBrand.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // 필터 적용
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+  };
+
+  // 필터 초기화
+  const resetFilters = () => {
+    setFilters({
+      searchQuery: '',
+      targetProduct: '',
+      targetMall: '',
+      targetBrand: ''
+    });
+  };
+
+  // 히스토리 필터링 로직
+  const applyHistoryFilters = (results: any[]) => {
+    if (!results) return [];
+    
+    return results.filter(result => {
+      // 검색어 필터
+      if (historyFilters.searchQuery && !result.product_title?.toLowerCase().includes(historyFilters.searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 상품 필터
+      if (historyFilters.targetProduct && !result.product_title?.toLowerCase().includes(historyFilters.targetProduct.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 몰 필터
+      if (historyFilters.targetMall && !result.mall_name?.toLowerCase().includes(historyFilters.targetMall.toLowerCase())) {
+        return false;
+      }
+      
+      // 대상 브랜드 필터
+      if (historyFilters.targetBrand && !result.brand?.toLowerCase().includes(historyFilters.targetBrand.toLowerCase())) {
+        return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // 히스토리 필터 적용
+  const handleHistoryFilterChange = (newFilters: any) => {
+    setHistoryFilters(newFilters);
+  };
+
+  // 히스토리 필터 초기화
+  const resetHistoryFilters = () => {
+    setHistoryFilters({
+      searchQuery: '',
+      targetProduct: '',
+      targetMall: '',
+      targetBrand: ''
+    });
   };
 
   // DB 변경 확인
@@ -678,6 +788,132 @@ export default function AutoSearchDashboard() {
         </motion.div>
       </div>
 
+      {/* 필터 섹션 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl p-6 border border-slate-200 dark:border-slate-600"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center mr-3">
+              <Filter className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              스케줄 필터
+            </h3>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-3 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold shadow-md hover:shadow-lg"
+          >
+            <span>필터</span>
+            <motion.div
+              animate={{ rotate: showFilters ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </motion.div>
+          </motion.button>
+        </div>
+
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-600 space-y-6 overflow-hidden"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label htmlFor="searchQueryFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Search className="w-4 h-4 mr-2 text-blue-600" />
+                    검색어
+                  </label>
+                  <input
+                    type="text"
+                    id="searchQueryFilter"
+                    value={filters.searchQuery}
+                    onChange={(e) => handleFilterChange({ ...filters, searchQuery: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    placeholder="검색어로 필터링 (예: 푸꾸옥)"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label htmlFor="targetProductFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <Target className="w-4 h-4 mr-2 text-purple-600" />
+                    대상 상품
+                  </label>
+                  <input
+                    type="text"
+                    id="targetProductFilter"
+                    value={filters.targetProduct}
+                    onChange={(e) => handleFilterChange({ ...filters, targetProduct: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    placeholder="대상 상품명으로 필터링 (예: 패키지 여행)"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label htmlFor="targetMallFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <BarChart3 className="w-4 h-4 mr-2 text-green-600" />
+                    대상 쇼핑몰
+                  </label>
+                  <input
+                    type="text"
+                    id="targetMallFilter"
+                    value={filters.targetMall}
+                    onChange={(e) => handleFilterChange({ ...filters, targetMall: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-green-100 dark:focus:ring-green-900/50 focus:border-green-500 dark:focus:border-green-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    placeholder="대상 쇼핑몰명으로 필터링"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label htmlFor="targetBrandFilter" className="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
+                    대상 브랜드
+                  </label>
+                  <input
+                    type="text"
+                    id="targetBrandFilter"
+                    value={filters.targetBrand}
+                    onChange={(e) => handleFilterChange({ ...filters, targetBrand: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                    placeholder="대상 브랜드명으로 필터링"
+                  />
+                </div>
+              </div>
+              
+              {/* 필터 액션 버튼들 */}
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  {stats && (
+                    <span>
+                      {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
+                      {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
+                    </span>
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={resetFilters}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 font-semibold"
+                  >
+                    초기화
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
       {/* 스케줄별 순위 결과 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -707,8 +943,24 @@ export default function AutoSearchDashboard() {
                 </ul>
               </div>
             </div>
+          ) : applyFilters(stats.scheduleRankings).length === 0 ? (
+            <div className="text-center py-8">
+              <Filter className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <p className="text-gray-500 text-lg mb-2">필터 조건에 맞는 결과가 없습니다</p>
+              <p className="text-gray-400 text-sm mb-4">
+                다른 필터 조건을 시도해보거나 필터를 초기화해보세요.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={resetFilters}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                필터 초기화
+              </motion.button>
+            </div>
           ) : (
-            stats.scheduleRankings.map((schedule) => (
+            applyFilters(stats.scheduleRankings).map((schedule) => (
               <div 
                 key={schedule.config_id} 
                 className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg transition-all duration-200 bg-white dark:bg-slate-800"
@@ -960,8 +1212,122 @@ export default function AutoSearchDashboard() {
               </button>
             </div>
 
+            {/* 히스토리 필터 */}
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">결과 필터</h4>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowHistoryFilters(!showHistoryFilters)}
+                  className="flex items-center space-x-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm"
+                >
+                  <span>필터</span>
+                  <motion.div
+                    animate={{ rotate: showHistoryFilters ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
+                </motion.button>
+              </div>
+
+              <AnimatePresence>
+                {showHistoryFilters && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="space-y-4 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label htmlFor="historySearchQueryFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <Search className="w-4 h-4 mr-2 text-blue-600" />
+                          상품명 검색
+                        </label>
+                        <input
+                          type="text"
+                          id="historySearchQueryFilter"
+                          value={historyFilters.searchQuery}
+                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, searchQuery: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                          placeholder="상품명으로 필터링 (예: 푸꾸옥)"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="historyTargetProductFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <Target className="w-4 h-4 mr-2 text-purple-600" />
+                          대상 상품
+                        </label>
+                        <input
+                          type="text"
+                          id="historyTargetProductFilter"
+                          value={historyFilters.targetProduct}
+                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetProduct: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                          placeholder="대상 상품명으로 필터링 (예: 패키지 여행)"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="historyTargetMallFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <BarChart3 className="w-4 h-4 mr-2 text-green-600" />
+                          쇼핑몰
+                        </label>
+                        <input
+                          type="text"
+                          id="historyTargetMallFilter"
+                          value={historyFilters.targetMall}
+                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetMall: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-100 dark:focus:ring-green-900/50 focus:border-green-500 dark:focus:border-green-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                          placeholder="쇼핑몰명으로 필터링"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="historyTargetBrandFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                          <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
+                          브랜드
+                        </label>
+                        <input
+                          type="text"
+                          id="historyTargetBrandFilter"
+                          value={historyFilters.targetBrand}
+                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetBrand: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
+                          placeholder="브랜드명으로 필터링"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {historyData && (
+                          <span>
+                            {applyHistoryFilters(historyData.history.flatMap((day: any) => day.executions.flatMap((exec: any) => exec.results))).length}개 결과 표시 중
+                            {Object.values(historyFilters).some(f => f) && ` (전체 ${historyData.history.flatMap((day: any) => day.executions.flatMap((exec: any) => exec.results)).length}개 중)`}
+                          </span>
+                        )}
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={resetHistoryFilters}
+                        className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm"
+                      >
+                        초기화
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
             {/* 히스토리 내용 */}
-            <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-80px)] overscroll-contain touch-pan-y">
+            <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-200px)] overscroll-contain touch-pan-y">
             {historyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -1017,7 +1383,7 @@ export default function AutoSearchDashboard() {
                             </div>
                             
                             <div className="space-y-2">
-                              {execution.results.map((result: any, resultIndex: number) => (
+                              {applyHistoryFilters(execution.results).map((result: any, resultIndex: number) => (
                                 <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                   <div className="flex items-center justify-between sm:hidden">
                                     <span className="text-sm font-medium text-gray-900 dark:text-white">
