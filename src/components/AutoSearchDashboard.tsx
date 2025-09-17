@@ -4,8 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BarChart3, 
-  TrendingUp, 
   Clock, 
   CheckCircle, 
   XCircle, 
@@ -19,10 +17,7 @@ import {
   RefreshCw,
   X,
   History,
-  ExternalLink,
-  Search,
-  Filter,
-  ChevronDown
+  ExternalLink
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import { toast as sonnerToast } from 'sonner';
@@ -85,7 +80,11 @@ interface DashboardStats {
   }>;
 }
 
-export default function AutoSearchDashboard() {
+interface AutoSearchDashboardProps {
+  onDataChange?: () => void; // 데이터 변경 시 콜백
+}
+
+export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboardProps = {}) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -112,14 +111,6 @@ export default function AutoSearchDashboard() {
   });
   const [filteredSchedules, setFilteredSchedules] = useState<any[]>([]);
   
-  // 히스토리 모달 필터 상태
-  const [historyFilters, setHistoryFilters] = useState({
-    searchQuery: '',
-    targetProduct: '',
-    targetMall: '',
-    targetBrand: ''
-  });
-  const [showHistoryFilters, setShowHistoryFilters] = useState(false);
 
   // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
@@ -296,48 +287,6 @@ export default function AutoSearchDashboard() {
   };
 
   // 히스토리 필터링 로직
-  const applyHistoryFilters = (results: any[]) => {
-    if (!results) return [];
-    
-    return results.filter(result => {
-      // 검색어 필터
-      if (historyFilters.searchQuery && !result.product_title?.toLowerCase().includes(historyFilters.searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      // 대상 상품 필터
-      if (historyFilters.targetProduct && !result.product_title?.toLowerCase().includes(historyFilters.targetProduct.toLowerCase())) {
-        return false;
-      }
-      
-      // 대상 몰 필터
-      if (historyFilters.targetMall && !result.mall_name?.toLowerCase().includes(historyFilters.targetMall.toLowerCase())) {
-        return false;
-      }
-      
-      // 대상 브랜드 필터
-      if (historyFilters.targetBrand && !result.brand?.toLowerCase().includes(historyFilters.targetBrand.toLowerCase())) {
-        return false;
-      }
-      
-      return true;
-    });
-  };
-
-  // 히스토리 필터 적용
-  const handleHistoryFilterChange = (newFilters: any) => {
-    setHistoryFilters(newFilters);
-  };
-
-  // 히스토리 필터 초기화
-  const resetHistoryFilters = () => {
-    setHistoryFilters({
-      searchQuery: '',
-      targetProduct: '',
-      targetMall: '',
-      targetBrand: ''
-    });
-  };
 
 
   // 수동 새로고침
@@ -363,6 +312,10 @@ export default function AutoSearchDashboard() {
       if (data.success) {
         sonnerToast.success('모든 자동검색 데이터가 삭제되었습니다. (설정은 유지됨)');
         await fetchStats();
+        // 부모 컴포넌트에 데이터 변경 알림
+        if (onDataChange) {
+          onDataChange();
+        }
       } else {
         sonnerToast.error('오류가 발생했습니다: ' + data.error);
       }
@@ -374,15 +327,25 @@ export default function AutoSearchDashboard() {
 
   // 스케줄별 데이터 삭제 확인
   const handleDeleteScheduleDataClick = (configId: number, configName: string) => {
-    setDeleteTargetSchedule({ configId, configName });
+    // 안전한 값으로 설정 (null/undefined 방지)
+    const safeConfigId = configId || 0;
+    const safeConfigName = configName || 'Unknown';
+    
+    console.log('삭제 확인 다이얼로그 표시:', { configId: safeConfigId, configName: safeConfigName });
+    setDeleteTargetSchedule({ configId: safeConfigId, configName: safeConfigName });
     setShowDeleteScheduleDialog(true);
   };
 
   // 스케줄별 데이터 삭제 실행
   const handleDeleteScheduleData = async () => {
-    if (!deleteTargetSchedule) return;
+    if (!deleteTargetSchedule || !deleteTargetSchedule.configId) {
+      sonnerToast.error('삭제할 스케줄 정보가 없습니다.');
+      setShowDeleteScheduleDialog(false); // 다이얼로그 닫기
+      return;
+    }
 
     try {
+      console.log('스케줄 삭제 시작:', deleteTargetSchedule.configId);
       const response = await fetch(`/api/auto-search/delete-schedule/${deleteTargetSchedule.configId}`, {
         method: 'DELETE',
       });
@@ -396,12 +359,20 @@ export default function AutoSearchDashboard() {
           closeHistoryModal();
         }
         await fetchStats();
+        // 부모 컴포넌트에 데이터 변경 알림
+        if (onDataChange) {
+          onDataChange();
+        }
       } else {
         sonnerToast.error('오류가 발생했습니다: ' + data.error);
       }
     } catch (error) {
       console.error('스케줄 데이터 삭제 오류:', error);
       sonnerToast.error('데이터를 삭제할 수 없습니다.');
+    } finally {
+      // 삭제 완료 후 다이얼로그 닫기 및 상태 초기화
+      setShowDeleteScheduleDialog(false);
+      setDeleteTargetSchedule(null);
     }
   };
 
@@ -787,7 +758,7 @@ export default function AutoSearchDashboard() {
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalResults.toLocaleString()}</p>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
-              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
           <div className="mt-2">
@@ -922,7 +893,7 @@ export default function AutoSearchDashboard() {
             </div>
           ) : applyFilters(stats.scheduleRankings).length === 0 ? (
             <div className="text-center py-8">
-              <Filter className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p className="text-gray-500 text-lg mb-2">필터 조건에 맞는 결과가 없습니다</p>
               <p className="text-gray-400 text-sm mb-4">
                 다른 필터 조건을 시도해보거나 필터를 초기화해보세요.
@@ -978,7 +949,7 @@ export default function AutoSearchDashboard() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name);
+                        handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown');
                       }}
                       className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
                     >
@@ -1071,7 +1042,7 @@ export default function AutoSearchDashboard() {
         className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
       >
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5" />
+          <Target className="w-5 h-5" />
           상위 설정
         </h3>
         <div className="space-y-3">
@@ -1201,6 +1172,13 @@ export default function AutoSearchDashboard() {
                   엑셀 내보내기
                 </button>
                 <button
+                  onClick={() => handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name)}
+                  className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  삭제
+                </button>
+                <button
                   onClick={closeHistoryModal}
                   className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
                 >
@@ -1209,119 +1187,6 @@ export default function AutoSearchDashboard() {
               </div>
             </div>
 
-            {/* 히스토리 필터 */}
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white">결과 필터</h4>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowHistoryFilters(!showHistoryFilters)}
-                  className="flex items-center space-x-2 px-3 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm"
-                >
-                  <span>필터</span>
-                  <motion.div
-                    animate={{ rotate: showHistoryFilters ? 180 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <ChevronDown className="w-4 h-4" />
-                  </motion.div>
-                </motion.button>
-              </div>
-
-              <AnimatePresence>
-                {showHistoryFilters && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
-                    className="space-y-4 overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label htmlFor="historySearchQueryFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                          <Search className="w-4 h-4 mr-2 text-blue-600" />
-                          상품명 검색
-                        </label>
-                        <input
-                          type="text"
-                          id="historySearchQueryFilter"
-                          value={historyFilters.searchQuery}
-                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, searchQuery: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
-                          placeholder="상품명으로 필터링 (예: 푸꾸옥)"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="historyTargetProductFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                          <Target className="w-4 h-4 mr-2 text-purple-600" />
-                          대상 상품
-                        </label>
-                        <input
-                          type="text"
-                          id="historyTargetProductFilter"
-                          value={historyFilters.targetProduct}
-                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetProduct: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-purple-100 dark:focus:ring-purple-900/50 focus:border-purple-500 dark:focus:border-purple-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
-                          placeholder="대상 상품명으로 필터링 (예: 패키지 여행)"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="historyTargetMallFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                          <BarChart3 className="w-4 h-4 mr-2 text-green-600" />
-                          쇼핑몰
-                        </label>
-                        <input
-                          type="text"
-                          id="historyTargetMallFilter"
-                          value={historyFilters.targetMall}
-                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetMall: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-green-100 dark:focus:ring-green-900/50 focus:border-green-500 dark:focus:border-green-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
-                          placeholder="쇼핑몰명으로 필터링"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label htmlFor="historyTargetBrandFilter" className="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
-                          <TrendingUp className="w-4 h-4 mr-2 text-orange-600" />
-                          브랜드
-                        </label>
-                        <input
-                          type="text"
-                          id="historyTargetBrandFilter"
-                          value={historyFilters.targetBrand}
-                          onChange={(e) => handleHistoryFilterChange({ ...historyFilters, targetBrand: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-200 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-orange-100 dark:focus:ring-orange-900/50 focus:border-orange-500 dark:focus:border-orange-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
-                          placeholder="브랜드명으로 필터링"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {historyData && (
-                          <span>
-                            {applyHistoryFilters(historyData.history.flatMap((day: any) => day.executions.flatMap((exec: any) => exec.results))).length}개 결과 표시 중
-                            {Object.values(historyFilters).some(f => f) && ` (전체 ${historyData.history.flatMap((day: any) => day.executions.flatMap((exec: any) => exec.results)).length}개 중)`}
-                          </span>
-                        )}
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={resetHistoryFilters}
-                        className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-300 text-sm"
-                      >
-                        초기화
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* 히스토리 내용 */}
             <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-200px)] overscroll-contain touch-pan-y">
@@ -1337,30 +1202,8 @@ export default function AutoSearchDashboard() {
                     <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p className="text-gray-500 dark:text-gray-400">실행 히스토리가 없습니다.</p>
                   </div>
-                ) : historyData.history.every((day: any) => 
-                    day.executions.every((exec: any) => 
-                      applyHistoryFilters(exec.results).length === 0
-                    )
-                  ) && Object.values(historyFilters).some(f => f) ? (
-                  <div className="text-center py-12">
-                    <Filter className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-500 dark:text-gray-400">필터 조건에 맞는 결과가 없습니다.</p>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={resetHistoryFilters}
-                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      필터 초기화
-                    </motion.button>
-                  </div>
                 ) : (
                   historyData.history
-                    .filter((dayData: any) => 
-                      dayData.executions.some((exec: any) => 
-                        applyHistoryFilters(exec.results).length > 0
-                      )
-                    )
                     .map((dayData: any, dayIndex: number) => (
                     <div key={dayIndex} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-800">
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -1376,9 +1219,6 @@ export default function AutoSearchDashboard() {
                       
                       <div className="space-y-4">
                         {dayData.executions
-                          .filter((execution: any) => 
-                            applyHistoryFilters(execution.results).length > 0
-                          )
                           .map((execution: any, execIndex: number) => (
                           <div key={execIndex} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
@@ -1402,19 +1242,17 @@ export default function AutoSearchDashboard() {
                                 </span>
                               </div>
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {applyHistoryFilters(execution.results).length}개 상품 표시
-                                {Object.values(historyFilters).some(f => f) && ` (전체 ${execution.results.length}개 중)`}
+                                {execution.results.length}개 상품 표시
                               </span>
                             </div>
                             
                             <div className="space-y-2">
-                              {applyHistoryFilters(execution.results).length === 0 ? (
+                              {execution.results.length === 0 ? (
                                 <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                                  <Filter className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                                  <p className="text-sm">필터 조건에 맞는 결과가 없습니다</p>
+                                  <p className="text-sm">결과가 없습니다</p>
                                 </div>
                               ) : (
-                                applyHistoryFilters(execution.results).map((result: any, resultIndex: number) => (
+                                execution.results.map((result: any, resultIndex: number) => (
                                 <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                   <div className="flex items-center justify-between sm:hidden">
                                     <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1479,13 +1317,17 @@ export default function AutoSearchDashboard() {
       {/* 스케줄 삭제 확인 다이얼로그 */}
       <ConfirmationDialog
         isOpen={showDeleteScheduleDialog}
-        onClose={() => setShowDeleteScheduleDialog(false)}
+        onClose={() => {
+          console.log('삭제 다이얼로그 닫기');
+          setShowDeleteScheduleDialog(false);
+          setDeleteTargetSchedule(null);
+        }}
         onConfirm={handleDeleteScheduleData}
         title="스케줄 데이터 삭제"
-        message={`"${deleteTargetSchedule?.configName}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`}
-        confirmText="삭제"
-        cancelText="취소"
-        type="warning"
+        message={`"${deleteTargetSchedule?.configName || 'Unknown'}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`}
+        confirmText="예, 삭제합니다"
+        cancelText="아니오, 취소"
+        type="danger"
       />
     </div>
   );
