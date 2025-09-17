@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Node.js 런타임에서 실행 (XLSX 등 Node 전용 기능 사용을 위해 명시)
 export const runtime = 'nodejs';
-import { supabase } from '@/utils/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Node 런타임에서 서비스 롤 키로 서버용 Supabase 클라이언트 생성
+const serverSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-key'
+);
 
 // XLSX 라이브러리를 동적으로 import
 let XLSX: any;
@@ -14,7 +20,7 @@ export async function GET(request: NextRequest) {
       XLSX = await import('xlsx');
     }
 
-    if (!supabase) {
+    if (!serverSupabase) {
       return NextResponse.json({ 
         success: false, 
         error: 'Supabase 클라이언트가 초기화되지 않았습니다.' 
@@ -27,7 +33,7 @@ export async function GET(request: NextRequest) {
     const targetConfigId = configIdParam ? Number(configIdParam) : null;
 
     // 스케줄 설정 조회 (특정 ID가 있으면 해당 스케줄만, 없으면 활성 스케줄 전부)
-    const baseQuery = supabase
+    const baseQuery = serverSupabase
       .from('auto_search_configs')
       .select('*')
       .order('search_query');
@@ -59,7 +65,7 @@ export async function GET(request: NextRequest) {
     // 각 스케줄별로 시트 생성 (검색어 기준으로 그룹화)
     for (const config of configs) {
       // 해당 스케줄의 검색 결과 조회 (히스토리 순서로)
-      const { data: results, error: resultsError } = await supabase
+      const { data: results, error: resultsError } = await serverSupabase
         .from('auto_search_results')
         .select(`
           product_title,
