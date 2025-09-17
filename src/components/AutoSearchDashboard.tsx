@@ -424,17 +424,35 @@ export default function AutoSearchDashboard() {
     }
   };
 
-  // 엑셀 내보내기
+  // 엑셀 내보내기 (필터 적용)
   const handleExportToExcel = async () => {
     try {
       const requestUrl = new URL('/api/auto-search/export-excel', window.location.origin);
+      
+      // 히스토리 모달이 열려있고 특정 스케줄이 선택된 경우
       if (selectedSchedule && selectedSchedule.config_id) {
         requestUrl.searchParams.set('configId', String(selectedSchedule.config_id));
+      } else {
+        // 필터가 적용된 경우 필터 파라미터 추가
+        if (filters.searchQuery) {
+          requestUrl.searchParams.set('searchQuery', filters.searchQuery);
+        }
+        if (filters.targetProduct) {
+          requestUrl.searchParams.set('targetProduct', filters.targetProduct);
+        }
+        if (filters.targetMall) {
+          requestUrl.searchParams.set('targetMall', filters.targetMall);
+        }
+        if (filters.targetBrand) {
+          requestUrl.searchParams.set('targetBrand', filters.targetBrand);
+        }
       }
+      
       const response = await fetch(requestUrl.toString());
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
       }
       
       // 응답을 ArrayBuffer로 받아서 Blob 생성
@@ -443,18 +461,44 @@ export default function AutoSearchDashboard() {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
       });
       
+      // 파일명 생성
+      let filename = `자동검색_결과_${new Date().toISOString().split('T')[0]}`;
+      if (selectedSchedule && selectedSchedule.config_id) {
+        filename += `_${selectedSchedule.config_name.replace(/[\\\/\?\*\[\]:]/g, '_')}`;
+      } else if (Object.values(filters).some(f => f)) {
+        const activeFilters = [];
+        if (filters.searchQuery) activeFilters.push(`검색어_${filters.searchQuery}`);
+        if (filters.targetProduct) activeFilters.push(`상품_${filters.targetProduct}`);
+        if (filters.targetMall) activeFilters.push(`몰_${filters.targetMall}`);
+        if (filters.targetBrand) activeFilters.push(`브랜드_${filters.targetBrand}`);
+        filename += `_필터_${activeFilters.join('_')}`;
+      }
+      filename += '.xlsx';
+      
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
-      a.download = `자동검색_결과_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(a);
-      toast('엑셀 파일이 다운로드되었습니다.', 'success');
+      
+      // 성공 메시지
+      let successMessage = '엑셀 파일이 다운로드되었습니다.';
+      if (selectedSchedule && selectedSchedule.config_id) {
+        successMessage = `"${selectedSchedule.config_name}" 스케줄의 엑셀 파일이 다운로드되었습니다.`;
+      } else if (Object.values(filters).some(f => f)) {
+        successMessage = '필터 조건에 맞는 스케줄들의 엑셀 파일이 다운로드되었습니다.';
+      } else {
+        successMessage = '모든 활성 스케줄의 엑셀 파일이 다운로드되었습니다.';
+      }
+      
+      toast(successMessage, 'success');
     } catch (error) {
       console.error('엑셀 내보내기 오류:', error);
-      toast('엑셀 파일을 생성할 수 없습니다.', 'error');
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      toast(`엑셀 파일을 생성할 수 없습니다: ${errorMessage}`, 'error');
     }
   };
 
@@ -698,20 +742,13 @@ export default function AutoSearchDashboard() {
         <p className="text-gray-600 dark:text-gray-400">자동 검색 시스템의 전체 현황을 확인하세요</p>
         
         {/* 액션 버튼들 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 px-4 sm:px-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 px-4 sm:px-0">
           <button
             onClick={handleRefresh}
             className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             새로고침
-          </button>
-          <button
-            onClick={handleExportToExcel}
-            className="w-full justify-center flex items-center gap-2 px-3 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            엑셀 내보내기
           </button>
           <button
             onClick={handleDebugInfo}
@@ -949,6 +986,15 @@ export default function AutoSearchDashboard() {
                   )}
                 </div>
                 <div className="flex space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleExportToExcel}
+                    className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-300 font-semibold flex items-center gap-2"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    엑셀 내보내기
+                  </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1265,12 +1311,21 @@ export default function AutoSearchDashboard() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={closeHistoryModal}
-                className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportToExcel}
+                  className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  엑셀 내보내기
+                </button>
+                <button
+                  onClick={closeHistoryModal}
+                  className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {/* 히스토리 필터 */}
