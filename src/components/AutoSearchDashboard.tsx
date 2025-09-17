@@ -1340,8 +1340,31 @@ export default function AutoSearchDashboard() {
                     <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                     <p className="text-gray-500 dark:text-gray-400">실행 히스토리가 없습니다.</p>
                   </div>
+                ) : historyData.history.every((day: any) => 
+                    day.executions.every((exec: any) => 
+                      applyHistoryFilters(exec.results).length === 0
+                    )
+                  ) && Object.values(historyFilters).some(f => f) ? (
+                  <div className="text-center py-12">
+                    <Filter className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-500 dark:text-gray-400">필터 조건에 맞는 결과가 없습니다.</p>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={resetHistoryFilters}
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      필터 초기화
+                    </motion.button>
+                  </div>
                 ) : (
-                  historyData.history.map((dayData: any, dayIndex: number) => (
+                  historyData.history
+                    .filter((dayData: any) => 
+                      dayData.executions.some((exec: any) => 
+                        applyHistoryFilters(exec.results).length > 0
+                      )
+                    )
+                    .map((dayData: any, dayIndex: number) => (
                     <div key={dayIndex} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-800">
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -1355,7 +1378,11 @@ export default function AutoSearchDashboard() {
                       </h4>
                       
                       <div className="space-y-4">
-                        {dayData.executions.map((execution: any, execIndex: number) => (
+                        {dayData.executions
+                          .filter((execution: any) => 
+                            applyHistoryFilters(execution.results).length > 0
+                          )
+                          .map((execution: any, execIndex: number) => (
                           <div key={execIndex} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex items-center gap-2">
@@ -1378,12 +1405,19 @@ export default function AutoSearchDashboard() {
                                 </span>
                               </div>
                               <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {execution.results.length}개 상품 발견
+                                {applyHistoryFilters(execution.results).length}개 상품 표시
+                                {Object.values(historyFilters).some(f => f) && ` (전체 ${execution.results.length}개 중)`}
                               </span>
                             </div>
                             
                             <div className="space-y-2">
-                              {applyHistoryFilters(execution.results).map((result: any, resultIndex: number) => (
+                              {applyHistoryFilters(execution.results).length === 0 ? (
+                                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                                  <Filter className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                                  <p className="text-sm">필터 조건에 맞는 결과가 없습니다</p>
+                                </div>
+                              ) : (
+                                applyHistoryFilters(execution.results).map((result: any, resultIndex: number) => (
                                 <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                   <div className="flex items-center justify-between sm:hidden">
                                     <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1410,7 +1444,8 @@ export default function AutoSearchDashboard() {
                                     <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
                                   </div>
                                 </div>
-                              ))}
+                                ))
+                              )}
                             </div>
                           </div>
                         ))}
