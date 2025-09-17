@@ -949,7 +949,9 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown');
+                        if (schedule && schedule.config_id) {
+                          handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown');
+                        }
                       }}
                       className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
                     >
@@ -1172,7 +1174,11 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                   엑셀 내보내기
                 </button>
                 <button
-                  onClick={() => handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name)}
+                  onClick={() => {
+                    if (selectedSchedule && selectedSchedule.config_id) {
+                      handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown');
+                    }
+                  }}
                   className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                 >
                   <Trash2 className="w-4 h-4" />
