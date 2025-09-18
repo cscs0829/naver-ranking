@@ -88,14 +88,14 @@ export default function DeleteConfirmationToast({
               damping: 20,
               stiffness: 400
             }}
-            className="fixed bottom-6 left-1/2 z-[100000] max-w-md w-full"
+            className="fixed bottom-4 left-1/2 z-[60] max-w-md w-full"
             style={{
               transformOrigin: 'bottom center',
               position: 'fixed',
-              bottom: '24px',
+              bottom: '16px',
               left: '50%',
               transform: 'translateX(-50%)',
-              zIndex: 100000,
+              zIndex: 60,
               maxWidth: '28rem',
               width: 'calc(100vw - 2rem)',
               margin: '0 1rem',
