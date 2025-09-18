@@ -74,6 +74,7 @@ export default function AutoSearchManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteToast, setShowDeleteToast] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteButtonElement, setDeleteButtonElement] = useState<HTMLElement | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     search_query: '',
@@ -227,8 +228,9 @@ export default function AutoSearchManager() {
   };
 
   // 설정 삭제 확인
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: number, buttonElement?: HTMLElement) => {
     setDeleteTargetId(id);
+    setDeleteButtonElement(buttonElement || null);
     setShowDeleteToast(true);
   };
 
@@ -514,7 +516,7 @@ export default function AutoSearchManager() {
                   </button>
                   
                   <button
-                    onClick={() => handleDeleteClick(config.id)}
+                    onClick={(e) => handleDeleteClick(config.id, e.currentTarget)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="삭제"
                   >
@@ -768,12 +770,17 @@ export default function AutoSearchManager() {
         onClose={() => {
           setShowDeleteToast(false);
           setDeleteTargetId(null);
+          setDeleteButtonElement(null);
         }}
         onConfirm={handleDelete}
-        title="설정 삭제"
-        message="정말로 이 설정을 삭제하시겠습니까? 관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다."
+        title="자동검색 설정 삭제"
+        message="정말로 이 자동검색 설정을 삭제하시겠습니까? 설정과 함께 관련된 모든 데이터(검색 결과, 실행 로그, 알림 등)가 영구적으로 삭제되며, 이 작업은 되돌릴 수 없습니다."
         confirmText="예, 삭제합니다"
         cancelText="아니오, 취소"
+        type="danger"
+        showBackdrop={false}
+        position="near-trigger"
+        triggerElement={deleteButtonElement}
       />
     </div>
   );

@@ -14,6 +14,8 @@ interface DeleteConfirmationToastProps {
   cancelText?: string
   type?: 'danger' | 'warning'
   showBackdrop?: boolean
+  position?: 'center' | 'viewport-center' | 'near-trigger'
+  triggerElement?: HTMLElement | null
 }
 
 export default function DeleteConfirmationToast({
@@ -25,11 +27,81 @@ export default function DeleteConfirmationToast({
   confirmText = '예, 삭제합니다',
   cancelText = '아니오, 취소',
   type = 'danger',
-  showBackdrop = true
+  showBackdrop = true,
+  position = 'center',
+  triggerElement = null
 }: DeleteConfirmationToastProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const confirmButtonRef = useRef<HTMLButtonElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // 위치 계산
+  const getModalPosition = () => {
+    if (position === 'center') {
+      return {
+        containerClass: 'fixed inset-0 flex items-center justify-center p-4',
+        modalStyle: {}
+      }
+    }
+    
+    if (position === 'viewport-center') {
+      const scrollY = window.scrollY || document.documentElement.scrollTop
+      const viewportHeight = window.innerHeight
+      const centerY = scrollY + viewportHeight / 2
+      
+      return {
+        containerClass: 'fixed inset-0 flex items-start justify-center p-4',
+        modalStyle: {
+          marginTop: `${centerY - 200}px` // 모달 높이의 절반 정도 빼기
+        }
+      }
+    }
+    
+    if (position === 'near-trigger' && triggerElement) {
+      const rect = triggerElement.getBoundingClientRect()
+      const scrollY = window.scrollY || document.documentElement.scrollTop
+      const scrollX = window.scrollX || document.documentElement.scrollLeft
+      
+      // 트리거 요소 근처에 위치하되, 화면 경계를 고려
+      const triggerCenterX = rect.left + rect.width / 2 + scrollX
+      const triggerBottomY = rect.bottom + scrollY + 20 // 트리거 아래 20px
+      
+      const modalWidth = 448 // max-w-md = 28rem = 448px
+      const modalHeight = 400 // 대략적인 모달 높이
+      
+      // 화면 경계 체크 및 조정
+      let finalX = triggerCenterX - modalWidth / 2
+      let finalY = triggerBottomY
+      
+      // 좌우 경계 체크
+      const viewportWidth = window.innerWidth
+      if (finalX < 16) finalX = 16 // 최소 16px 여백
+      if (finalX + modalWidth > viewportWidth - 16) finalX = viewportWidth - modalWidth - 16
+      
+      // 상하 경계 체크
+      const viewportHeight = window.innerHeight
+      if (finalY + modalHeight > scrollY + viewportHeight - 16) {
+        // 아래쪽 공간이 부족하면 트리거 위쪽에 배치
+        finalY = rect.top + scrollY - modalHeight - 20
+      }
+      
+      return {
+        containerClass: 'fixed top-0 left-0',
+        modalStyle: {
+          position: 'absolute' as const,
+          left: `${finalX}px`,
+          top: `${finalY}px`,
+          margin: 0
+        }
+      }
+    }
+    
+    // 기본값
+    return {
+      containerClass: 'fixed inset-0 flex items-center justify-center p-4',
+      modalStyle: {}
+    }
+  }
 
   // 포커스 관리 및 키보드 네비게이션
   useEffect(() => {
@@ -38,7 +110,7 @@ export default function DeleteConfirmationToast({
       setTimeout(() => {
         cancelButtonRef.current?.focus()
       }, 150)
-      
+
       // 스크롤 방지 (중요한 확인 작업이므로)
       if (showBackdrop) {
         document.body.style.overflow = 'hidden'
@@ -79,7 +151,7 @@ export default function DeleteConfirmationToast({
     const focusableElements = container.querySelectorAll<HTMLElement>(
       'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
     )
-    
+
     const firstElement = focusableElements[0]
     const lastElement = focusableElements[focusableElements.length - 1]
 
@@ -153,57 +225,58 @@ export default function DeleteConfirmationToast({
               aria-hidden="true"
             />
           )}
-          
-          {/* 메인 컨테이너 - 중앙 배치로 변경 */}
-          <div className={`fixed inset-0 flex items-center justify-center p-4 z-[100000] ${!showBackdrop ? 'pointer-events-none' : ''}`}>
+
+          {/* 메인 컨테이너 - 위치에 따라 동적 배치 */}
+          <div className={`${getModalPosition().containerClass} z-[100000] ${!showBackdrop ? 'pointer-events-none' : ''}`}>
             <motion.div
               ref={containerRef}
-              initial={{ 
-                opacity: 0, 
-                scale: 0.8, 
-                y: showBackdrop ? 50 : 100,
+              initial={{
+                opacity: 0,
+                scale: 0.8,
+                y: position === 'near-trigger' ? -20 : (showBackdrop ? 50 : 100),
                 rotateX: showBackdrop ? 15 : 0
               }}
-              animate={{ 
-                opacity: 1, 
-                scale: 1, 
+              animate={{
+                opacity: 1,
+                scale: 1,
                 y: 0,
                 rotateX: 0
               }}
-              exit={{ 
-                opacity: 0, 
-                scale: 0.8, 
-                y: showBackdrop ? 50 : 100,
+              exit={{
+                opacity: 0,
+                scale: 0.8,
+                y: position === 'near-trigger' ? -20 : (showBackdrop ? 50 : 100),
                 rotateX: showBackdrop ? -15 : 0
               }}
-              transition={{ 
-                type: "spring", 
+              transition={{
+                type: "spring",
                 duration: 0.4,
                 damping: 25,
                 stiffness: 300
               }}
-              className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border ${styles.border} overflow-hidden backdrop-blur-sm bg-opacity-95 w-full max-w-md mx-auto pointer-events-auto`}
+              className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border ${styles.border} overflow-hidden backdrop-blur-sm bg-opacity-95 w-full max-w-md pointer-events-auto ${position === 'near-trigger' ? '' : 'mx-auto'}`}
               role="dialog"
               aria-modal="true"
               aria-labelledby="delete-toast-title"
               aria-describedby="delete-toast-description"
               style={{
                 transformStyle: 'preserve-3d',
-                perspective: '1000px'
+                perspective: '1000px',
+                ...getModalPosition().modalStyle
               }}
             >
               {/* 위험 표시 스트라이프 */}
               <div className="h-1 bg-gradient-to-r from-red-500 via-red-600 to-red-500 animate-pulse" />
-              
+
               {/* 헤더 */}
-              <motion.div 
+              <motion.div
                 className={`flex items-center justify-between p-6 border-b ${styles.headerBorder}`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
               >
                 <div className="flex items-center gap-4">
-                  <motion.div 
+                  <motion.div
                     className={`p-3 rounded-full ${styles.iconBg}`}
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -212,8 +285,8 @@ export default function DeleteConfirmationToast({
                     {styles.icon}
                   </motion.div>
                   <div>
-                    <h3 
-                      id="delete-toast-title" 
+                    <h3
+                      id="delete-toast-title"
                       className="text-xl font-bold text-gray-900 dark:text-white"
                     >
                       {title}
@@ -238,8 +311,8 @@ export default function DeleteConfirmationToast({
               <div className="p-6">
                 <div className="flex items-start gap-3 mb-6">
                   <Shield className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <p 
-                    id="delete-toast-description" 
+                  <p
+                    id="delete-toast-description"
                     className="text-gray-600 dark:text-gray-300 leading-relaxed"
                   >
                     {message}
@@ -247,7 +320,7 @@ export default function DeleteConfirmationToast({
                 </div>
 
                 {/* 경고 메시지 */}
-                <motion.div 
+                <motion.div
                   className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -260,7 +333,7 @@ export default function DeleteConfirmationToast({
                 </motion.div>
 
                 {/* 액션 버튼들 */}
-                <motion.div 
+                <motion.div
                   className="flex gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

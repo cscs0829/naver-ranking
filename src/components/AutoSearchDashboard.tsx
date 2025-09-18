@@ -99,6 +99,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [showDeleteScheduleToast, setShowDeleteScheduleToast] = useState(false);
   const [deleteTargetSchedule, setDeleteTargetSchedule] = useState<any>(null);
+  const [deleteButtonElement, setDeleteButtonElement] = useState<HTMLElement | null>(null);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
@@ -325,13 +326,14 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   };
 
   // 스케줄별 데이터 삭제 확인
-  const handleDeleteScheduleDataClick = (configId: number, configName: string) => {
+  const handleDeleteScheduleDataClick = (configId: number, configName: string, buttonElement?: HTMLElement) => {
     // 안전한 값으로 설정 (null/undefined 방지)
     const safeConfigId = configId || 0;
     const safeConfigName = configName || 'Unknown';
     
     console.log('삭제 확인 토스트 표시:', { configId: safeConfigId, configName: safeConfigName });
     setDeleteTargetSchedule({ configId: safeConfigId, configName: safeConfigName });
+    setDeleteButtonElement(buttonElement || null);
     setShowDeleteScheduleToast(true);
   };
 
@@ -953,7 +955,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                       onClick={(e) => {
                         e.stopPropagation();
                         if (schedule && schedule.config_id) {
-                          handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown');
+                          handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown', e.currentTarget);
                         }
                       }}
                       className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
@@ -1177,9 +1179,9 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                   엑셀 내보내기
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
                     if (selectedSchedule && selectedSchedule.config_id) {
-                      handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown');
+                      handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown', e.currentTarget);
                     }
                   }}
                   className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
@@ -1330,12 +1332,17 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
           console.log('삭제 토스트 닫기');
           setShowDeleteScheduleToast(false);
           setDeleteTargetSchedule(null);
+          setDeleteButtonElement(null);
         }}
         onConfirm={handleDeleteScheduleData}
         title="스케줄 데이터 삭제"
-        message={`"${deleteTargetSchedule?.configName || 'Unknown'}" 스케줄의 모든 데이터를 삭제하시겠습니까? 설정은 유지됩니다.`}
+        message={`"${deleteTargetSchedule?.configName || 'Unknown'}" 스케줄의 모든 검색 결과와 로그를 영구적으로 삭제하시겠습니까? 설정은 유지되지만 모든 히스토리 데이터가 사라집니다.`}
         confirmText="예, 삭제합니다"
         cancelText="아니오, 취소"
+        type="danger"
+        showBackdrop={false}
+        position="near-trigger"
+        triggerElement={deleteButtonElement}
       />
     </div>
   );
