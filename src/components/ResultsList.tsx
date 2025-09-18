@@ -11,6 +11,7 @@ import emptyAnim from './empty-state.json'
 import { toast } from '@/utils/toast'
 import { toast as sonnerToast } from 'sonner'
 import ConfirmationDialog from './ConfirmationDialog'
+import DeleteConfirmationToast from './DeleteConfirmationToast'
 
 interface ResultsListProps {
   refreshTrigger: number
@@ -40,7 +41,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
   const [isMobile, setIsMobile] = useState(false)
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null)
   const [showModal, setShowModal] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showDeleteToast, setShowDeleteToast] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false)
 
@@ -186,7 +187,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
   // 개별 결과 삭제 확인
   const handleDeleteClick = (id: number) => {
     setDeleteTargetId(id)
-    setShowDeleteDialog(true)
+    setShowDeleteToast(true)
   }
 
   // 개별 결과 삭제 실행
@@ -200,13 +201,16 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
 
       if (response.ok) {
         setResults(prev => prev.filter(result => result.id !== deleteTargetId))
-        sonnerToast.success('결과가 삭제되었습니다.')
+        toast('결과가 삭제되었습니다.', 'success')
       } else {
         const data = await response.json()
-        sonnerToast.error(data.error || '삭제에 실패했습니다.')
+        toast(data.error || '삭제에 실패했습니다.', 'error')
       }
     } catch (err) {
-      sonnerToast.error('삭제 중 오류가 발생했습니다.')
+      toast('삭제 중 오류가 발생했습니다.', 'error')
+    } finally {
+      setShowDeleteToast(false)
+      setDeleteTargetId(null)
     }
   }
 
@@ -223,12 +227,12 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
       if(res.ok){ 
         setResults([])
         setError('')
-        sonnerToast.success('전체 삭제 완료')
+        toast('전체 삭제 완료', 'success')
       } else { 
-        sonnerToast.error(data.error || '전체 삭제 실패')
+        toast(data.error || '전체 삭제 실패', 'error')
       }
     } catch(e){ 
-      sonnerToast.error('전체 삭제 중 오류')
+      toast('전체 삭제 중 오류', 'error')
     }
   }
 
@@ -973,54 +977,68 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
       {/* 모바일용 모달 - Portal 사용 */}
       {showModal && selectedResult && typeof window !== 'undefined' && createPortal(
         <AnimatePresence>
+          {/* Backdrop with better blur effect */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm mobile-modal-overlay"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100000]"
             onClick={closeModal}
-            style={{ 
-              position: 'fixed', 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              bottom: 0,
-              zIndex: 9999
-            }}
-          >
+            aria-hidden="true"
+          />
+          
+          {/* Dialog Container */}
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden mobile-modal relative"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ 
+                type: "spring", 
+                duration: 0.4,
+                damping: 25,
+                stiffness: 300
+              }}
+              className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 w-full max-w-md mx-auto"
               onClick={(e) => e.stopPropagation()}
+              tabIndex={-1}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
+              aria-describedby="modal-description"
               style={{ 
-                position: 'relative', 
-                zIndex: 10000,
-                maxHeight: '90vh'
+                maxHeight: '90vh',
+                overflow: 'hidden'
               }}
             >
               {/* 모달 헤더 */}
-              <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-600">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
-                    <Eye className="w-4 h-4 text-white" />
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-full bg-blue-50 dark:bg-blue-900/20">
+                    <Eye className="w-6 h-6 text-blue-500" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">상세 정보</h3>
+                  <h3 
+                    id="modal-title" 
+                    className="text-lg font-semibold text-gray-900 dark:text-white"
+                  >
+                    상세 정보
+                  </h3>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
                   onClick={closeModal}
-                  className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-200"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+                  aria-label="닫기"
                 >
-                  <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                </motion.button>
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
 
               {/* 모달 내용 */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div 
+                id="modal-description"
+                className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+              >
                 <div className="space-y-6">
                   {/* 상품 정보 */}
                   <div className="space-y-4">
@@ -1120,50 +1138,48 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                   )}
 
                   {/* 액션 버튼들 */}
-                  <div className="flex space-x-3 pt-4 border-t border-slate-200 dark:border-slate-600">
+                  <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
                     {selectedResult.product_link && (
-                      <motion.a
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      <a
                         href={selectedResult.product_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold"
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span>상품 페이지 보기</span>
-                      </motion.a>
+                      </a>
                     )}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
                       onClick={() => {
                         handleDeleteClick(selectedResult.id!)
                         closeModal()
                       }}
-                      className="px-4 py-3 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-200 dark:hover:bg-red-900 transition-colors duration-200 font-semibold"
+                      className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </AnimatePresence>,
         document.body
       )}
 
-      {/* 개별 삭제 확인 다이얼로그 */}
-      <ConfirmationDialog
-        isOpen={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
+      {/* 개별 삭제 확인 토스트 */}
+      <DeleteConfirmationToast
+        isOpen={showDeleteToast}
+        onClose={() => {
+          setShowDeleteToast(false)
+          setDeleteTargetId(null)
+        }}
         onConfirm={handleDelete}
         title="결과 삭제"
         message="정말로 이 결과를 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="취소"
-        type="danger"
+        confirmText="예, 삭제합니다"
+        cancelText="아니오, 취소"
       />
 
       {/* 전체 삭제 확인 다이얼로그 */}
