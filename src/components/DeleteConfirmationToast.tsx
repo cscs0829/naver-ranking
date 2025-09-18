@@ -76,26 +76,31 @@ export default function DeleteConfirmationToast({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 100, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 100, scale: 0.9 }}
-          transition={{ 
-            type: "spring", 
-            duration: 0.5,
-            damping: 20,
-            stiffness: 400
-          }}
-          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100000] max-w-md w-full mx-4"
-          style={{
-            transformOrigin: 'bottom center',
-            position: 'fixed',
-            bottom: '24px',
-            left: '50%',
-            right: 'auto',
-            top: 'auto',
-            transform: 'translateX(-50%)'
-          }}
+        <>
+          {/* 포털을 사용하여 body에 직접 렌더링 */}
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.9 }}
+            transition={{ 
+              type: "spring", 
+              duration: 0.5,
+              damping: 20,
+              stiffness: 400
+            }}
+            className="fixed bottom-6 left-1/2 z-[100000] max-w-md w-full"
+            style={{
+              transformOrigin: 'bottom center',
+              position: 'fixed',
+              bottom: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 100000,
+              maxWidth: '28rem',
+              width: 'calc(100vw - 2rem)',
+              margin: '0 1rem',
+              pointerEvents: 'auto'
+            }}
           onKeyDown={handleKeyDown}
           role="dialog"
           aria-modal="true"
@@ -177,6 +182,7 @@ export default function DeleteConfirmationToast({
             </div>
           </div>
         </motion.div>
+        </>
       )}
     </AnimatePresence>
   )
