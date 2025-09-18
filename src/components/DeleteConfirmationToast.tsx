@@ -43,15 +43,24 @@ export default function DeleteConfirmationToast({
         cancelButtonRef.current?.focus()
       }, 150)
       
-      // 스크롤 방지 (중요한 확인 작업이므로)
+      // 스크롤 방지 - 스크롤 위치 보존
       if (showBackdrop) {
-        document.body.style.overflow = 'hidden'
+        const scrollY = window.scrollY
+        document.body.style.position = 'fixed'
+        document.body.style.top = `-${scrollY}px`
+        document.body.style.width = '100%'
       }
     }
 
     return () => {
       if (showBackdrop) {
-        document.body.style.overflow = 'unset'
+        const scrollY = document.body.style.top
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1)
+        }
       }
     }
   }, [isOpen, showBackdrop])
