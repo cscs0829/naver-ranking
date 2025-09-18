@@ -86,9 +86,15 @@ export default function DeleteConfirmationToast({
             damping: 20,
             stiffness: 400
           }}
-          className="fixed bottom-6 right-6 z-[100000] max-w-md w-full mx-4"
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[100000] max-w-md w-full mx-4"
           style={{
-            transformOrigin: 'bottom right'
+            transformOrigin: 'bottom center',
+            position: 'fixed !important',
+            bottom: '24px !important',
+            left: '50% !important',
+            right: 'auto !important',
+            top: 'auto !important',
+            transform: 'translateX(-50%) !important'
           }}
           onKeyDown={handleKeyDown}
           role="dialog"
