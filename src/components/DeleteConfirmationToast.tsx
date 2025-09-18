@@ -104,31 +104,39 @@ export default function DeleteConfirmationToast({
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, y: 100, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 100, scale: 0.95 }}
-          transition={{ 
-            type: "spring", 
-            duration: 0.5,
-            damping: 25,
-            stiffness: 400
-          }}
-          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[99999] w-full max-w-md px-4"
+        <div
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4"
           style={{
             position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1rem',
             pointerEvents: 'auto'
           }}
-          onKeyDown={handleKeyDown}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-toast-title"
-          aria-describedby="delete-toast-description"
         >
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.95 }}
+            transition={{ 
+              type: "spring", 
+              duration: 0.5,
+              damping: 25,
+              stiffness: 400
+            }}
+            className="w-full max-w-md"
+            onKeyDown={handleKeyDown}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-toast-title"
+            aria-describedby="delete-toast-description"
+          >
           <div className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border ${styles.border} overflow-hidden backdrop-blur-sm`}>
             {/* 위험 표시 스트라이프 */}
             <div className="h-1 bg-gradient-to-r from-red-500 via-red-600 to-red-500" />
@@ -211,7 +219,8 @@ export default function DeleteConfirmationToast({
               </motion.div>
             </div>
           </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>,
     document.body
