@@ -778,8 +778,6 @@ export default function AutoSearchManager() {
         confirmText="예, 삭제합니다"
         cancelText="아니오, 취소"
         type="danger"
-        showBackdrop={true}
-        position="center"
       />
     </div>
   );
