@@ -460,7 +460,10 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       
       if (data.success) {
         console.log('디버그 정보:', data.debug);
-        toast(`디버그 정보가 콘솔에 출력되었습니다.\n설정: ${data.debug.configs.count}개, 결과: ${data.debug.results.count}개, 로그: ${data.debug.logs.count}개`, 'info');
+        const configsCount = data.debug?.configs?.count || 0;
+        const resultsCount = data.debug?.results?.count || 0;
+        const logsCount = data.debug?.logs?.count || 0;
+        toast(`디버그 정보가 콘솔에 출력되었습니다.\n설정: ${configsCount}개, 결과: ${resultsCount}개, 로그: ${logsCount}개`, 'info');
       } else {
         toast('디버그 정보를 가져올 수 없습니다: ' + data.error, 'error');
       }

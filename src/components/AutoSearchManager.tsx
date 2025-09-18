@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
+import DeleteConfirmationToast from './DeleteConfirmationToast';
 
 interface AutoSearchConfig {
   id: number;
@@ -70,6 +71,9 @@ export default function AutoSearchManager() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingConfig, setEditingConfig] = useState<AutoSearchConfig | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     search_query: '',
@@ -149,6 +153,7 @@ export default function AutoSearchManager() {
   // 설정 생성/수정
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
     try {
       const url = editingConfig 
@@ -205,23 +210,33 @@ export default function AutoSearchManager() {
           toast(editingConfig ? '설정이 수정되었습니다.' : '설정이 생성되었습니다.', 'success');
         }
         
-        resetForm();
+        // 성공 애니메이션 후 폼 닫기
+        setTimeout(() => {
+          resetForm();
+        }, 500);
       } else {
         toast('오류가 발생했습니다: ' + data.error, 'error');
       }
     } catch (error) {
       console.error('설정 저장 오류:', error);
       toast('설정을 저장할 수 없습니다.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // 설정 삭제
-  const handleDelete = async (id: number) => {
-    // 토스트로 확인 메시지 표시
-    toast('정말로 이 설정을 삭제하시겠습니까? 관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다.', 'warning');
+  // 설정 삭제 확인
+  const handleDeleteClick = (id: number) => {
+    setDeleteTargetId(id);
+    setShowDeleteToast(true);
+  };
+
+  // 설정 삭제 실행
+  const handleDelete = async () => {
+    if (!deleteTargetId) return;
 
     try {
-      const response = await fetch(`/api/auto-search/configs/${id}`, {
+      const response = await fetch(`/api/auto-search/configs/${deleteTargetId}`, {
         method: 'DELETE',
       });
 
@@ -241,6 +256,9 @@ export default function AutoSearchManager() {
     } catch (error) {
       console.error('설정 삭제 오류:', error);
       toast('설정을 삭제할 수 없습니다.', 'error');
+    } finally {
+      setShowDeleteToast(false);
+      setDeleteTargetId(null);
     }
   };
 
@@ -494,7 +512,7 @@ export default function AutoSearchManager() {
                   </button>
                   
                   <button
-                    onClick={() => handleDelete(config.id)}
+                    onClick={() => handleDeleteClick(config.id)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     title="삭제"
                   >
@@ -703,18 +721,58 @@ export default function AutoSearchManager() {
                 >
                   취소
                 </button>
-                <button
+                <motion.button
                   type="submit"
-                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                  disabled={isSubmitting}
+                  whileHover={!isSubmitting ? { scale: 1.02 } : {}}
+                  whileTap={!isSubmitting ? { scale: 0.98 } : {}}
+                  className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                    isSubmitting 
+                      ? 'bg-blue-400 text-white cursor-not-allowed' 
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
+                  }`}
                 >
-                  {editingConfig ? '수정' : '생성'}
-                </button>
+                  {isSubmitting ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                      />
+                      {editingConfig ? '수정 중...' : '생성 중...'}
+                    </>
+                  ) : (
+                    <>
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        {editingConfig ? '수정' : '생성'}
+                      </motion.div>
+                    </>
+                  )}
+                </motion.button>
               </div>
             </form>
           </motion.div>
         </motion.div>,
         document.body
       )}
+
+      {/* 삭제 확인 토스트 */}
+      <DeleteConfirmationToast
+        isOpen={showDeleteToast}
+        onClose={() => {
+          setShowDeleteToast(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={handleDelete}
+        title="설정 삭제"
+        message="정말로 이 설정을 삭제하시겠습니까? 관련된 모든 데이터(결과, 로그, 알림)도 함께 삭제됩니다."
+        confirmText="예, 삭제합니다"
+        cancelText="아니오, 취소"
+      />
     </div>
   );
 }
