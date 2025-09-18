@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, X, AlertTriangle } from 'lucide-react'
 
@@ -97,7 +98,10 @@ export default function DeleteConfirmationToast({
 
   const styles = getTypeStyles()
 
-  return (
+  // Portal을 사용해서 document.body에 직접 렌더링
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -110,13 +114,14 @@ export default function DeleteConfirmationToast({
             damping: 25,
             stiffness: 400
           }}
-          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md px-4"
+          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[99999] w-full max-w-md px-4"
           style={{
             position: 'fixed',
             bottom: '24px',
             left: '50%',
             transform: 'translateX(-50%)',
-            zIndex: 9999
+            zIndex: 99999,
+            pointerEvents: 'auto'
           }}
           onKeyDown={handleKeyDown}
           role="dialog"
@@ -208,6 +213,7 @@ export default function DeleteConfirmationToast({
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
