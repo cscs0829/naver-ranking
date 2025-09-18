@@ -175,6 +175,7 @@ export default function AutoSearchManager() {
       });
 
       const data = await response.json();
+      console.log('API 응답 데이터:', data);
       
       if (!response.ok) {
         throw new Error(data.error || `HTTP ${response.status} 오류가 발생했습니다.`);
@@ -184,7 +185,7 @@ export default function AutoSearchManager() {
         await fetchConfigs();
         
         // 새 설정 생성 시 즉시 실행
-        if (!editingConfig && data.config?.id) {
+        if (!editingConfig && data.config && data.config.id) {
           try {
             const runResponse = await fetch('/api/auto-search/run', {
               method: 'POST',
@@ -241,13 +242,14 @@ export default function AutoSearchManager() {
       });
 
       const data = await response.json();
+      console.log('삭제 API 응답 데이터:', data);
       
       if (data.success) {
         await fetchConfigs();
         
         // 삭제된 항목 수 표시
-        const deleted = data.deleted;
-        const message = `설정과 관련 데이터가 삭제되었습니다.\n\n삭제된 항목:\n• 설정: ${deleted.config}개\n• 결과: ${deleted.results}개\n• 로그: ${deleted.logs}개\n• 알림: ${deleted.notifications}개`;
+        const deleted = data.deleted || {};
+        const message = `설정과 관련 데이터가 삭제되었습니다.\n\n삭제된 항목:\n• 설정: ${deleted.config || 0}개\n• 결과: ${deleted.results || 0}개\n• 로그: ${deleted.logs || 0}개\n• 알림: ${deleted.notifications || 0}개`;
         
         toast(message, 'success');
       } else {

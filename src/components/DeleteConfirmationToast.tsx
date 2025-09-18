@@ -77,16 +77,19 @@ export default function DeleteConfirmationToast({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          initial={{ opacity: 0, y: 100, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 50, scale: 0.95 }}
+          exit={{ opacity: 0, y: 100, scale: 0.9 }}
           transition={{ 
             type: "spring", 
-            duration: 0.4,
-            damping: 25,
-            stiffness: 300
+            duration: 0.5,
+            damping: 20,
+            stiffness: 400
           }}
           className="fixed bottom-6 right-6 z-[100000] max-w-md w-full mx-4"
+          style={{
+            transformOrigin: 'bottom right'
+          }}
           onKeyDown={handleKeyDown}
           role="dialog"
           aria-modal="true"
@@ -95,11 +98,21 @@ export default function DeleteConfirmationToast({
         >
           <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-red-200 dark:border-red-800 overflow-hidden backdrop-blur-sm bg-opacity-95">
             {/* 헤더 */}
-            <div className="flex items-center justify-between p-4 border-b border-red-100 dark:border-red-900/50">
+            <motion.div 
+              className="flex items-center justify-between p-4 border-b border-red-100 dark:border-red-900/50"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.3 }}
+            >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-red-50 dark:bg-red-900/30">
+                <motion.div 
+                  className="p-2 rounded-full bg-red-50 dark:bg-red-900/30"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.2, duration: 0.4, type: "spring", stiffness: 300 }}
+                >
                   <AlertTriangle className="w-5 h-5 text-red-500" />
-                </div>
+                </motion.div>
                 <h3 
                   id="delete-toast-title" 
                   className="text-lg font-semibold text-gray-900 dark:text-white"
@@ -107,14 +120,16 @@ export default function DeleteConfirmationToast({
                   {title}
                 </h3>
               </div>
-              <button
+              <motion.button
                 onClick={onClose}
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
                 className="p-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
                 aria-label="닫기"
               >
                 <X className="w-4 h-4 text-gray-500" />
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
 
             {/* 내용 */}
             <div className="p-4">
@@ -126,24 +141,33 @@ export default function DeleteConfirmationToast({
               </p>
 
               {/* 액션 버튼들 */}
-              <div className="flex gap-3">
-                <button
+              <motion.div 
+                className="flex gap-3"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+              >
+                <motion.button
                   ref={cancelButtonRef}
                   onClick={onClose}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 flex items-center justify-center gap-2"
                 >
                   <X className="w-4 h-4" />
                   {cancelText}
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   ref={confirmButtonRef}
                   onClick={handleConfirm}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-800 flex items-center justify-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
                   {confirmText}
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             </div>
           </div>
         </motion.div>
