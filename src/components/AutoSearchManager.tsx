@@ -778,9 +778,8 @@ export default function AutoSearchManager() {
         confirmText="예, 삭제합니다"
         cancelText="아니오, 취소"
         type="danger"
-        showBackdrop={false}
-        position="near-trigger"
-        triggerElement={deleteButtonElement}
+        showBackdrop={true}
+        position="center"
       />
     </div>
   );

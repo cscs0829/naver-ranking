@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
   Activity,
   Zap,
   Calendar,
@@ -103,7 +103,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
-  
+
   // 필터 상태 추가
   const [filters, setFilters] = useState({
     searchQuery: '',
@@ -112,7 +112,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
     targetBrand: ''
   });
   const [filteredSchedules, setFilteredSchedules] = useState<any[]>([]);
-  
+
 
   // 모달 열릴 때: 내부 스크롤 최상단 + 모바일에서만 배경 스크롤 잠금
   useEffect(() => {
@@ -123,7 +123,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         document.body.style.overflow = 'hidden';
       }
       setTimeout(() => {
-        try { modalScrollRef.current?.scrollTo({ top: 0 }); } catch {}
+        try { modalScrollRef.current?.scrollTo({ top: 0 }); } catch { }
       }, 0);
       return () => {
         if (isMobile) {
@@ -153,7 +153,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
     if (!container) return;
 
     const focusableSelectors = [
-      'a[href]','button:not([disabled])','textarea:not([disabled])','input:not([disabled])','select:not([disabled])','[tabindex]:not([tabindex="-1"])'
+      'a[href]', 'button:not([disabled])', 'textarea:not([disabled])', 'input:not([disabled])', 'select:not([disabled])', '[tabindex]:not([tabindex="-1"])'
     ].join(',');
 
     const focusable = Array.from(container.querySelectorAll<HTMLElement>(focusableSelectors));
@@ -232,7 +232,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       const duration = Math.round(end - start);
       setLastDurationMs(duration);
       if (process.env.NODE_ENV !== 'production') {
-        try { console.debug(`[Dashboard] 응답 시간: ${duration}ms`); } catch {}
+        try { console.debug(`[Dashboard] 응답 시간: ${duration}ms`); } catch { }
       }
       clearTimeout(timeout);
       clearTimeout(slowTimer);
@@ -247,28 +247,28 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   // 필터링 로직
   const applyFilters = (schedules: any[]) => {
     if (!schedules) return [];
-    
+
     return schedules.filter(schedule => {
       // 검색어 필터
       if (filters.searchQuery && !schedule.search_query.toLowerCase().includes(filters.searchQuery.toLowerCase())) {
         return false;
       }
-      
+
       // 대상 상품 필터
       if (filters.targetProduct && !schedule.target_product_name?.toLowerCase().includes(filters.targetProduct.toLowerCase())) {
         return false;
       }
-      
+
       // 대상 몰 필터
       if (filters.targetMall && !schedule.target_mall_name?.toLowerCase().includes(filters.targetMall.toLowerCase())) {
         return false;
       }
-      
+
       // 대상 브랜드 필터
       if (filters.targetBrand && !schedule.target_brand?.toLowerCase().includes(filters.targetBrand.toLowerCase())) {
         return false;
       }
-      
+
       return true;
     });
   };
@@ -310,7 +310,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         await fetchStats();
         // 부모 컴포넌트에 데이터 변경 알림
@@ -330,7 +330,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
     // 안전한 값으로 설정 (null/undefined 방지)
     const safeConfigId = configId || 0;
     const safeConfigName = configName || 'Unknown';
-    
+
     console.log('삭제 확인 토스트 표시:', { configId: safeConfigId, configName: safeConfigName });
     setDeleteTargetSchedule({ configId: safeConfigId, configName: safeConfigName });
     setDeleteButtonElement(buttonElement || null);
@@ -351,7 +351,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         // 히스토리 모달이 현재 해당 스케줄을 보고 있다면 닫고 상태 초기화
         if (selectedSchedule && selectedSchedule.config_id === deleteTargetSchedule.configId) {
@@ -382,7 +382,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const handleExportToExcel = async () => {
     try {
       const requestUrl = new URL('/api/auto-search/export-excel', window.location.origin);
-      
+
       // 히스토리 모달이 열려있고 특정 스케줄이 선택된 경우
       if (selectedSchedule && selectedSchedule.config_id) {
         requestUrl.searchParams.set('configId', String(selectedSchedule.config_id));
@@ -390,7 +390,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         // 필터가 적용된 경우에만 현재 표시된 스케줄 ID를 전달
         // 아무것도 입력하지 않은 경우는 configIds를 전달하지 않아 모든 활성 스케줄을 가져옴
         const hasActiveFilters = filters.searchQuery || filters.targetProduct || filters.targetMall || filters.targetBrand;
-        
+
         if (hasActiveFilters) {
           const visibleConfigIds = filteredSchedules.map(schedule => schedule.config_id).join(',');
           if (visibleConfigIds) {
@@ -399,20 +399,20 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         }
         // 필터가 없으면 configIds를 전달하지 않음 (API에서 모든 활성 스케줄 조회)
       }
-      
+
       const response = await fetch(requestUrl.toString());
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.error || `HTTP error! status: ${response.status}`);
       }
-      
+
       // 응답을 ArrayBuffer로 받아서 Blob 생성
       const arrayBuffer = await response.arrayBuffer();
-      const blob = new Blob([arrayBuffer], { 
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+      const blob = new Blob([arrayBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
-      
+
       // 파일명 생성
       let filename = `자동검색_결과_${new Date().toISOString().split('T')[0]}`;
       if (selectedSchedule && selectedSchedule.config_id) {
@@ -426,7 +426,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         filename += `_필터_${activeFilters.join('_')}`;
       }
       filename += '.xlsx';
-      
+
       const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
@@ -435,7 +435,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       a.click();
       window.URL.revokeObjectURL(blobUrl);
       document.body.removeChild(a);
-      
+
       // 성공 메시지
       let successMessage = '엑셀 파일이 다운로드되었습니다.';
       if (selectedSchedule && selectedSchedule.config_id) {
@@ -445,7 +445,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       } else {
         successMessage = '모든 활성 스케줄의 엑셀 파일이 다운로드되었습니다.';
       }
-      
+
       toast(successMessage, 'success');
     } catch (error) {
       console.error('엑셀 내보내기 오류:', error);
@@ -459,7 +459,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
     try {
       const response = await fetch('/api/auto-search/debug');
       const data = await response.json();
-      
+
       if (data.success) {
         console.log('디버그 정보:', data.debug);
         const configsCount = data.debug?.configs?.count || 0;
@@ -481,7 +481,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       setHistoryLoading(true);
       const response = await fetch(`/api/auto-search/history/${configId}`);
       const data = await response.json();
-      
+
       if (data.success) {
         setHistoryData(data);
       } else {
@@ -631,7 +631,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
           <div className="mx-4 sm:mx-0 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm flex items-center justify-between">
             <span>데이터를 불러오는 중입니다. 잠시만 기다려 주세요...</span>
             {lastDurationMs != null && (
-              <span className="text-amber-700 dark:text-amber-300">(지연: ~{Math.max(2, Math.round(lastDurationMs/1000))}초)</span>
+              <span className="text-amber-700 dark:text-amber-300">(지연: ~{Math.max(2, Math.round(lastDurationMs / 1000))}초)</span>
             )}
           </div>
         )}
@@ -657,7 +657,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">실시간 결과</h2>
         <p className="text-gray-600 dark:text-gray-400">자동 검색 시스템의 전체 현황을 확인하세요</p>
-        
+
         {/* 액션 버튼들 */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 px-4 sm:px-0">
           <button
@@ -792,7 +792,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
 
         {/* 스케줄 필터 */}
         <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
-          
+
           {/* 검색어 입력 */}
           <div className="mb-4">
             <input
@@ -828,7 +828,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
               placeholder="대상 브랜드명으로 필터링"
             />
           </div>
-          
+
           {/* 필터 액션 버튼들 */}
           <div className="flex justify-between items-center">
             <div className="text-sm text-slate-600 dark:text-slate-400 flex items-center gap-2">
@@ -914,128 +914,127 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
-            {applyFilters(stats.scheduleRankings).map((schedule) => (
-              <motion.div 
-                key={schedule.config_id} 
-                layout
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.2 }}
-                className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800"
-                onClick={() => handleScheduleClick(schedule)}
-              >
-                {/* 헤더 */}
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
-                    <div className="break-words">
-                      <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">
-                        {schedule.config_name}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        검색어: "{schedule.search_query}"
-                        {schedule.target_product_name && (
-                          <span> | 대상상품: "{schedule.target_product_name}"</span>
-                        )}
+              {applyFilters(stats.scheduleRankings).map((schedule) => (
+                <motion.div
+                  key={schedule.config_id}
+                  layout
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.2 }}
+                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800"
+                  onClick={() => handleScheduleClick(schedule)}
+                >
+                  {/* 헤더 */}
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-blue-500"></div>
+                      <div className="break-words">
+                        <h4 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">
+                          {schedule.config_name}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          검색어: "{schedule.search_query}"
+                          {schedule.target_product_name && (
+                            <span> | 대상상품: "{schedule.target_product_name}"</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedSchedules(prev => ({ ...prev, [schedule.config_id]: !prev[schedule.config_id] }));
+                        }}
+                        className="h-9 px-3 py-0 sm:py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+                      >
+                        {expandedSchedules[schedule.config_id] ? '간단히' : '상세보기'}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (schedule && schedule.config_id) {
+                            handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown', e.currentTarget);
+                          }
+                        }}
+                        className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 검색 정보 */}
+                  {expandedSchedules[schedule.config_id] && (
+                    <div className="space-y-2 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">검색어:</span>
+                        <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.search_query}"</span>
+                      </div>
+                      {schedule.target_product_name && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 상품:</span>
+                          <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_product_name}"</span>
+                        </div>
+                      )}
+                      {schedule.target_mall_name && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 쇼핑몰:</span>
+                          <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_mall_name}"</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 최신 실행 정보 */}
+                  {schedule.rankings.length > 0 ? (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold ${schedule.rankings[0].total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                            schedule.rankings[0].total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                              'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                            }`}>
+                            {schedule.rankings[0].total_rank}
+                          </div>
+                          <div>
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">
+                              {new Date(schedule.latest_check).toLocaleString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                timeZone: 'Asia/Seoul'
+                              })} 기준
+                            </p>
+                            <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium">
+                              {schedule.rankings[0].page}페이지 {schedule.rankings[0].rank_in_page}번째
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] sm:text-xs text-gray-500 dark:text-slate-500">
+                            {schedule.rankings.length}개 상품 발견
+                          </p>
+                          <p className="hidden sm:block text-xs text-blue-600 dark:text-blue-400 font-medium">
+                            클릭하여 히스토리 보기
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 text-center">
+                      <p className="text-sm text-gray-500 dark:text-slate-500">
+                        아직 검색 결과가 없습니다
                       </p>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedSchedules(prev => ({ ...prev, [schedule.config_id]: !prev[schedule.config_id] }));
-                      }}
-                      className="h-9 px-3 py-0 sm:py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
-                    >
-                      {expandedSchedules[schedule.config_id] ? '간단히' : '상세보기'}
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (schedule && schedule.config_id) {
-                          handleDeleteScheduleDataClick(schedule.config_id, schedule.config_name || 'Unknown', e.currentTarget);
-                        }
-                      }}
-                      className="h-9 flex items-center gap-1 px-3 py-0 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      삭제
-                    </button>
-                  </div>
-                </div>
-
-                {/* 검색 정보 */}
-                {expandedSchedules[schedule.config_id] && (
-                  <div className="space-y-2 mb-3 sm:mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">검색어:</span>
-                      <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.search_query}"</span>
-                    </div>
-                    {schedule.target_product_name && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 상품:</span>
-                        <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_product_name}"</span>
-                      </div>
-                    )}
-                    {schedule.target_mall_name && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-slate-400 w-20">대상 쇼핑몰:</span>
-                        <span className="text-xs sm:text-sm text-gray-900 dark:text-white font-medium">"{schedule.target_mall_name}"</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 최신 실행 정보 */}
-                {schedule.rankings.length > 0 ? (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 sm:p-4 border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-bold ${
-                          schedule.rankings[0].total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
-                          schedule.rankings[0].total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
-                          'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                        }`}>
-                          {schedule.rankings[0].total_rank}
-                  </div>
-                  <div>
-                          <p className="text-xs sm:text-sm text-gray-600 dark:text-slate-400">
-                            {new Date(schedule.latest_check).toLocaleString('ko-KR', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              timeZone: 'Asia/Seoul'
-                            })} 기준
-                          </p>
-                          <p className="text-sm sm:text-base text-blue-600 dark:text-blue-400 font-medium">
-                            {schedule.rankings[0].page}페이지 {schedule.rankings[0].rank_in_page}번째
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                        <p className="text-[11px] sm:text-xs text-gray-500 dark:text-slate-500">
-                          {schedule.rankings.length}개 상품 발견
-                        </p>
-                        <p className="hidden sm:block text-xs text-blue-600 dark:text-blue-400 font-medium">
-                          클릭하여 히스토리 보기
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 text-center">
-                    <p className="text-sm text-gray-500 dark:text-slate-500">
-                      아직 검색 결과가 없습니다
-                    </p>
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                  )}
+                </motion.div>
+              ))}
             </AnimatePresence>
           )}
         </motion.div>
@@ -1093,35 +1092,35 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
             <p className="text-gray-500 dark:text-gray-400 text-center py-4">최근 활동이 없습니다.</p>
           ) : (
             <>
-              {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0,1)).map((activity) => (
+              {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0, 1)).map((activity) => (
                 <div key={activity.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100 dark:bg-green-900/30' : activity.status === 'error' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}` }>
-                    {activity.status === 'success' ? (
-                      <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    ) : activity.status === 'error' ? (
-                      <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{activity.config_name}</p>
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100 dark:bg-green-900/30' : activity.status === 'error' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                        {activity.status === 'success' ? (
+                          <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        ) : activity.status === 'error' ? (
+                          <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">{activity.config_name}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">"{activity.search_query}"</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">{new Date(activity.started_at).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}</p>
                       </div>
                     </div>
                     <div className="text-left sm:text-right">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.results_count}개 결과</p>
-                      {activity.duration_ms && (<p className="text-xs text-gray-500 dark:text-gray-400">{(activity.duration_ms/1000).toFixed(1)}초</p>)}
+                      {activity.duration_ms && (<p className="text-xs text-gray-500 dark:text-gray-400">{(activity.duration_ms / 1000).toFixed(1)}초</p>)}
                     </div>
                   </div>
                 </div>
               ))}
               {stats.recentActivity.length > 1 && (
                 <div className="pt-2">
-                  <button onClick={() => setShowAllActivities(v=>!v)} className="w-full sm:w-auto px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700">{showAllActivities ? '접기' : '더보기'}</button>
+                  <button onClick={() => setShowAllActivities(v => !v)} className="w-full sm:w-auto px-4 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700">{showAllActivities ? '접기' : '더보기'}</button>
                 </div>
               )}
             </>
@@ -1131,8 +1130,8 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
 
       {/* 히스토리 모달 - Portal/AnimatePresence 사용 (순위결과 모달 로직 참고) */}
       {typeof window !== 'undefined' ? createPortal(
-          <AnimatePresence>
-            {selectedSchedule && (
+        <AnimatePresence>
+          {selectedSchedule && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -1154,164 +1153,164 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                 style={{ position: 'relative', zIndex: 10000, maxHeight: '90vh' }}
                 ref={modalContainerRef}
               >
-            {/* 모달 헤더 */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
-              <div className="flex items-center gap-3">
-                <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                <div>
-                  <h3 id="history-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
-                    {selectedSchedule.config_name} 실행 히스토리
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-slate-400">
-                    검색어: "{selectedSchedule.search_query}"
-                    {selectedSchedule.target_product_name && (
-                      <span> | 대상 상품: "{selectedSchedule.target_product_name}"</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExportToExcel}
-                  className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  엑셀 내보내기
-                </button>
-                <button
-                  onClick={(e) => {
-                    if (selectedSchedule && selectedSchedule.config_id) {
-                      handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown', e.currentTarget);
-                    }
-                  }}
-                  className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  삭제
-                </button>
-                <button
-                  onClick={closeHistoryModal}
-                  className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-
-            {/* 히스토리 내용 */}
-            <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-200px)] overscroll-contain touch-pan-y">
-            {historyLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span className="ml-3 text-gray-600 dark:text-gray-400">히스토리를 불러오는 중...</span>
-              </div>
-            ) : historyData ? (
-              <div className="space-y-6">
-                {historyData.history.length === 0 ? (
-                  <div className="text-center py-12">
-                    <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                    <p className="text-gray-500 dark:text-gray-400">실행 히스토리가 없습니다.</p>
+                {/* 모달 헤더 */}
+                <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
+                  <div className="flex items-center gap-3">
+                    <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    <div>
+                      <h3 id="history-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
+                        {selectedSchedule.config_name} 실행 히스토리
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-slate-400">
+                        검색어: "{selectedSchedule.search_query}"
+                        {selectedSchedule.target_product_name && (
+                          <span> | 대상 상품: "{selectedSchedule.target_product_name}"</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  historyData.history
-                    .map((dayData: any, dayIndex: number) => (
-                    <div key={dayIndex} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-800">
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        {new Date(dayData.date).toLocaleDateString('ko-KR', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          weekday: 'long',
-                          timeZone: 'Asia/Seoul'
-                        })}
-                      </h4>
-                      
-                      <div className="space-y-4">
-                        {dayData.executions
-                          .map((execution: any, execIndex: number) => (
-                          <div key={execIndex} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                                <span className="font-medium text-gray-900 dark:text-white">
-                                  {(() => {
-                                    const firstTime = execution?.results?.[0]?.time;
-                                    const d = firstTime ? new Date(firstTime) : null;
-                                    return d
-                                      ? d.toLocaleString('ko-KR', {
-                                          timeZone: 'Asia/Seoul',
-                                          hour: '2-digit',
-                                          minute: '2-digit',
-                                          second: '2-digit'
-                                        })
-                                      : `${execution.hour.toString().padStart(2, '0')}:${execution.minute
-                                          .toString()
-                                          .padStart(2, '0')}:${execution.second.toString().padStart(2, '0')}`;
-                                  })()}
-                                </span>
-                              </div>
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {execution.results.length}개 상품 표시
-                              </span>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              {execution.results.length === 0 ? (
-                                <div className="text-center py-4 text-gray-500 dark:text-gray-400">
-                                  <p className="text-sm">결과가 없습니다</p>
-                                </div>
-                              ) : (
-                                execution.results.map((result: any, resultIndex: number) => (
-                                <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
-                                  <div className="flex items-center justify-between sm:hidden">
-                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                    </span>
-                                    <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">{result.page}페이지 {result.rank_in_page}번째</span>
-                                  </div>
-                                  <div className="hidden sm:flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${result.total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : result.total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>{result.total_rank}</div>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <p className="font-medium text-gray-900 dark:text-white truncate">{result.product_title}</p>
-                                          {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full font-medium">정확 매칭</span>)}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportToExcel}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      엑셀 내보내기
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        if (selectedSchedule && selectedSchedule.config_id) {
+                          handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown', e.currentTarget);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      삭제
+                    </button>
+                    <button
+                      onClick={closeHistoryModal}
+                      className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+
+                {/* 히스토리 내용 */}
+                <div ref={modalScrollRef} className="px-4 sm:px-6 pb-6 overflow-y-auto max-h-[calc(90vh-200px)] overscroll-contain touch-pan-y">
+                  {historyLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <span className="ml-3 text-gray-600 dark:text-gray-400">히스토리를 불러오는 중...</span>
+                    </div>
+                  ) : historyData ? (
+                    <div className="space-y-6">
+                      {historyData.history.length === 0 ? (
+                        <div className="text-center py-12">
+                          <History className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                          <p className="text-gray-500 dark:text-gray-400">실행 히스토리가 없습니다.</p>
+                        </div>
+                      ) : (
+                        historyData.history
+                          .map((dayData: any, dayIndex: number) => (
+                            <div key={dayIndex} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-800">
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                {new Date(dayData.date).toLocaleDateString('ko-KR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  weekday: 'long',
+                                  timeZone: 'Asia/Seoul'
+                                })}
+                              </h4>
+
+                              <div className="space-y-4">
+                                {dayData.executions
+                                  .map((execution: any, execIndex: number) => (
+                                    <div key={execIndex} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                          <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                          <span className="font-medium text-gray-900 dark:text-white">
+                                            {(() => {
+                                              const firstTime = execution?.results?.[0]?.time;
+                                              const d = firstTime ? new Date(firstTime) : null;
+                                              return d
+                                                ? d.toLocaleString('ko-KR', {
+                                                  timeZone: 'Asia/Seoul',
+                                                  hour: '2-digit',
+                                                  minute: '2-digit',
+                                                  second: '2-digit'
+                                                })
+                                                : `${execution.hour.toString().padStart(2, '0')}:${execution.minute
+                                                  .toString()
+                                                  .padStart(2, '0')}:${execution.second.toString().padStart(2, '0')}`;
+                                            })()}
+                                          </span>
                                         </div>
-                                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                          <span>{result.mall_name}</span>
-                                          {result.brand && <span>브랜드: {result.brand}</span>}
-                                          <span>{result.price}원</span>
-                                          <span className="text-blue-600">{result.page}페이지 {result.rank_in_page}번째</span>
-                                        </div>
+                                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                                          {execution.results.length}개 상품 표시
+                                        </span>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        {execution.results.length === 0 ? (
+                                          <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                                            <p className="text-sm">결과가 없습니다</p>
+                                          </div>
+                                        ) : (
+                                          execution.results.map((result: any, resultIndex: number) => (
+                                            <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                                              <div className="flex items-center justify-between sm:hidden">
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                  {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                </span>
+                                                <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">{result.page}페이지 {result.rank_in_page}번째</span>
+                                              </div>
+                                              <div className="hidden sm:flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${result.total_rank <= 10 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : result.total_rank <= 50 ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>{result.total_rank}</div>
+                                                  <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                      <p className="font-medium text-gray-900 dark:text-white truncate">{result.product_title}</p>
+                                                      {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full font-medium">정확 매칭</span>)}
+                                                    </div>
+                                                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                                                      <span>{result.mall_name}</span>
+                                                      {result.brand && <span>브랜드: {result.brand}</span>}
+                                                      <span>{result.price}원</span>
+                                                      <span className="text-blue-600">{result.page}페이지 {result.rank_in_page}번째</span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
+                                              </div>
+                                            </div>
+                                          ))
+                                        )}
                                       </div>
                                     </div>
-                                    <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
-                                  </div>
-              </div>
-            ))
-          )}
+                                  ))}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))
+                      )}
                     </div>
-                  ))
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <XCircle className="w-12 h-12 mx-auto mb-4 text-red-300" />
-                <p className="text-red-500">히스토리를 불러올 수 없습니다.</p>
-              </div>
-            )}
-            </div>
-          </motion.div>
-        </motion.div>
-            )}
-      </AnimatePresence>
-      , document.body) : null}
+                  ) : (
+                    <div className="text-center py-12">
+                      <XCircle className="w-12 h-12 mx-auto mb-4 text-red-300" />
+                      <p className="text-red-500">히스토리를 불러올 수 없습니다.</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        , document.body) : null}
 
       {/* 전체 삭제 확인 다이얼로그 */}
       <ConfirmationDialog
@@ -1340,9 +1339,8 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         confirmText="예, 삭제합니다"
         cancelText="아니오, 취소"
         type="danger"
-        showBackdrop={false}
-        position="near-trigger"
-        triggerElement={deleteButtonElement}
+        showBackdrop={true}
+        position="center"
       />
     </div>
   );
