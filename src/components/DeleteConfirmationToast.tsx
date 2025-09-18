@@ -114,12 +114,12 @@ export default function DeleteConfirmationToast({
             damping: 25,
             stiffness: 400
           }}
-          className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[99999] w-full max-w-md px-4"
+          className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[99999] w-full max-w-md px-4"
           style={{
             position: 'fixed',
-            bottom: '24px',
+            top: '50%',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: 'translate(-50%, -50%)',
             zIndex: 99999,
             pointerEvents: 'auto'
           }}
