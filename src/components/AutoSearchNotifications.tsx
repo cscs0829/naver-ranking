@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bell, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
+import {
+  Bell,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
   Clock,
   X,
   Settings
@@ -34,6 +34,10 @@ export default function AutoSearchNotifications() {
       const data = await response.json();
       setNotifications(data.notifications || []);
     } catch (error) {
+      // AbortError인 경우 조용히 처리
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('알림 조회 오류:', error);
     } finally {
       setLoading(false);
@@ -42,7 +46,7 @@ export default function AutoSearchNotifications() {
 
   useEffect(() => {
     fetchNotifications();
-    
+
     // 30초마다 알림 새로고침
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
@@ -56,13 +60,17 @@ export default function AutoSearchNotifications() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ read: true })
       });
-      
-      setNotifications(prev => 
-        prev.map(notif => 
+
+      setNotifications(prev =>
+        prev.map(notif =>
           notif.id === id ? { ...notif, read: true } : notif
         )
       );
     } catch (error) {
+      // AbortError인 경우 조용히 처리
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('알림 읽음 처리 오류:', error);
     }
   };
@@ -73,11 +81,15 @@ export default function AutoSearchNotifications() {
       await fetch('/api/auto-search/notifications/read-all', {
         method: 'POST'
       });
-      
-      setNotifications(prev => 
+
+      setNotifications(prev =>
         prev.map(notif => ({ ...notif, read: true }))
       );
     } catch (error) {
+      // AbortError인 경우 조용히 처리
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('모든 알림 읽음 처리 오류:', error);
     }
   };
@@ -88,9 +100,13 @@ export default function AutoSearchNotifications() {
       await fetch(`/api/auto-search/notifications/${id}`, {
         method: 'DELETE'
       });
-      
+
       setNotifications(prev => prev.filter(notif => notif.id !== id));
     } catch (error) {
+      // AbortError인 경우 조용히 처리
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
       console.error('알림 삭제 오류:', error);
     }
   };
@@ -112,7 +128,7 @@ export default function AutoSearchNotifications() {
   // 알림 타입별 배경색
   const getNotificationBgColor = (type: string, read: boolean) => {
     if (read) return 'bg-gray-50';
-    
+
     switch (type) {
       case 'success':
         return 'bg-green-50 border-green-200';
@@ -177,7 +193,7 @@ export default function AutoSearchNotifications() {
           </div>
           <h2 className="text-xl font-bold text-gray-900">알림</h2>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <button
@@ -215,26 +231,23 @@ export default function AutoSearchNotifications() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className={`p-4 rounded-lg border transition-all duration-200 ${
-                  getNotificationBgColor(notification.type, notification.read)
-                } ${!notification.read ? 'shadow-sm' : ''}`}
+                className={`p-4 rounded-lg border transition-all duration-200 ${getNotificationBgColor(notification.type, notification.read)
+                  } ${!notification.read ? 'shadow-sm' : ''}`}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">
                     {getNotificationIcon(notification.type)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h3 className={`font-medium ${
-                          notification.read ? 'text-gray-600' : 'text-gray-900'
-                        }`}>
+                        <h3 className={`font-medium ${notification.read ? 'text-gray-600' : 'text-gray-900'
+                          }`}>
                           {notification.title}
                         </h3>
-                        <p className={`text-sm mt-1 ${
-                          notification.read ? 'text-gray-500' : 'text-gray-700'
-                        }`}>
+                        <p className={`text-sm mt-1 ${notification.read ? 'text-gray-500' : 'text-gray-700'
+                          }`}>
                           {notification.message}
                         </p>
                         {notification.config_name && (
@@ -246,7 +259,7 @@ export default function AutoSearchNotifications() {
                           {new Date(notification.created_at).toLocaleString('ko-KR')}
                         </p>
                       </div>
-                      
+
                       <div className="flex items-center gap-1 ml-2">
                         {!notification.read && (
                           <button

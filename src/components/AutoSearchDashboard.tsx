@@ -103,6 +103,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
   const modalScrollRef = useRef<HTMLDivElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // 필터 상태 추가
   const [filters, setFilters] = useState({
@@ -223,22 +224,51 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       const start = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
       const slowTimer = setTimeout(() => setSlowLoading(true), 1500);
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`, { signal: controller.signal });
-      const data = await response.json();
-      setStats(data);
-      const end = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
-      const duration = Math.round(end - start);
-      setLastDurationMs(duration);
-      if (process.env.NODE_ENV !== 'production') {
-        try { console.debug(`[Dashboard] 응답 시간: ${duration}ms`); } catch { }
+      // 이전 요청이 있다면 취소
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-      clearTimeout(timeout);
-      clearTimeout(slowTimer);
-      setInitialLoaded(true);
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      
+      try {
+        const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`, { signal: controller.signal });
+        
+        // AbortError 체크
+        if (controller.signal.aborted) {
+          return;
+        }
+        
+        const data = await response.json();
+        setStats(data);
+        const end = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+        const duration = Math.round(end - start);
+        setLastDurationMs(duration);
+        if (process.env.NODE_ENV !== 'production') {
+          try { console.debug(`[Dashboard] 응답 시간: ${duration}ms`); } catch { }
+        }
+        setInitialLoaded(true);
+      } catch (fetchError) {
+        // AbortError인 경우 조용히 처리 (사용자에게 오류 표시하지 않음)
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          return;
+        }
+        throw fetchError;
+      } finally {
+        clearTimeout(timeout);
+        clearTimeout(slowTimer);
+        // 요청 완료 후 ref 정리
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
+      }
     } catch (error) {
-      console.error('통계 조회 오류:', error);
+      // AbortError가 아닌 경우에만 오류 로깅
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('통계 조회 오류:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -509,6 +539,15 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
 
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  // 컴포넌트 언마운트 시 진행 중인 요청 취소
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
 

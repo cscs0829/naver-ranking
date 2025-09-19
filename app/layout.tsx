@@ -15,6 +15,15 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Naver Ranking',
   description: 'Naver ranking app',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
   other: {
     'mobile-web-app-capable': 'yes'
   }
@@ -33,8 +42,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="네이버 쇼핑 순위 검색기" />
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={`${inter.className} antialiased`}>

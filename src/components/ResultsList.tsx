@@ -169,13 +169,14 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
         setError(data.error || '결과를 가져올 수 없습니다.')
       }
     } catch (err) {
+      // AbortError인 경우 조용히 처리 (사용자에게 오류 표시하지 않음)
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      
       console.error('데이터 로딩 오류:', err)
       if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('요청 시간이 초과되었습니다. 다시 시도해주세요.')
-        } else {
-          setError(`오류: ${err.message}`)
-        }
+        setError(`오류: ${err.message}`)
       } else {
         setError('결과를 가져오는 중 오류가 발생했습니다.')
       }
