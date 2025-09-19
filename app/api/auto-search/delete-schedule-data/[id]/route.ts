@@ -52,19 +52,26 @@ export async function DELETE(
       console.error('알림 삭제 오류:', notificationsError);
     }
 
-    // 설정 자체를 완전히 삭제
-    const { error: configError } = await supabase
+    // 설정의 실행 통계 초기화 (설정은 유지하되 통계만 리셋)
+    const { error: resetError } = await supabase
       .from('auto_search_configs')
-      .delete()
+      .update({
+        run_count: 0,
+        success_count: 0,
+        error_count: 0,
+        last_run_at: null,
+        last_error: null,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', configId);
 
-    if (configError) {
-      console.error('설정 삭제 오류:', configError);
+    if (resetError) {
+      console.error('설정 통계 초기화 오류:', resetError);
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: '자동검색 설정과 관련된 모든 데이터가 완전히 삭제되었습니다.' 
+      message: '스케줄 데이터가 삭제되었습니다. (설정은 유지됨)' 
     });
 
   } catch (error) {

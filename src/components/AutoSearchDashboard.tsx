@@ -98,6 +98,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [showDeleteScheduleToast, setShowDeleteScheduleToast] = useState(false);
+  const [showDeleteDataOnlyToast, setShowDeleteDataOnlyToast] = useState(false);
   const [deleteTargetSchedule, setDeleteTargetSchedule] = useState<any>(null);
   const [deleteButtonElement, setDeleteButtonElement] = useState<HTMLElement | null>(null);
   const [expandedSchedules, setExpandedSchedules] = useState<Record<number, boolean>>({});
@@ -367,7 +368,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
     setShowDeleteScheduleToast(true);
   };
 
-  // 스케줄별 데이터 삭제 실행
+  // 스케줄별 데이터 삭제 실행 (완전 삭제)
   const handleDeleteScheduleData = async () => {
     if (!deleteTargetSchedule || !deleteTargetSchedule.configId) {
       setShowDeleteScheduleToast(false); // 토스트 닫기
@@ -393,7 +394,48 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
           onDataChange();
         }
         // 성공 토스트 표시
-        toast('스케줄 데이터가 삭제되었습니다.', 'success');
+        toast('자동검색 설정이 완전히 삭제되었습니다.', 'success');
+      } else {
+        console.error('삭제 실패:', data.error);
+        toast('삭제에 실패했습니다: ' + data.error, 'error');
+      }
+    } catch (error) {
+      console.error('스케줄 데이터 삭제 오류:', error);
+      toast('삭제 중 오류가 발생했습니다.', 'error');
+    } finally {
+      // 삭제 완료 후 토스트 닫기 및 상태 초기화
+      setShowDeleteScheduleToast(false);
+      setDeleteTargetSchedule(null);
+    }
+  };
+
+  // 히스토리 모달창용 데이터만 삭제 실행 (설정 유지)
+  const handleDeleteScheduleDataOnly = async () => {
+    if (!deleteTargetSchedule || !deleteTargetSchedule.configId) {
+      setShowDeleteScheduleToast(false); // 토스트 닫기
+      return;
+    }
+
+    try {
+      console.log('스케줄 데이터만 삭제 시작:', deleteTargetSchedule.configId);
+      const response = await fetch(`/api/auto-search/delete-schedule-data/${deleteTargetSchedule.configId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // 히스토리 모달이 현재 해당 스케줄을 보고 있다면 닫고 상태 초기화
+        if (selectedSchedule && selectedSchedule.config_id === deleteTargetSchedule.configId) {
+          closeHistoryModal();
+        }
+        await fetchStats();
+        // 부모 컴포넌트에 데이터 변경 알림
+        if (onDataChange) {
+          onDataChange();
+        }
+        // 성공 토스트 표시
+        toast('스케줄 데이터가 삭제되었습니다. (설정은 유지됨)', 'success');
       } else {
         console.error('삭제 실패:', data.error);
         toast('삭제에 실패했습니다: ' + data.error, 'error');
@@ -1219,7 +1261,10 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                     <button
                       onClick={(e) => {
                         if (selectedSchedule && selectedSchedule.config_id) {
-                          handleDeleteScheduleDataClick(selectedSchedule.config_id, selectedSchedule.config_name || 'Unknown', e.currentTarget);
+                          // 히스토리 모달창에서는 데이터만 삭제 (설정 유지)
+                          setDeleteTargetSchedule({ configId: selectedSchedule.config_id, configName: selectedSchedule.config_name || 'Unknown' });
+                          setDeleteButtonElement(e.currentTarget);
+                          setShowDeleteDataOnlyToast(true);
                         }
                       }}
                       className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
@@ -1363,7 +1408,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
         type="danger"
       />
 
-      {/* 스케줄 삭제 확인 토스트 */}
+      {/* 스케줄 삭제 확인 토스트 (완전 삭제) */}
       <DeleteConfirmationToast
         isOpen={showDeleteScheduleToast}
         onClose={() => {
@@ -1373,6 +1418,23 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
           setDeleteButtonElement(null);
         }}
         onConfirm={handleDeleteScheduleData}
+        title="자동검색 설정 삭제"
+        message={`정말로 "${deleteTargetSchedule?.configName || 'Unknown'}" 자동검색 설정을 삭제하시겠습니까? 설정과 함께 관련된 모든 데이터(검색 결과, 실행 로그, 알림 등)가 영구적으로 삭제되며, 이 작업은 되돌릴 수 없습니다.`}
+        confirmText="예, 삭제합니다"
+        cancelText="아니오, 취소"
+        type="danger"
+      />
+
+      {/* 히스토리 모달창용 데이터만 삭제 확인 토스트 */}
+      <DeleteConfirmationToast
+        isOpen={showDeleteDataOnlyToast}
+        onClose={() => {
+          console.log('데이터 삭제 토스트 닫기');
+          setShowDeleteDataOnlyToast(false);
+          setDeleteTargetSchedule(null);
+          setDeleteButtonElement(null);
+        }}
+        onConfirm={handleDeleteScheduleDataOnly}
         title="스케줄 데이터 삭제"
         message={`"${deleteTargetSchedule?.configName || 'Unknown'}" 스케줄의 모든 검색 결과와 로그를 영구적으로 삭제하시겠습니까? 설정은 유지되지만 모든 히스토리 데이터가 사라집니다.`}
         confirmText="예, 삭제합니다"
