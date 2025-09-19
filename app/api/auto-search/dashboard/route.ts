@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 // 캐시 비활성화: 항상 최신 데이터를 반환
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const maxDuration = 60;
 
 // 환경변수 체크
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -19,72 +20,71 @@ export async function GET() {
   try {
     console.log('대시보드 API 호출됨');
     
-    // 전체 설정 수 조회
-    const { count: totalConfigs, error: totalConfigsError } = await supabase
-      .from('auto_search_configs')
-      .select('*', { count: 'exact', head: true });
-    
-    console.log('전체 설정 수:', totalConfigs, '오류:', totalConfigsError);
-
-    // 활성 설정 수 조회
-    const { count: activeConfigs } = await supabase
-      .from('auto_search_configs')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
-
-    // 실행 통계 조회 (auto_search_configs에서)
-    const { data: configStats } = await supabase
-      .from('auto_search_configs')
-      .select('run_count, success_count, error_count');
-
-    const totalRuns = configStats?.reduce((sum, config) => sum + (config.run_count || 0), 0) || 0;
-    const successRuns = configStats?.reduce((sum, config) => sum + (config.success_count || 0), 0) || 0;
-    const errorRuns = configStats?.reduce((sum, config) => sum + (config.error_count || 0), 0) || 0;
-
-    // 검색 결과 수 조회 (auto_search_results 테이블에서)
-    const { count: totalResults } = await supabase
-      .from('auto_search_results')
-      .select('*', { count: 'exact', head: true });
-
-    // 최근 활동 조회 (auto_search_logs에서)
-    const { data: recentActivity } = await supabase
-      .from('auto_search_logs')
-      .select(`
-        id,
-        config_id,
-        status,
-        started_at,
-        completed_at,
-        duration_ms,
-        results_count,
-        error_message,
-        auto_search_configs (
+    // 🚀 최적화: 모든 기본 쿼리를 병렬로 실행 (Promise.all 사용)
+    const [
+      configsResult,
+      resultsCountResult,
+      recentActivityResult
+    ] = await Promise.all([
+      // 모든 설정 정보를 한 번에 조회 (통계 계산을 위해)
+      supabase
+        .from('auto_search_configs')
+        .select('id, is_active, run_count, success_count, error_count, created_at, name, search_query, target_product_name, target_mall_name, target_brand'),
+      
+      // 검색 결과 수 조회
+      supabase
+        .from('auto_search_results')
+        .select('*', { count: 'exact', head: true }),
+      
+      // 최근 활동 조회 (JOIN 포함)
+      supabase
+        .from('auto_search_logs')
+        .select(`
           id,
-          name,
-          search_query,
-          target_product_name,
-          target_mall_name,
-          target_brand
-        )
-      `)
-      .order('started_at', { ascending: false })
-      .limit(10);
+          config_id,
+          status,
+          started_at,
+          completed_at,
+          duration_ms,
+          results_count,
+          error_message,
+          auto_search_configs (
+            id,
+            name,
+            search_query,
+            target_product_name,
+            target_mall_name,
+            target_brand
+          )
+        `)
+        .order('started_at', { ascending: false })
+        .limit(10)
+    ]);
 
-    // 상위 설정 조회 (실행 횟수 기준 상위 5개)
-    const { data: topConfigs } = await supabase
-      .from('auto_search_configs')
-      .select('id, name, search_query, run_count, success_count')
-      .order('run_count', { ascending: false })
-      .limit(5);
+    // 클라이언트에서 통계 계산 (데이터베이스 부하 감소)
+    const configs = configsResult.data || [];
+    const totalConfigs = configs.length;
+    const activeConfigs = configs.filter(config => config.is_active).length;
+    
+    const totalRuns = configs.reduce((sum, config) => sum + (config.run_count || 0), 0);
+    const successRuns = configs.reduce((sum, config) => sum + (config.success_count || 0), 0);
+    const errorRuns = configs.reduce((sum, config) => sum + (config.error_count || 0), 0);
 
-    // 성공률 계산
-    const topConfigsWithRate = topConfigs?.map(config => ({
-      ...config,
-      success_rate: config.run_count > 0 ? Math.round((config.success_count / config.run_count) * 100) : 0
-    })) || [];
+    // 상위 설정 계산 (클라이언트에서 정렬)
+    const topConfigs = configs
+      .sort((a, b) => (b.run_count || 0) - (a.run_count || 0))
+      .slice(0, 5)
+      .map(config => ({
+        id: config.id,
+        name: config.name,
+        search_query: config.search_query,
+        run_count: config.run_count,
+        success_count: config.success_count,
+        success_rate: config.run_count > 0 ? Math.round((config.success_count / config.run_count) * 100) : 0
+      }));
 
     // 최근 활동 데이터 포맷
-    const formattedRecentActivity = recentActivity?.map(activity => ({
+    const formattedRecentActivity = (recentActivityResult.data || []).map(activity => ({
       id: activity.id,
       config_id: activity.config_id,
       config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
@@ -98,91 +98,80 @@ export async function GET() {
       results_count: activity.results_count || 0,
       duration_ms: activity.duration_ms || 0,
       error_message: activity.error_message
-    })) || [];
+    }));
 
-    // 모든 활성화된 설정 조회
-    const { data: allActiveConfigs, error: configsError } = await supabase
-      .from('auto_search_configs')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+    // 활성 설정만 필터링
+    const activeConfigsOnly = configs.filter(config => config.is_active);
 
-    // 각 설정별로 최신 순위 결과 조회 (최신 1개, 최소 컬럼만)
-    let scheduleRankingsData: any = {};
-    
-    if (allActiveConfigs && allActiveConfigs.length > 0) {
-      for (const config of allActiveConfigs) {
-        const { data: configResults, error: resultsError } = await supabase
-          .from('auto_search_results')
-          .select(`
-            total_rank,
-            page,
-            rank_in_page,
-            product_title,
-            mall_name,
-            brand,
-            price,
-            product_link,
-            created_at
-          `)
-          .eq('config_id', config.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
+    // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로 실행
+    const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
+      const { data: configResults, error: resultsError } = await supabase
+        .from('auto_search_results')
+        .select(`
+          total_rank,
+          page,
+          rank_in_page,
+          product_title,
+          mall_name,
+          brand,
+          price,
+          product_link,
+          created_at
+        `)
+        .eq('config_id', config.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-        if (!resultsError && configResults) {
-          // 결과가 있는 설정
-          if (configResults.length > 0) {
-            scheduleRankingsData[config.id] = {
-              config_id: config.id,
-              config_name: config.name,
-              search_query: config.search_query,
-              target_product_name: config.target_product_name,
-              target_mall_name: config.target_mall_name,
-              target_brand: config.target_brand,
-              is_active: config.is_active,
-              latest_check: configResults[0].created_at,
-              rankings: configResults.map(result => ({
-                total_rank: result.total_rank,
-                page: result.page,
-                rank_in_page: result.rank_in_page,
-                product_title: result.product_title,
-                mall_name: result.mall_name,
-                brand: result.brand,
-                price: result.price,
-                product_link: result.product_link
-              }))
-            };
-          } else {
-            // 결과가 없는 설정 (빈 상태)
-            scheduleRankingsData[config.id] = {
-              config_id: config.id,
-              config_name: config.name,
-              search_query: config.search_query,
-              target_product_name: config.target_product_name,
-              target_mall_name: config.target_mall_name,
-              target_brand: config.target_brand,
-              is_active: config.is_active,
-              latest_check: config.last_run_at || config.created_at,
-              rankings: []
-            };
-          }
-        }
+      if (!resultsError && configResults && configResults.length > 0) {
+        // 결과가 있는 설정
+        return {
+          config_id: config.id,
+          config_name: config.name,
+          search_query: config.search_query,
+          target_product_name: config.target_product_name,
+          target_mall_name: config.target_mall_name,
+          target_brand: config.target_brand,
+          is_active: config.is_active,
+          latest_check: configResults[0].created_at,
+          rankings: configResults.map(result => ({
+            total_rank: result.total_rank,
+            page: result.page,
+            rank_in_page: result.rank_in_page,
+            product_title: result.product_title,
+            mall_name: result.mall_name,
+            brand: result.brand,
+            price: result.price,
+            product_link: result.product_link
+          }))
+        };
+      } else {
+        // 결과가 없는 설정 (빈 상태)
+        return {
+          config_id: config.id,
+          config_name: config.name,
+          search_query: config.search_query,
+          target_product_name: config.target_product_name,
+          target_mall_name: config.target_mall_name,
+          target_brand: config.target_brand,
+          is_active: config.is_active,
+          latest_check: config.created_at,
+          rankings: []
+        };
       }
-    }
+    });
 
-    const latestRankings = Object.values(scheduleRankingsData);
+    // 모든 활성 설정의 결과를 병렬로 조회
+    const scheduleRankings = await Promise.all(scheduleRankingsPromises);
 
-    console.log('활성 설정 수:', allActiveConfigs?.length || 0);
-    console.log('스케줄별 순위 결과 수:', latestRankings?.length || 0);
+    console.log('활성 설정 수:', activeConfigsOnly.length);
+    console.log('스케줄별 순위 결과 수:', scheduleRankings.length);
     
     // 각 스케줄별 상품 수 로깅
-    if (latestRankings && latestRankings.length > 0) {
-      console.log('각 스케줄별 상품 수:', latestRankings.map((schedule: any) => 
+    if (scheduleRankings && scheduleRankings.length > 0) {
+      console.log('각 스케줄별 상품 수:', scheduleRankings.map((schedule: any) => 
         `설정 ${schedule.config_id}: ${schedule.rankings.length}개 상품`
       ));
     }
-
-    const scheduleRankings = latestRankings || [];
 
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
@@ -190,9 +179,9 @@ export async function GET() {
       totalRuns,
       successRuns,
       errorRuns,
-      totalResults: totalResults || 0,
+      totalResults: resultsCountResult.count || 0,
       recentActivity: formattedRecentActivity,
-      topConfigs: topConfigsWithRate,
+      topConfigs: topConfigs,
       scheduleRankings: scheduleRankings
     };
 

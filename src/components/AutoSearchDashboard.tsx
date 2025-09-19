@@ -231,7 +231,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
 
       const controller = new AbortController();
       abortControllerRef.current = controller;
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      const timeout = setTimeout(() => controller.abort(), 60000);
       
       try {
         const response = await fetch(`/api/auto-search/dashboard?t=${Date.now()}`, { signal: controller.signal });
