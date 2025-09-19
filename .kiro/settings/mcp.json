@@ -1,0 +1,81 @@
+{
+  "mcpServers": {
+    "Magic MCP": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@21st-dev/magic-mcp",
+        "--key",
+        "cc905a3d-c71c-40e9-8eb3-a306f5c6fa4c",
+        "--profile",
+        "quarrelsome-mosquito-LEd5aY"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "tosspayments-integration-guide": {
+      "command": "npx -y @tosspayments/integration-guide-mcp@latest",
+      "args": [],
+      "env": {},
+      "disabled": true
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://localhost/mydb"
+      ],
+      "env": {},
+      "disabled": true
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_be1e2ddfa0563a3bf5a0bf561ef60d3b203a8f8b"
+      ],
+      "disabled": true
+    },
+    "context7-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@upstash/context7-mcp",
+        "--key",
+        "cc905a3d-c71c-40e9-8eb3-a306f5c6fa4c"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "resolve-library-id",
+        "get-library-docs"
+      ]
+    },
+    "Playwright Automation": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@microsoft/playwright-mcp",
+        "--key",
+        "cc905a3d-c71c-40e9-8eb3-a306f5c6fa4c"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "browser_navigate",
+        "browser_click",
+        "browser_press_key",
+        "browser_take_screenshot",
+        "browser_wait_for"
+      ]
+    }
+  }
+}
