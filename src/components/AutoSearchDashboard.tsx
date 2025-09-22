@@ -1346,7 +1346,17 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                             <p className="text-sm">결과가 없습니다</p>
                                           </div>
                                         ) : (
-                                          execution.results.map((result: any, resultIndex: number) => (
+                                          // 페이지별로 정렬하여 표시
+                                          execution.results
+                                            .sort((a: any, b: any) => {
+                                              // 먼저 페이지 번호로 정렬
+                                              if (a.page !== b.page) {
+                                                return a.page - b.page;
+                                              }
+                                              // 같은 페이지 내에서는 페이지 내 순위로 정렬
+                                              return a.rank_in_page - b.rank_in_page;
+                                            })
+                                            .map((result: any, resultIndex: number) => (
                                             <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
                                               <div className="flex items-center justify-between sm:hidden">
                                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
