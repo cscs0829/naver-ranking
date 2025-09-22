@@ -105,7 +105,31 @@ export async function GET() {
 
     // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로
     const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
-      // 최신 검색 실행의 모든 결과를 가져와서 페이지별로 정렬 (히스토리 모달과 동일한 로직)
+      // 1단계: 최신 검색 시간 찾기
+      const { data: latestTimeResult, error: latestTimeError } = await supabase
+        .from('auto_search_results')
+        .select('created_at')
+        .eq('config_id', config.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (latestTimeError || !latestTimeResult || latestTimeResult.length === 0) {
+        return {
+          config_id: config.id,
+          config_name: config.name,
+          search_query: config.search_query,
+          target_product_name: config.target_product_name,
+          target_mall_name: config.target_mall_name,
+          target_brand: config.target_brand,
+          is_active: config.is_active,
+          latest_check: config.created_at,
+          rankings: []
+        };
+      }
+
+      const latestCheckTime = latestTimeResult[0].created_at;
+
+      // 2단계: 최신 검색 시간의 모든 결과 가져오기
       const { data: allResults, error: allResultsError } = await supabase
         .from('auto_search_results')
         .select(`
@@ -120,7 +144,7 @@ export async function GET() {
           created_at
         `)
         .eq('config_id', config.id)
-        .order('created_at', { ascending: false });
+        .eq('created_at', latestCheckTime);
 
       if (allResultsError || !allResults || allResults.length === 0) {
         return {
@@ -131,19 +155,13 @@ export async function GET() {
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           is_active: config.is_active,
-          latest_check: config.created_at,
+          latest_check: latestCheckTime,
           rankings: []
         };
       }
-
-      // 최신 검색 시간 찾기
-      const latestCheckTime = allResults[0].created_at;
       
-      // 해당 시간의 모든 결과 필터링
-      const latestResults = allResults.filter(result => result.created_at === latestCheckTime);
-      
-      // 히스토리 모달과 동일한 정렬: 페이지 번호 → 페이지 내 순위
-      const sortedResults = latestResults.sort((a, b) => {
+      // 3단계: 히스토리 모달과 동일한 정렬 (페이지 번호 → 페이지 내 순위)
+      const sortedResults = allResults.sort((a, b) => {
         if (a.page !== b.page) {
           return a.page - b.page;
         }
@@ -151,6 +169,8 @@ export async function GET() {
       });
 
       const configResults = sortedResults.slice(0, 1); // 첫 번째(가장 위) 결과만 선택
+
+      console.log(`설정 ${config.id} (${config.name}): 최신 검색 시간 ${latestCheckTime}에서 ${allResults.length}개 결과 중 선택된 상품 - page: ${configResults[0].page}, rank_in_page: ${configResults[0].rank_in_page}, total_rank: ${configResults[0].total_rank}`);
 
       if (configResults && configResults.length > 0) {
         // 결과가 있는 설정 - total_rank가 가장 높은(낮은 숫자) 상품 표시
