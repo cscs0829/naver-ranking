@@ -152,7 +152,10 @@ export async function GET() {
 
       // 가장 높은 순위(가장 낮은 숫자)의 상품 선택
       const bestResult = sortedResults.reduce((best, current) => {
-        return current.total_rank < best.total_rank ? current : best;
+        // 페이지 번호가 낮은 것이 우선, 같으면 페이지 내 순위가 낮은 것이 우선
+        if (current.page < best.page) return current;
+        if (current.page > best.page) return best;
+        return current.rank_in_page < best.rank_in_page ? current : best;
       }, sortedResults[0]);
 
       const configResults = bestResult ? [bestResult] : [];
