@@ -220,10 +220,11 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
         const resultsToInsert = matchedItems.map((item) => {
           // 원본 집합에서의 인덱스를 기준으로 순위 계산
           const originalIndex = aggregatedItems.indexOf(item);
-          const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
           // 네이버 쇼핑 웹페이지는 1페이지에 40개씩 표시됨 (API는 100개씩 처리)
           const page = originalIndex >= 0 ? Math.floor(originalIndex / 40) + 1 : 0;
           const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
+          // total_rank는 실제 네이버 쇼핑 순위로 계산: (페이지-1) * 40 + 페이지내순위
+          const totalRank = originalIndex >= 0 ? (page - 1) * 40 + rankInPage : 0;
 
           return {
           search_query: config.search_query,
