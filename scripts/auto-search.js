@@ -217,30 +217,13 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
         const todayStr = new Date().toISOString().split('T')[0];
 
         // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
-        // 히스토리 모달과 동일한 방식으로 정렬: 페이지 번호 → 페이지 내 순위
-        const sortedMatchedItems = matchedItems.map((item) => {
+        const resultsToInsert = matchedItems.map((item) => {
+          // 원본 집합에서의 인덱스를 기준으로 순위 계산
           const originalIndex = aggregatedItems.indexOf(item);
           const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
+          // 네이버 쇼핑 웹페이지는 1페이지에 40개씩 표시됨 (API는 100개씩 처리)
           const page = originalIndex >= 0 ? Math.floor(originalIndex / 40) + 1 : 0;
           const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
-          
-          return {
-            item,
-            totalRank,
-            page,
-            rankInPage
-          };
-        }).sort((a, b) => {
-          // 먼저 페이지 번호로 정렬
-          if (a.page !== b.page) {
-            return a.page - b.page;
-          }
-          // 같은 페이지 내에서는 페이지 내 순위로 정렬
-          return a.rankInPage - b.rankInPage;
-        });
-
-        const resultsToInsert = sortedMatchedItems.map((sortedItem, index) => {
-          const { item, totalRank, page, rankInPage } = sortedItem;
 
           return {
           search_query: config.search_query,
