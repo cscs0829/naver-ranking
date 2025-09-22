@@ -1349,7 +1349,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                           // 페이지별로 정렬하여 표시
                                           execution.results
                                             .sort((a: any, b: any) => {
-                                              // 먼저 페이지 번호로 정렬
+                                              // 먼저 페이지 번호로 정렬 (낮은 페이지부터)
                                               if (a.page !== b.page) {
                                                 return a.page - b.page;
                                               }
