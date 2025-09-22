@@ -105,6 +105,31 @@ export async function GET() {
 
     // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로 실행
     const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
+      // 먼저 최신 검색 시간을 찾기
+      const { data: latestResults, error: latestError } = await supabase
+        .from('auto_search_results')
+        .select('created_at')
+        .eq('config_id', config.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (latestError || !latestResults || latestResults.length === 0) {
+        return {
+          config_id: config.id,
+          config_name: config.name,
+          search_query: config.search_query,
+          target_product_name: config.target_product_name,
+          target_mall_name: config.target_mall_name,
+          target_brand: config.target_brand,
+          is_active: config.is_active,
+          latest_check: config.created_at,
+          rankings: []
+        };
+      }
+
+      const latestCheckTime = latestResults[0].created_at;
+
+      // 해당 시간의 모든 결과를 가져와서 total_rank 기준으로 정렬
       const { data: configResults, error: resultsError } = await supabase
         .from('auto_search_results')
         .select(`
@@ -119,11 +144,12 @@ export async function GET() {
           created_at
         `)
         .eq('config_id', config.id)
-        .order('created_at', { ascending: false })
+        .eq('created_at', latestCheckTime)
+        .order('total_rank', { ascending: true })
         .limit(1);
 
       if (!resultsError && configResults && configResults.length > 0) {
-        // 결과가 있는 설정
+        // 결과가 있는 설정 - total_rank가 가장 높은(낮은 숫자) 상품 표시
         return {
           config_id: config.id,
           config_name: config.name,
@@ -132,7 +158,7 @@ export async function GET() {
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           is_active: config.is_active,
-          latest_check: configResults[0].created_at,
+          latest_check: latestCheckTime,
           rankings: configResults.map(result => ({
             total_rank: result.total_rank,
             page: result.page,
@@ -154,7 +180,7 @@ export async function GET() {
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           is_active: config.is_active,
-          latest_check: config.created_at,
+          latest_check: latestCheckTime,
           rankings: []
         };
       }
