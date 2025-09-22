@@ -103,7 +103,7 @@ export async function GET() {
     // 활성 설정만 필터링
     const activeConfigsOnly = configs.filter(config => config.is_active);
 
-    // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로 실행
+    // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로
     const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
       // 최신 검색 실행의 모든 결과를 가져와서 total_rank 기준으로 정렬
       const { data: configResults, error: resultsError } = await supabase
