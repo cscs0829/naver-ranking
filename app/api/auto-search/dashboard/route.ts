@@ -126,6 +126,8 @@ export async function GET() {
 
       if (!resultsError && configResults && configResults.length > 0) {
         // 결과가 있는 설정 - total_rank가 가장 높은(낮은 숫자) 상품 표시
+        console.log(`설정 ${config.id} (${config.name}): 선택된 상품 - total_rank: ${configResults[0].total_rank}, page: ${configResults[0].page}, rank_in_page: ${configResults[0].rank_in_page}, created_at: ${configResults[0].created_at}`);
+        
         return {
           config_id: config.id,
           config_name: config.name,
