@@ -105,31 +105,7 @@ export async function GET() {
 
     // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로 실행
     const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
-      // 먼저 최신 검색 시간을 찾기
-      const { data: latestResults, error: latestError } = await supabase
-        .from('auto_search_results')
-        .select('created_at')
-        .eq('config_id', config.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (latestError || !latestResults || latestResults.length === 0) {
-        return {
-          config_id: config.id,
-          config_name: config.name,
-          search_query: config.search_query,
-          target_product_name: config.target_product_name,
-          target_mall_name: config.target_mall_name,
-          target_brand: config.target_brand,
-          is_active: config.is_active,
-          latest_check: config.created_at,
-          rankings: []
-        };
-      }
-
-      const latestCheckTime = latestResults[0].created_at;
-
-      // 해당 시간의 모든 결과를 가져와서 total_rank 기준으로 정렬
+      // 최신 검색 실행의 모든 결과를 가져와서 total_rank 기준으로 정렬
       const { data: configResults, error: resultsError } = await supabase
         .from('auto_search_results')
         .select(`
@@ -144,7 +120,7 @@ export async function GET() {
           created_at
         `)
         .eq('config_id', config.id)
-        .eq('created_at', latestCheckTime)
+        .order('created_at', { ascending: false })
         .order('total_rank', { ascending: true })
         .limit(1);
 
@@ -158,7 +134,7 @@ export async function GET() {
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           is_active: config.is_active,
-          latest_check: latestCheckTime,
+          latest_check: configResults[0].created_at,
           rankings: configResults.map(result => ({
             total_rank: result.total_rank,
             page: result.page,
@@ -180,7 +156,7 @@ export async function GET() {
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           is_active: config.is_active,
-          latest_check: latestCheckTime,
+          latest_check: config.created_at,
           rankings: []
         };
       }
