@@ -213,6 +213,19 @@ export async function GET() {
       ));
     }
 
+    // 스케줄별 순위 결과를 최고 순위(가장 낮은 total_rank) 기준으로 정렬
+    const sortedScheduleRankings = scheduleRankings.sort((a, b) => {
+      // 각 스케줄의 최고 순위 상품 찾기
+      const aBestRank = a.rankings && a.rankings.length > 0 
+        ? Math.min(...a.rankings.map((r: any) => r.total_rank || 999999))
+        : 999999;
+      const bBestRank = b.rankings && b.rankings.length > 0 
+        ? Math.min(...b.rankings.map((r: any) => r.total_rank || 999999))
+        : 999999;
+      
+      return aBestRank - bBestRank; // 낮은 순위(더 좋은 순위)가 먼저 오도록
+    });
+
     const dashboardStats = {
       totalConfigs: totalConfigs || 0,
       activeConfigs: activeConfigs || 0,
@@ -222,7 +235,7 @@ export async function GET() {
       totalResults: resultsCountResult.count || 0,
       recentActivity: formattedRecentActivity,
       topConfigs: topConfigs,
-      scheduleRankings: scheduleRankings
+      scheduleRankings: sortedScheduleRankings
     };
 
     return NextResponse.json(dashboardStats, {
