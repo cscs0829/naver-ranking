@@ -101,7 +101,7 @@ export default function AutoSearchManager() {
     }
   };
 
-  // 필터 적용된 스케줄 목록 (실시간 결과 탭과 동일한 애니메이션 체계 적용을 위해 별도 메모이즈)
+  // 필터 적용된 스케줄 목록 (실시간 결과 탭과 동일한 애니메이션 체계 적용을 위해 별도 메모)
   const filteredConfigs = useMemo(() => {
     if (!filters.searchQuery) return configs;
     const q = filters.searchQuery.toLowerCase();
