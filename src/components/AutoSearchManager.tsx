@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Clock, 
   Play, 
@@ -69,6 +69,7 @@ export default function AutoSearchManager() {
   const [configs, setConfigs] = useState<AutoSearchConfig[]>([]);
   const [apiKeyProfiles, setApiKeyProfiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ searchQuery: '' });
   const [showForm, setShowForm] = useState(false);
   const [editingConfig, setEditingConfig] = useState<AutoSearchConfig | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,6 +100,16 @@ export default function AutoSearchManager() {
       setLoading(false);
     }
   };
+
+  // 필터 적용된 스케줄 목록 (실시간 결과 탭과 동일한 애니메이션 체계 적용을 위해 별도 메모이즈)
+  const filteredConfigs = useMemo(() => {
+    if (!filters.searchQuery) return configs;
+    const q = filters.searchQuery.toLowerCase();
+    return configs.filter((config) =>
+      (config.search_query || '').toLowerCase().includes(q) ||
+      (config.name || '').toLowerCase().includes(q)
+    );
+  }, [configs, filters.searchQuery]);
 
   // API 키 프로필 목록 조회 (쇼핑 검색 API 타입만)
   const fetchApiKeyProfiles = async () => {
@@ -421,6 +432,21 @@ export default function AutoSearchManager() {
         </button>
       </div>
 
+      {/* 검색어 필터 */}
+      <div className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <input
+          type="text"
+          value={filters.searchQuery}
+          onChange={(e) => setFilters({ searchQuery: e.target.value })}
+          onKeyDown={(e) => { if (e.key === 'Escape') setFilters({ searchQuery: '' }); }}
+          className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/50 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-300 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+          placeholder="검색어 또는 스케줄 이름으로 필터링"
+        />
+        <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          {filteredConfigs.length}개 스케줄 표시 중{filters.searchQuery && ` (전체 ${configs.length}개 중)`}
+        </div>
+      </div>
+
       {/* 스케줄 목록 */}
       <div className="grid gap-4">
         {configs.length === 0 ? (
@@ -430,13 +456,17 @@ export default function AutoSearchManager() {
             <p>새 설정을 만들어보세요.</p>
           </div>
         ) : (
-          configs.map((config) => (
-            <motion.div
-              key={config.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
-            >
+          <AnimatePresence mode="popLayout">
+            {filteredConfigs.map((config) => (
+              <motion.div
+                key={config.id}
+                layout
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.2 }}
+                className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6 shadow-sm"
+              >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
@@ -524,8 +554,9 @@ export default function AutoSearchManager() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          ))
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 
