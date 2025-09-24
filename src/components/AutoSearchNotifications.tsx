@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   Clock,
   X,
-  Settings
+  Trash2
 } from 'lucide-react';
 
 interface Notification {
@@ -25,7 +25,6 @@ interface Notification {
 export default function AutoSearchNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
 
   // 알림 조회
   const fetchNotifications = async () => {
@@ -111,6 +110,23 @@ export default function AutoSearchNotifications() {
     }
   };
 
+  // 모든 알림 삭제
+  const deleteAllNotifications = async () => {
+    try {
+      await fetch('/api/auto-search/notifications/delete-all', {
+        method: 'DELETE'
+      });
+
+      setNotifications([]);
+    } catch (error) {
+      // AbortError인 경우 조용히 처리
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      console.error('모든 알림 삭제 오류:', error);
+    }
+  };
+
   // 알림 타입별 아이콘
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -154,7 +170,7 @@ export default function AutoSearchNotifications() {
           </div>
           <div className="flex items-center gap-2">
             <div className="h-8 w-20 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
-            <div className="h-8 w-8 rounded-lg animate-pulse bg-slate-200 dark:bg-slate-700" />
+            <div className="h-8 w-16 rounded animate-pulse bg-slate-200 dark:bg-slate-700" />
           </div>
         </div>
 
@@ -203,12 +219,15 @@ export default function AutoSearchNotifications() {
               모두 읽음
             </button>
           )}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          {notifications.length > 0 && (
+            <button
+              onClick={deleteAllNotifications}
+              className="flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors font-medium"
+            >
+              <Trash2 className="w-4 h-4" />
+              비우기
+            </button>
+          )}
         </div>
       </div>
 
@@ -287,37 +306,6 @@ export default function AutoSearchNotifications() {
         </AnimatePresence>
       </div>
 
-      {/* 설정 패널 */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-          >
-            <h3 className="font-medium text-gray-900 mb-3">알림 설정</h3>
-            <div className="space-y-3">
-              <label className="flex items-center gap-3">
-                <input type="checkbox" defaultChecked className="rounded" />
-                <span className="text-sm text-gray-700">성공 알림 받기</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input type="checkbox" defaultChecked className="rounded" />
-                <span className="text-sm text-gray-700">오류 알림 받기</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded" />
-                <span className="text-sm text-gray-700">경고 알림 받기</span>
-              </label>
-              <label className="flex items-center gap-3">
-                <input type="checkbox" className="rounded" />
-                <span className="text-sm text-gray-700">정보 알림 받기</span>
-              </label>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
