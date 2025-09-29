@@ -1353,15 +1353,11 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                             <p className="text-sm">결과가 없습니다</p>
                                           </div>
                                         ) : (
-                                          // 페이지별로 정렬하여 표시
+                                          // 전체 순위로 정렬하여 표시
                                           execution.results
                                             .sort((a: any, b: any) => {
-                                              // 먼저 페이지 번호로 정렬 (낮은 페이지부터)
-                                              if (a.page !== b.page) {
-                                                return a.page - b.page;
-                                              }
-                                              // 같은 페이지 내에서는 페이지 내 순위로 정렬
-                                              return a.rank_in_page - b.rank_in_page;
+                                              // total_rank로 정렬 (낮은 순위부터)
+                                              return a.total_rank - b.total_rank;
                                             })
                                             .map((result: any, resultIndex: number) => (
                                             <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
@@ -1369,7 +1365,9 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                   {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                                 </span>
-                                                <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">{result.page}페이지 {result.rank_in_page}번째</span>
+                                                <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
+                                                  {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
+                                                </span>
                                               </div>
                                               <div className="hidden sm:flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
@@ -1383,11 +1381,13 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                                       <span>{result.mall_name}</span>
                                                       {result.brand && <span>브랜드: {result.brand}</span>}
                                                       <span>{result.price}원</span>
-                                                      <span className="text-blue-600">{result.page}페이지 {result.rank_in_page}번째</span>
+                                                      <span className="text-blue-600">
+                                                        {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
+                                                      </span>
                                                     </div>
                                                   </div>
                                                 </div>
-                                                <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(result.page - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
+                                                <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40) + 1 - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
                                               </div>
                                             </div>
                                           ))
