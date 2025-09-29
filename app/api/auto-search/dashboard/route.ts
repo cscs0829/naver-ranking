@@ -142,20 +142,15 @@ export async function GET() {
       // 해당 시간의 모든 결과 필터링
       const latestResults = allResults.filter(result => result.created_at === latestCheckTime);
       
-      // 히스토리 모달과 동일한 정렬: 페이지 번호 → 페이지 내 순위
+      // 전체 순위로 정렬 (히스토리 모달과 동일한 로직)
       const sortedResults = latestResults.sort((a, b) => {
-        if (a.page !== b.page) {
-          return a.page - b.page;
-        }
-        return a.rank_in_page - b.rank_in_page;
+        return a.total_rank - b.total_rank;
       });
 
-      // 가장 높은 순위(가장 낮은 숫자)의 상품 선택
+      // 가장 높은 순위(가장 낮은 total_rank)의 상품 선택
       const bestResult = sortedResults.reduce((best, current) => {
-        // 페이지 번호가 낮은 것이 우선, 같으면 페이지 내 순위가 낮은 것이 우선
-        if (current.page < best.page) return current;
-        if (current.page > best.page) return best;
-        return current.rank_in_page < best.rank_in_page ? current : best;
+        // total_rank가 낮은 것이 우선 (1위가 가장 좋음)
+        return current.total_rank < best.total_rank ? current : best;
       }, sortedResults[0]);
 
       const configResults = bestResult ? [bestResult] : [];
