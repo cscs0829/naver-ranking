@@ -1378,20 +1378,20 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                                 window.open(link, '_blank', 'noopener,noreferrer');
                                               }}
                                             >
-                                              <div className="flex items-center justify-between sm:hidden">
-                                                <div className="flex-1">
-                                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1">
+                                              <div className="flex flex-col sm:hidden">
+                                                <div className="flex items-start justify-between mb-2">
+                                                  <p className="text-sm font-medium text-gray-900 dark:text-white flex-1 pr-2 line-clamp-2">
                                                     {result.product_title}
                                                   </p>
+                                                  <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white flex-shrink-0">
+                                                    {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
+                                                  </span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
                                                   <p className="text-xs text-gray-500 dark:text-gray-400">
                                                     {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                                   </p>
-                                                </div>
-                                                <div className="ml-2 text-right">
-                                                  <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
-                                                    {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
-                                                  </span>
-                                                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                                  <p className="text-xs text-blue-600 dark:text-blue-400">
                                                     탭하여 바로가기
                                                   </p>
                                                 </div>
@@ -1402,7 +1402,6 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                                   <div className="flex-1">
                                                     <div className="flex items-center gap-2 mb-1">
                                                       <p className="font-medium text-gray-900 dark:text-white truncate">{result.product_title}</p>
-                                                      {result.is_exact_match && (<span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 text-xs rounded-full font-medium">정확 매칭</span>)}
                                                     </div>
                                                     <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                                       <span>{result.mall_name}</span>
