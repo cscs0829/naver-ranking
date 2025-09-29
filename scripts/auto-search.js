@@ -217,12 +217,13 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
         const todayStr = new Date().toISOString().split('T')[0];
 
         // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
-        const resultsToInsert = matchedItems.map((item, index) => {
-          // 정확 매칭된 아이템들의 순서대로 total_rank 계산
-          const totalRank = index + 1;
-          // total_rank를 기준으로 실제 페이지와 페이지 내 순위 계산
-          const page = Math.floor((totalRank - 1) / 40) + 1;
-          const rankInPage = ((totalRank - 1) % 40) + 1;
+        const resultsToInsert = matchedItems.map((item) => {
+          // 원본 집합에서의 인덱스를 기준으로 실제 순위 계산
+          const originalIndex = aggregatedItems.indexOf(item);
+          // 수동 검색과 동일한 로직: API 인덱스를 기준으로 실제 웹페이지 순위 계산
+          const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
+          const page = originalIndex >= 0 ? Math.floor(originalIndex / 40) + 1 : 0;
+          const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
 
           return {
           search_query: config.search_query,
