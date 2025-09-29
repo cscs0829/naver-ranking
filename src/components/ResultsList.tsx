@@ -1136,7 +1136,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                     </div>
                   )}
 
-                  {/* 액션 버튼들 */}
+                  {/* 액션 버튼 */}
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
                     <a
                       href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedResult.search_query)}&start=${(Math.floor((selectedResult.total_rank - 1) / 40)) * 40 + 1}`}
