@@ -949,19 +949,17 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                                   </span>
                                 </div>
                               </div>
-                              {result.product_link && (
-                                <div className="mt-4">
-                                  <a
-                                    href={result.product_link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors duration-200"
-                                  >
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                    상품 페이지 보기
-                                  </a>
-                                </div>
-                              )}
+                              <div className="mt-4">
+                                <a
+                                  href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(result.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40)) * 40 + 1}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900 transition-colors duration-200"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  상품 페이지 보기
+                                </a>
+                              </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
@@ -1140,17 +1138,15 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
 
                   {/* 액션 버튼들 */}
                   <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
-                    {selectedResult.product_link && (
-                      <a
-                        href={selectedResult.product_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>상품 페이지 보기</span>
-                      </a>
-                    )}
+                    <a
+                      href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedResult.search_query)}&start=${(Math.floor((selectedResult.total_rank - 1) / 40)) * 40 + 1}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>네이버 쇼핑에서 보기</span>
+                    </a>
                     <button
                       onClick={() => {
                         handleDeleteClick(selectedResult.id!)

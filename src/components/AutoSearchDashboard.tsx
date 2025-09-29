@@ -1374,7 +1374,10 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                               key={resultIndex} 
                                               className="p-4 sm:p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all duration-150 min-h-[60px] sm:min-h-auto"
                                               onClick={() => {
-                                                const link = `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40) + 1 - 1) * 20 + 1}`;
+                                                // 네이버 쇼핑은 1페이지에 40개씩 표시되므로 올바른 start 계산
+                                                const page = Math.floor((result.total_rank - 1) / 40) + 1;
+                                                const start = (page - 1) * 40 + 1;
+                                                const link = `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${start}`;
                                                 window.open(link, '_blank', 'noopener,noreferrer');
                                               }}
                                             >
@@ -1413,7 +1416,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                                     </div>
                                                   </div>
                                                 </div>
-                                                <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40) + 1 - 1) * 20 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
+                                                <a href={`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40)) * 40 + 1}`} target="_blank" rel="noopener noreferrer" className="hidden sm:flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"><ExternalLink className="w-4 h-4" />바로가기</a>
                                               </div>
                                             </div>
                                           ))
