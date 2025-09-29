@@ -151,16 +151,28 @@ export async function GET() {
         };
       }
 
-      // 최신 검색 시간 찾기
+      // 최신 검색 시간 찾기 (초 단위로 그룹화 - 히스토리 API와 동일한 방식)
       const latestCheckTime = allResults[0].created_at;
+      const latestCheckTimeKey = new Date(latestCheckTime).toISOString().slice(0, 19); // 초 단위로 동일 실행 묶음
       
-      // 해당 시간의 모든 결과 필터링
-      const latestResults = allResults.filter(result => result.created_at === latestCheckTime);
+      // 해당 시간의 모든 결과 필터링 (초 단위로 그룹화)
+      const latestResults = allResults.filter(result => {
+        const resultTimeKey = new Date(result.created_at).toISOString().slice(0, 19);
+        return resultTimeKey === latestCheckTimeKey;
+      });
       
       // 전체 순위로 정렬 (히스토리 모달과 동일한 로직)
       const sortedResults = latestResults.sort((a, b) => {
         return a.total_rank - b.total_rank;
       });
+
+      // 디버깅: 모든 결과 로그 출력
+      console.log(`설정 ${config.id} (${config.name}) - 모든 결과:`, sortedResults.map(r => ({
+        total_rank: r.total_rank,
+        page: r.page,
+        rank_in_page: r.rank_in_page,
+        product_title: r.product_title?.substring(0, 30) + '...'
+      })));
 
       // 가장 높은 순위(가장 낮은 total_rank)의 상품 선택
       const bestResult = sortedResults.reduce((best, current) => {
