@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { SearchResult } from '@/utils/supabase'
-import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor } from 'lucide-react'
+import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, ExternalLink, Eye, X, Smartphone, Monitor } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 // import { orderBy } from 'lodash'
 import { toast } from '@/utils/toast'
@@ -620,8 +620,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                       <span>뒤에서부터</span>
                     </motion.button>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
-                    <Sparkles className="w-3 h-3 mr-1" />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     각 검색어 그룹 내에서 상품들을 순위별로 정렬합니다
                   </p>
                 </div>
@@ -686,8 +685,7 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
                       </select>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
-                    <Sparkles className="w-3 h-3 mr-1" />
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Context7의 Lodash orderBy를 사용한 다중 기준 정렬
                   </p>
                 </div>
@@ -715,13 +713,8 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
       {/* 결과 목록 */}
       {Object.keys(groupedResults).length === 0 ? (
         <div className="text-center py-16">
-          <div className="relative">
-            <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search className="w-10 h-10 text-blue-500" />
-            </div>
-            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Search className="w-10 h-10 text-blue-500" />
           </div>
           <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
             순위 결과가 없습니다
