@@ -183,6 +183,7 @@ export async function GET() {
           target_brand: config.target_brand,
           is_active: config.is_active,
           latest_check: configResults[0].created_at,
+          total_products_count: latestResults.length, // 실제 상품 개수 추가
           rankings: configResults.map(result => ({
             total_rank: result.total_rank,
             page: result.page,
@@ -205,6 +206,7 @@ export async function GET() {
           target_brand: config.target_brand,
           is_active: config.is_active,
           latest_check: config.created_at,
+          total_products_count: 0, // 실제 상품 개수 추가
           rankings: []
         };
       }

@@ -65,6 +65,7 @@ interface DashboardStats {
     is_active: boolean;
     latest_check: string;
     check_date: string;
+    total_products_count?: number; // 실제 상품 개수 추가
     rankings: Array<{
       product_title: string;
       mall_name: string;
@@ -1100,7 +1101,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                         </div>
                         <div className="text-right">
                           <p className="text-[11px] sm:text-xs text-gray-500 dark:text-slate-500">
-                            {schedule.rankings.length}개 상품 발견
+                            {schedule.total_products_count !== undefined ? schedule.total_products_count : schedule.rankings.length}개 상품 발견
                           </p>
                           <p className="hidden sm:block text-xs text-blue-600 dark:text-blue-400 font-medium">
                             클릭하여 히스토리 보기
