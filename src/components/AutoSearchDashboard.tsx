@@ -43,6 +43,7 @@ interface DashboardStats {
     started_at: string;
     completed_at?: string;
     results_count: number;
+    actual_results_count?: number; // 실제 상품 개수
     duration_ms?: number;
     error_message?: string;
   }>;
@@ -1195,7 +1196,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                     <div className="text-left sm:text-right">
                       <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold border border-blue-200 dark:border-blue-700">
                         <Target className="w-4 h-4 mr-1.5" />
-                        {activity.results_count}개 상품
+                        {activity.actual_results_count !== undefined ? activity.actual_results_count : activity.results_count}개 상품
                       </div>
                       {activity.duration_ms && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

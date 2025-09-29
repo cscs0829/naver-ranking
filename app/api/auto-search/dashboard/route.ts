@@ -83,21 +83,36 @@ export async function GET() {
         success_rate: config.run_count > 0 ? Math.round((config.success_count / config.run_count) * 100) : 0
       }));
 
-    // 최근 활동 데이터 포맷
-    const formattedRecentActivity = (recentActivityResult.data || []).map(activity => ({
-      id: activity.id,
-      config_id: activity.config_id,
-      config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
-      search_query: (activity.auto_search_configs as any)?.search_query || '',
-      target_product_name: (activity.auto_search_configs as any)?.target_product_name || '',
-      target_mall_name: (activity.auto_search_configs as any)?.target_mall_name || '',
-      target_brand: (activity.auto_search_configs as any)?.target_brand || '',
-      status: activity.status,
-      started_at: activity.started_at,
-      completed_at: activity.completed_at,
-      results_count: activity.results_count || 0,
-      duration_ms: activity.duration_ms || 0,
-      error_message: activity.error_message
+    // 최근 활동 데이터 포맷 (실제 상품 개수 포함)
+    const formattedRecentActivity = await Promise.all((recentActivityResult.data || []).map(async (activity) => {
+      // 해당 실행 시간대의 실제 상품 개수 조회
+      let actualResultsCount = 0;
+      if (activity.status === 'success' && activity.completed_at) {
+        const { count } = await supabase
+          .from('auto_search_results')
+          .select('*', { count: 'exact', head: true })
+          .eq('config_id', activity.config_id)
+          .gte('created_at', activity.started_at)
+          .lte('created_at', activity.completed_at);
+        actualResultsCount = count || 0;
+      }
+
+      return {
+        id: activity.id,
+        config_id: activity.config_id,
+        config_name: (activity.auto_search_configs as any)?.name || 'Unknown',
+        search_query: (activity.auto_search_configs as any)?.search_query || '',
+        target_product_name: (activity.auto_search_configs as any)?.target_product_name || '',
+        target_mall_name: (activity.auto_search_configs as any)?.target_mall_name || '',
+        target_brand: (activity.auto_search_configs as any)?.target_brand || '',
+        status: activity.status,
+        started_at: activity.started_at,
+        completed_at: activity.completed_at,
+        results_count: activity.results_count || 0,
+        actual_results_count: actualResultsCount,
+        duration_ms: activity.duration_ms || 0,
+        error_message: activity.error_message
+      };
     }));
 
     // 활성 설정만 필터링
