@@ -1174,7 +1174,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
           ) : (
             <>
               {(showAllActivities ? stats.recentActivity : stats.recentActivity.slice(0, 1)).map((activity) => (
-                <div key={activity.id} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <div key={activity.id} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800 transition-all duration-200">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-full ${activity.status === 'success' ? 'bg-green-100 dark:bg-green-900/30' : activity.status === 'error' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
@@ -1193,8 +1193,15 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                       </div>
                     </div>
                     <div className="text-left sm:text-right">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.results_count}개 결과</p>
-                      {activity.duration_ms && (<p className="text-xs text-gray-500 dark:text-gray-400">{(activity.duration_ms / 1000).toFixed(1)}초</p>)}
+                      <div className="inline-flex items-center px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full text-sm font-semibold border border-blue-200 dark:border-blue-700">
+                        <Target className="w-4 h-4 mr-1.5" />
+                        {activity.results_count}개 상품
+                      </div>
+                      {activity.duration_ms && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {(activity.duration_ms / 1000).toFixed(1)}초 소요
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
