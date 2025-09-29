@@ -768,7 +768,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       </div>
 
       {/* 주요 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1244,28 +1244,42 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                 ref={modalContainerRef}
               >
                 {/* 모달 헤더 */}
-                <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
-                  <div className="flex items-center gap-3">
-                    <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                    <div>
-                      <h3 id="history-modal-title" className="text-xl font-bold text-gray-900 dark:text-white">
-                        {selectedSchedule.config_name} 실행 히스토리
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-slate-400">
-                        검색어: "{selectedSchedule.search_query}"
-                        {selectedSchedule.target_product_name && (
-                          <span> | 대상 상품: "{selectedSchedule.target_product_name}"</span>
-                        )}
-                      </p>
+                <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-slate-700 sticky top-0 bg-white/95 dark:bg-slate-800/95 backdrop-blur z-10">
+                  {/* 제목과 닫기 버튼 */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0 pr-4">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex-shrink-0">
+                        <History className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 id="history-modal-title" className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                          {selectedSchedule.config_name} 실행 히스토리
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-slate-400 mt-1 break-words">
+                          검색어: "{selectedSchedule.search_query}"
+                          {selectedSchedule.target_product_name && (
+                            <span> | 대상 상품: "{selectedSchedule.target_product_name}"</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
+                    <button
+                      onClick={closeHistoryModal}
+                      className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700 flex-shrink-0"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* 액션 버튼들 */}
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={handleExportToExcel}
-                      className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium min-w-[120px] justify-center"
                     >
                       <FileSpreadsheet className="w-4 h-4" />
-                      엑셀 내보내기
+                      <span className="hidden sm:inline">엑셀 내보내기</span>
+                      <span className="sm:hidden">엑셀</span>
                     </button>
                     <button
                       onClick={(e) => {
@@ -1276,16 +1290,10 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                           setShowDeleteDataOnlyToast(true);
                         }
                       }}
-                      className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium min-w-[80px] justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
-                      삭제
-                    </button>
-                    <button
-                      onClick={closeHistoryModal}
-                      className="p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-slate-700"
-                    >
-                      <X className="w-6 h-6" />
+                      <span>삭제</span>
                     </button>
                   </div>
                 </div>
