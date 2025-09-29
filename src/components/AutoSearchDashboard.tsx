@@ -768,7 +768,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
       </div>
 
       {/* 주요 통계 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1005,7 +1005,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.98 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.2 }}
-                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800"
+                  className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 cursor-pointer hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-lg bg-white dark:bg-slate-800 w-full active:scale-[0.98] transition-transform duration-150"
                   onClick={() => handleScheduleClick(schedule)}
                 >
                   {/* 헤더 */}
@@ -1362,14 +1362,31 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                                               return a.total_rank - b.total_rank;
                                             })
                                             .map((result: any, resultIndex: number) => (
-                                            <div key={resultIndex} className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                                            <div 
+                                              key={resultIndex} 
+                                              className="p-4 sm:p-3 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700 active:scale-[0.98] transition-all duration-150 min-h-[60px] sm:min-h-auto"
+                                              onClick={() => {
+                                                const link = `https://search.shopping.naver.com/search/all?query=${encodeURIComponent(selectedSchedule.search_query)}&start=${(Math.floor((result.total_rank - 1) / 40) + 1 - 1) * 20 + 1}`;
+                                                window.open(link, '_blank', 'noopener,noreferrer');
+                                              }}
+                                            >
                                               <div className="flex items-center justify-between sm:hidden">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                  {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                                                </span>
-                                                <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
-                                                  {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
-                                                </span>
+                                                <div className="flex-1">
+                                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1">
+                                                    {result.product_title}
+                                                  </p>
+                                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    {new Date(result.time).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                                  </p>
+                                                </div>
+                                                <div className="ml-2 text-right">
+                                                  <span className="text-xs px-2 py-1 rounded-full bg-blue-600 text-white">
+                                                    {Math.floor((result.total_rank - 1) / 40) + 1}페이지 {((result.total_rank - 1) % 40) + 1}번째
+                                                  </span>
+                                                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                                    탭하여 바로가기
+                                                  </p>
+                                                </div>
                                               </div>
                                               <div className="hidden sm:flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
