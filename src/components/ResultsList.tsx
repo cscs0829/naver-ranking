@@ -5,9 +5,7 @@ import { createPortal } from 'react-dom'
 import { SearchResult } from '@/utils/supabase'
 import { Filter, ChevronDown, Download, Trash2, Search, Award, BarChart3, AlertTriangle, TrendingUp, Sparkles, ExternalLink, Eye, X, Smartphone, Monitor } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import Lottie from 'lottie-react'
 // import { orderBy } from 'lodash'
-import emptyAnim from './empty-state.json'
 import { toast } from '@/utils/toast'
 import { toast as sonnerToast } from 'sonner'
 import ConfirmationDialog from './ConfirmationDialog'
@@ -717,9 +715,6 @@ export default function ResultsList({ refreshTrigger, onNavigateToSearch }: Resu
       {/* 결과 목록 */}
       {Object.keys(groupedResults).length === 0 ? (
         <div className="text-center py-16">
-          <div className="w-40 mx-auto mb-4">
-            <Lottie animationData={emptyAnim} loop autoplay />
-          </div>
           <div className="relative">
             <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mx-auto mb-6">
               <Search className="w-10 h-10 text-blue-500" />
