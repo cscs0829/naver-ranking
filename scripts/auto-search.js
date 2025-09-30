@@ -66,7 +66,7 @@ function isExactTargetProduct(item, targetProductName, targetMallName, targetBra
 
 // 네이버 쇼핑 API 검색 함수
 async function searchNaverShopping(query, options = {}) {
-  const { clientId, clientSecret, display = 100, start = 1, sort = 'sim' } = options;
+  const { clientId, clientSecret, display = 100, start = 1 } = options;
   
   if (!clientId || !clientSecret) {
     throw new Error('네이버 API 키가 설정되지 않았습니다.');
@@ -76,8 +76,8 @@ async function searchNaverShopping(query, options = {}) {
   const params = new URLSearchParams({
     query,
     display: display.toString(),
-    start: start.toString(),
-    sort
+    start: start.toString()
+    // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
   });
 
   try {
@@ -186,8 +186,8 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             clientId: apiKeyProfile.client_id,
             clientSecret: apiKeyProfile.client_secret,
             display,
-            start: startIndex,
-            sort: 'sim'
+            start: startIndex
+            // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
           }
         );
         if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
@@ -222,7 +222,7 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           const originalIndex = aggregatedItems.indexOf(item);
           // 수동 검색과 동일한 로직: API 인덱스를 기준으로 실제 웹페이지 순위 계산
           const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
-          const page = originalIndex >= 0 ? Math.floor(originalIndex / 40) + 1 : 0;
+          const page = originalIndex >= 0 ? Math.floor((originalIndex) / 40) + 1 : 0;
           const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
 
           return {
