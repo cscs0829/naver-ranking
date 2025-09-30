@@ -52,8 +52,8 @@ export class NaverShoppingRankChecker {
         params: {
           query,
           start,
-          display,
-          sort: 'sim' // 정확도 순
+          display
+          // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
         },
         headers: {
           'X-Naver-Client-Id': this.clientId,
