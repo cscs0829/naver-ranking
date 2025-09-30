@@ -52,8 +52,8 @@ export class NaverShoppingRankChecker {
         params: {
           query,
           start,
-          display
-          // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
+          display,
+          sort: 'sim' // 정확도 순
         },
         headers: {
           'X-Naver-Client-Id': this.clientId,
@@ -306,7 +306,7 @@ export class NaverShoppingRankChecker {
           
           // 실제 네이버 쇼핑 웹페이지 기준으로 페이지와 순위 계산
           const totalRank = (currentApiPage - 1) * itemsPerApiPage + i + 1
-          const webPage = Math.floor((totalRank - 1) / itemsPerWebPage) + 1
+          const webPage = Math.floor(totalRank / itemsPerWebPage) + 1
           const rankInWebPage = ((totalRank - 1) % itemsPerWebPage) + 1
           
           console.log(`상품 정보: ${productInfo.product_title}`)

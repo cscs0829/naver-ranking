@@ -66,7 +66,7 @@ function isExactTargetProduct(item, targetProductName, targetMallName, targetBra
 
 // 네이버 쇼핑 API 검색 함수
 async function searchNaverShopping(query, options = {}) {
-  const { clientId, clientSecret, display = 100, start = 1 } = options;
+  const { clientId, clientSecret, display = 100, start = 1, sort = 'sim' } = options;
   
   if (!clientId || !clientSecret) {
     throw new Error('네이버 API 키가 설정되지 않았습니다.');
@@ -76,8 +76,8 @@ async function searchNaverShopping(query, options = {}) {
   const params = new URLSearchParams({
     query,
     display: display.toString(),
-    start: start.toString()
-    // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
+    start: start.toString(),
+    sort
   });
 
   try {
@@ -186,8 +186,8 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             clientId: apiKeyProfile.client_id,
             clientSecret: apiKeyProfile.client_secret,
             display,
-            start: startIndex
-            // sort 파라미터 제거 - 네이버 쇼핑 웹페이지와 동일한 기본 정렬 사용
+            start: startIndex,
+            sort: 'sim'
           }
         );
         if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
