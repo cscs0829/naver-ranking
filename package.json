@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "scrape": "node scripts/scrape_naver_rank.js",
+    "cleanup-logs": "node scripts/cleanup-old-logs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -35,6 +37,7 @@
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0",
+    "playwright": "^1.47.2",
     "typescript": "^5.5.0"
   }
 }

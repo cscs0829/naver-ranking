@@ -1,0 +1,13 @@
+┌─────────┐
+│ (index) │
+├─────────┤
+└─────────┘
+
+JSON_START
+{
+  "query": "푸꾸옥커플검색",
+  "sort": "sim",
+  "display": 20,
+  "items": []
+}
+JSON_END

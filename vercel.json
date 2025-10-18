@@ -3,5 +3,11 @@
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cleanup-logs",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }
