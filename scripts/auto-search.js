@@ -64,8 +64,8 @@ function isExactTargetProduct(item, targetProductName, targetMallName, targetBra
   return true;
 }
 
-// 네이버 쇼핑 API 검색 함수
-async function searchNaverShopping(query, options = {}) {
+// 네이버 쇼핑 API 검색 함수 (재시도 로직 포함)
+async function searchNaverShopping(query, options = {}, retryCount = 0) {
   const { clientId, clientSecret, display = 100, start = 1, sort = 'sim' } = options;
   
   if (!clientId || !clientSecret) {
@@ -85,12 +85,27 @@ async function searchNaverShopping(query, options = {}) {
       headers: {
         'X-Naver-Client-Id': clientId,
         'X-Naver-Client-Secret': clientSecret
-      }
+      },
+      timeout: 30000 // 30초 타임아웃
     });
 
     return response.data;
   } catch (error) {
-    console.error('네이버 API 호출 오류:', error.response?.data || error.message);
+    const errorData = error.response?.data;
+    const errorCode = errorData?.errorCode;
+    const statusCode = error.response?.status;
+
+    console.error('네이버 API 호출 오류:', errorData || error.message);
+    
+    // SE99 시스템 에러 또는 5xx 서버 에러인 경우 재시도
+    if ((errorCode === 'SE99' || statusCode >= 500) && retryCount < 3) {
+      const delay = Math.pow(2, retryCount) * 1000; // 1초, 2초, 4초
+      console.log(`⚠️ 시스템 에러 발생. ${delay/1000}초 후 재시도... (${retryCount + 1}/3)`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return searchNaverShopping(query, options, retryCount + 1);
+    }
+    
     throw error;
   }
 }
@@ -180,21 +195,36 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
       while (aggregatedItems.length < maxWanted && startIndex <= 1000) {
         const remaining = maxWanted - aggregatedItems.length;
         const display = Math.min(remaining, 100); // API limit
-        const batch = await searchNaverShopping(
-          config.search_query,
-          {
-            clientId: apiKeyProfile.client_id,
-            clientSecret: apiKeyProfile.client_secret,
-            display,
-            start: startIndex,
-            sort: 'sim'
+        
+        try {
+          const batch = await searchNaverShopping(
+            config.search_query,
+            {
+              clientId: apiKeyProfile.client_id,
+              clientSecret: apiKeyProfile.client_secret,
+              display,
+              start: startIndex,
+              sort: 'sim'
+            }
+          );
+          
+          if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
+            break;
           }
-        );
-        if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
-          break;
+          aggregatedItems.push(...batch.items);
+          startIndex += display; // 다음 구간
+          
+          // API 호출 간격 조절 (네이버 서버 부하 감소)
+          if (startIndex <= 1000) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+          }
+        } catch (error) {
+          console.error(`❌ 페이지 ${Math.floor(startIndex/100) + 1} 검색 실패:`, error.message);
+          // 개별 페이지 실패 시에도 계속 진행
+          startIndex += display;
+          continue;
         }
-        aggregatedItems.push(...batch.items);
-        startIndex += display; // 다음 구간
+        
         // 안전장치: 과도한 루프 방지
         if (startIndex > 1000) break;
       }
@@ -389,7 +419,13 @@ async function main() {
       
       for (const config of configs) {
         console.log(`\n🔄 설정 "${config.name}" 실행 중...`);
-        await runAutoSearch(config.id, apiKeyProfileId);
+        try {
+          await runAutoSearch(config.id, apiKeyProfileId);
+        } catch (error) {
+          console.error(`❌ 설정 "${config.name}" 실행 실패:`, error.message);
+          // 개별 설정 실패 시에도 다음 설정 계속 실행
+          continue;
+        }
       }
     } else {
       await runAutoSearch(configId, apiKeyProfileId);
