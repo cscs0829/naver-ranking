@@ -359,7 +359,7 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
           console.log('⚠️ 정확 매칭되는 결과가 없습니다. 저장을 건너뜁니다.');
         }
 
-        // 로그에 검색 결과 
+        // 로그에 검색 결과 저장
         if (log) {
           await supabase
             .from('auto_search_logs')
