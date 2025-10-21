@@ -201,13 +201,14 @@ export async function POST(request: NextRequest) {
           .eq('id', log.id);
       }
 
-      // 설정 누적 카운터 및 실행시각 갱신
+      // 설정 누적 카운터 및 실행시각 갱신 (성공 시 last_error 초기화)
       await supabase
         .from('auto_search_configs')
         .update({
           last_run_at: new Date().toISOString(),
           run_count: (config.run_count || 0) + 1,
-          success_count: (config.success_count || 0) + 1
+          success_count: (config.success_count || 0) + 1,
+          last_error: null // 성공 시 이전 오류 메시지 초기화
         })
         .eq('id', configId);
 

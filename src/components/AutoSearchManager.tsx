@@ -517,7 +517,7 @@ export default function AutoSearchManager() {
                     </div>
                   </div>
 
-                  {config.last_error && (
+                  {config.last_error && config.error_count > 0 && config.success_count === 0 && (
                     <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                       <strong>마지막 오류:</strong> {config.last_error}
                     </div>
