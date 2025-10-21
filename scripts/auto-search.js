@@ -365,8 +365,15 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             .from('auto_search_logs')
             .update({
               search_results: {
-                total_items: aggregatedItems.length,
-                items: matchedItems.slice(0, 10) // 처음 10개만 저장 (정확 매칭 기준)
+                total_items: totalSearched, // 검색한 총 상품 수
+                items: matchedItems.slice(0, 10).map(item => ({
+                  product_title: item.product.title,
+                  mall_name: item.product.mallName,
+                  brand: item.product.brand || '',
+                  total_rank: item.totalRank,
+                  page: item.webPage,
+                  rank_in_page: item.rankInWebPage
+                })) // 처음 10개만 저장 (정확 매칭 기준)
               }
             })
             .eq('id', log.id);
