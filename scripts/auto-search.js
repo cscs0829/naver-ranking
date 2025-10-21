@@ -188,13 +188,26 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
 
       console.log(`🔑 API 키 프로필 사용: ${apiKeyProfile.name}`);
 
-      // 네이버 쇼핑 검색 실행 (API 제한 준수: display<=100, start<=1000)
-      const maxWanted = Math.min((config.max_pages || 1) * 20, 1000);
-      const aggregatedItems = [];
-      let startIndex = 1; // 1-base
-      while (aggregatedItems.length < maxWanted && startIndex <= 1000) {
-        const remaining = maxWanted - aggregatedItems.length;
-        const display = Math.min(remaining, 100); // API limit
+      // 네이버 쇼핑 검색 실행 (순위검색 로직과 동일하게 수정)
+      const maxPages = config.max_pages || 10;
+      const itemsPerApiPage = 100; // API에서 한 번에 가져오는 상품 수
+      const itemsPerWebPage = 40;  // 실제 네이버 쇼핑 웹페이지에서 표시하는 상품 수
+      const actualMaxPages = Math.min(maxPages, 25); // API 최대 25페이지(1000개)
+      
+      const matchedItems = []; // 매칭된 상품들을 저장할 배열
+      let totalSearched = 0;
+      let currentApiPage = 1;
+
+      console.log(`검색 시작: "${config.search_query}"`);
+      console.log(`타겟 상품명: "${config.target_product_name || '없음'}"`);
+      console.log(`타겟 몰명: "${config.target_mall_name || '없음'}"`);
+      console.log(`타겟 브랜드: "${config.target_brand || '없음'}"`);
+      console.log(`제한 검색 모드: 최대 ${actualMaxPages}페이지 (${actualMaxPages * itemsPerApiPage}개 상품)`);
+      console.log(`실제 네이버 쇼핑 웹페이지: 한 페이지당 ${itemsPerWebPage}개 상품 표시`);
+
+      while (currentApiPage <= actualMaxPages) {
+        const start = (currentApiPage - 1) * itemsPerApiPage + 1;
+        console.log(`API 페이지 ${currentApiPage} 검색 중... (start: ${start}, display: ${itemsPerApiPage})`);
         
         try {
           const batch = await searchNaverShopping(
@@ -202,45 +215,80 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
             {
               clientId: apiKeyProfile.client_id,
               clientSecret: apiKeyProfile.client_secret,
-              display,
-              start: startIndex,
+              display: itemsPerApiPage,
+              start: start,
               sort: 'sim'
             }
           );
           
           if (!batch || !Array.isArray(batch.items) || batch.items.length === 0) {
+            console.error(`API 페이지 ${currentApiPage} 검색 실패`);
+            break; // 더 이상 검색할 수 없으면 중단
+          }
+
+          console.log(`API 페이지 ${currentApiPage}: ${batch.items.length}개 상품 발견`);
+          totalSearched += batch.items.length;
+
+          // API에서 가져온 100개를 실제 웹페이지 기준 40개씩 나누어 처리
+          for (let i = 0; i < batch.items.length; i++) {
+            const product = batch.items[i];
+            console.log(`상품 ${i + 1} 검사 중: "${product.title}"`);
+            
+            const isMatch = isExactTargetProduct(
+              product,
+              config.target_product_name,
+              config.target_mall_name,
+              config.target_brand
+            );
+            
+            if (isMatch) {
+              console.log(`✅ 매칭된 상품 발견!`);
+              
+              // 실제 네이버 쇼핑 웹페이지 기준으로 페이지와 순위 계산 (순위검색과 동일)
+              const totalRank = (currentApiPage - 1) * itemsPerApiPage + i + 1;
+              const webPage = Math.floor(totalRank / itemsPerWebPage) + 1;
+              const rankInWebPage = ((totalRank - 1) % itemsPerWebPage) + 1;
+              
+              console.log(`상품 정보: ${product.title}`);
+              console.log(`몰명: ${product.mallName}`);
+              console.log(`브랜드: ${product.brand || ''}`);
+              console.log(`가격: ${product.lprice}`);
+              console.log(`전체 순위: ${totalRank}위`);
+              console.log(`웹페이지: ${webPage}페이지 ${rankInWebPage}번째`);
+              
+              matchedItems.push({
+                product: product,
+                totalRank: totalRank,
+                webPage: webPage,
+                rankInWebPage: rankInWebPage
+              });
+              
+              console.log(`매칭 상품 발견: 전체 ${totalRank}위, 웹페이지 ${webPage}페이지 ${rankInWebPage}번째`);
+            }
+          }
+
+          // 더 이상 상품이 없으면 중단
+          if (batch.items.length < itemsPerApiPage) {
+            console.log(`API 페이지 ${currentApiPage}에서 ${batch.items.length}개만 반환됨. 검색 완료.`);
             break;
           }
-          aggregatedItems.push(...batch.items);
-          startIndex += display; // 다음 구간
+
+          // API 호출 제한을 고려한 딜레이 (네이버 API는 초당 10회 제한)
+          await new Promise(resolve => setTimeout(resolve, 200));
+          currentApiPage++;
           
-          // API 호출 간격 조절 (네이버 서버 부하 감소)
-          if (startIndex <= 1000) {
-            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
-          }
         } catch (error) {
-          console.error(`❌ 페이지 ${Math.floor(startIndex/100) + 1} 검색 실패:`, error.message);
+          console.error(`❌ API 페이지 ${currentApiPage} 검색 실패:`, error.message);
           // 개별 페이지 실패 시에도 계속 진행
-          startIndex += display;
+          currentApiPage++;
           continue;
         }
-        
-        // 안전장치: 과도한 루프 방지
-        if (startIndex > 1000) break;
       }
 
-      if (aggregatedItems.length > 0) {
-        console.log(`📊 검색 결과: ${aggregatedItems.length}개 상품`);
+      console.log(`검색 완료: 총 ${totalSearched}개 상품 검색, ${matchedItems.length}개 매칭`);
+      console.log(`실제 웹페이지 기준: 최대 ${Math.ceil(totalSearched / itemsPerWebPage)}페이지`);
 
-        // 정확 매칭 필터 적용
-        const matchedItems = aggregatedItems
-          .filter(item => isExactTargetProduct(
-            item,
-            config.target_product_name,
-            config.target_mall_name,
-            config.target_brand
-          ));
-
+      if (matchedItems.length > 0) {
         console.log(`🎯 정확 매칭 결과: ${matchedItems.length}개 상품`);
 
         // 히스토리 보존: 삭제하지 않고 매 실행마다 결과를 누적 저장
@@ -248,30 +296,25 @@ async function runAutoSearch(configId, apiKeyProfileId = null) {
 
         // 검색 결과를 데이터베이스에 저장 (정확 매칭만)
         const resultsToInsert = matchedItems.map((item) => {
-          // 원본 집합에서의 인덱스를 기준으로 실제 순위 계산
-          const originalIndex = aggregatedItems.indexOf(item);
-          // 수동 검색과 동일한 로직: API 인덱스를 기준으로 실제 웹페이지 순위 계산
-          const totalRank = originalIndex >= 0 ? originalIndex + 1 : 0;
-          const page = originalIndex >= 0 ? Math.floor((originalIndex) / 40) + 1 : 0;
-          const rankInPage = originalIndex >= 0 ? ((originalIndex) % 40) + 1 : 0;
+          const product = item.product;
 
           return {
           search_query: config.search_query,
           target_mall_name: config.target_mall_name,
           target_brand: config.target_brand,
           target_product_name: config.target_product_name,
-          page,
-          rank_in_page: rankInPage,
-          total_rank: totalRank,
-          product_title: normalizeWhitespace(removeHtmlTags(item.title)),
-          mall_name: normalizeWhitespace(removeHtmlTags(item.mallName)),
-          brand: normalizeWhitespace(removeHtmlTags(item.brand || '')),
-          price: item.lprice,
-          product_link: item.link,
-          product_id: item.productId,
-          category1: item.category1,
-          category2: item.category2,
-          category3: item.category3,
+          page: item.webPage, // 실제 웹페이지 번호
+          rank_in_page: item.rankInWebPage, // 웹페이지 내 순위
+          total_rank: item.totalRank, // 전체 순위
+          product_title: normalizeWhitespace(removeHtmlTags(product.title)),
+          mall_name: normalizeWhitespace(removeHtmlTags(product.mallName)),
+          brand: normalizeWhitespace(removeHtmlTags(product.brand || '')),
+          price: product.lprice,
+          product_link: product.link,
+          product_id: product.productId,
+          category1: product.category1,
+          category2: product.category2,
+          category3: product.category3,
           is_exact_match: true,
           match_confidence: 1.00,
           check_date: todayStr,
