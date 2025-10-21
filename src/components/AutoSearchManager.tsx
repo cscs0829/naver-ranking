@@ -13,7 +13,8 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  UserPlus
 } from 'lucide-react';
 import { toast } from '@/utils/toast';
 import DeleteConfirmationToast from './DeleteConfirmationToast';
@@ -36,6 +37,7 @@ interface AutoSearchConfig {
   error_count: number;
   last_error?: string;
   description?: string;
+  created_at?: string;
   api_key_profiles?: {
     id: number;
     name: string;
@@ -356,6 +358,24 @@ export default function AutoSearchManager() {
     return date.toLocaleDateString('ko-KR');
   };
 
+  // 등록일 포맷
+  const formatCreatedAt = (createdAt?: string) => {
+    if (!createdAt) return '알 수 없음';
+    
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '어제';
+    if (diffDays < 7) return `${diffDays}일 전`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}주 전`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)}개월 전`;
+    
+    return date.toLocaleDateString('ko-KR');
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -505,6 +525,10 @@ export default function AutoSearchManager() {
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       <span>마지막 실행: {formatLastRun(config.last_run_at)}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <UserPlus className="w-4 h-4" />
+                      <span>등록일: {formatCreatedAt(config.created_at)}</span>
                     </div>
                     <div>
                       <span>실행 횟수: {config.run_count}</span>
