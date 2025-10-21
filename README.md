@@ -593,6 +593,329 @@ CREATE TABLE api_key_profiles (
 - 시간 단위: date, week, month만 지원
 - 연령 필터: 10, 20, 30, 40, 50, 60대만 지원
 
+## 🔧 트러블슈팅
+
+이 섹션에서는 프로젝트 개발 과정에서 발생한 주요 문제들과 해결 방법을 다룹니다.
+
+### ❌ 자동검색 오류 메시지 지속 표시 문제
+
+**문제**: 자동검색이 성공적으로 실행되었음에도 불구하고 "Request failed with status code 500" 오류 메시지가 계속 표시됨
+
+**원인**: 
+- 자동검색 성공 시 `last_error` 필드가 데이터베이스에서 자동으로 초기화되지 않음
+- UI에서 이전 오류 메시지를 계속 표시하는 로직 문제
+
+**해결 방법**:
+```typescript
+// app/api/auto-search/run/route.ts
+// 성공 시 last_error 필드 초기화
+await supabase
+  .from('auto_search_configs')
+  .update({
+    last_run_at: new Date().toISOString(),
+    run_count: (config.run_count || 0) + 1,
+    success_count: (config.success_count || 0) + 1,
+    last_error: null // 성공 시 이전 오류 메시지 초기화
+  })
+  .eq('id', configId);
+```
+
+```typescript
+// src/components/AutoSearchManager.tsx
+// 조건부 오류 메시지 표시
+{config.last_error && config.error_count > 0 && config.success_count === 0 && (
+  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+    <strong>마지막 오류:</strong> {config.last_error}
+  </div>
+)}
+```
+
+### ❌ 네이버 API 호출 제한 문제
+
+**문제**: 네이버 API 호출 시 "API 호출 한도 초과" 오류 발생
+
+**원인**:
+- 네이버 쇼핑 API는 초당 1회 호출 제한
+- 자동검색에서 빠른 연속 호출 시 제한 초과
+
+**해결 방법**:
+```javascript
+// scripts/auto-search.js
+// API 호출 간격 조절
+if (startIndex <= 1000) {
+  await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+}
+```
+
+```javascript
+// 재시도 로직 구현
+if ((errorCode === 'SE99' || statusCode >= 500) && retryCount < 3) {
+  const delay = Math.pow(2, retryCount) * 1000; // 1초, 2초, 4초
+  console.log(`⚠️ 시스템 에러 발생. ${delay/1000}초 후 재시도... (${retryCount + 1}/3)`);
+  
+  await new Promise(resolve => setTimeout(resolve, delay));
+  return searchNaverShopping(query, options, retryCount + 1);
+}
+```
+
+### ❌ 데이터베이스 연결 오류
+
+**문제**: Supabase 연결 실패 또는 환경변수 누락 오류
+
+**원인**:
+- 환경변수 설정 누락
+- Supabase 프로젝트 설정 오류
+- 네트워크 연결 문제
+
+**해결 방법**:
+```typescript
+// src/utils/supabase.ts
+export function checkSupabaseConfig() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Supabase 환경변수가 설정되지 않았습니다.');
+  }
+}
+```
+
+```bash
+# 환경변수 확인
+echo $NEXT_PUBLIC_SUPABASE_URL
+echo $NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+### ❌ 키워드 분석 API 오류
+
+**문제**: 네이버 데이터랩 API 호출 시 오류 발생
+
+**원인**:
+- 잘못된 날짜 형식 (2017-08-01 이전 날짜)
+- 잘못된 키워드 형식
+- API 키 타입 불일치 (쇼핑 API 키로 데이터랩 API 호출)
+
+**해결 방법**:
+```typescript
+// 날짜 유효성 검사
+const minDataLabDate = new Date('2017-08-01')
+const startDateObj = new Date(startDate)
+if (startDateObj < minDataLabDate) {
+  return NextResponse.json({ error: '시작 날짜는 2017-08-01 이후여야 합니다.' }, { status: 400 })
+}
+```
+
+```typescript
+// API 키 타입 확인
+const apiKeyProfile = await getActiveProfile(profileId, 'search') // 데이터랩용
+```
+
+### ❌ 자동검색 스크립트 실행 오류
+
+**문제**: Node.js 스크립트 실행 시 환경변수 누락 오류
+
+**원인**:
+- 스크립트에서 환경변수를 올바르게 로드하지 못함
+- Supabase 클라이언트 초기화 실패
+
+**해결 방법**:
+```javascript
+// scripts/auto-search.js
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ 환경변수가 설정되지 않았습니다.');
+  console.error('SUPABASE_URL과 SUPABASE_SERVICE_KEY를 설정해주세요.');
+  process.exit(1);
+}
+```
+
+### ❌ 프론트엔드 로딩 상태 관리 문제
+
+**문제**: 데이터 로딩 중 사용자 경험 저하 및 중복 요청 발생
+
+**원인**:
+- 로딩 상태 관리 부족
+- 요청 중복 방지 로직 없음
+
+**해결 방법**:
+```typescript
+// 로딩 상태 관리
+const [loading, setLoading] = useState(false);
+
+const fetchData = async () => {
+  if (loading) return; // 중복 요청 방지
+  
+  try {
+    setLoading(true);
+    // API 호출
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+```typescript
+// AbortController를 활용한 요청 취소
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+const response = await fetch(url, {
+  signal: controller.signal,
+  // ...
+});
+```
+
+### ❌ 데이터베이스 성능 문제
+
+**문제**: 대량 데이터 처리 시 성능 저하
+
+**원인**:
+- 적절한 인덱스 부족
+- 비효율적인 쿼리
+- 대량 데이터 조회 시 페이징 없음
+
+**해결 방법**:
+```sql
+-- 인덱스 생성
+CREATE INDEX idx_search_results_query_date ON search_results(search_query, created_at);
+CREATE INDEX idx_auto_search_logs_config_status ON auto_search_logs(config_id, status);
+CREATE INDEX idx_keyword_results_created_at ON keyword_analysis_results(created_at);
+```
+
+```typescript
+// 페이징 구현
+const { data, error } = await supabase
+  .from('search_results')
+  .select('*')
+  .range(startIndex, endIndex)
+  .order('created_at', { ascending: false });
+```
+
+### ❌ 메모리 누수 문제
+
+**문제**: 장시간 사용 시 메모리 사용량 증가
+
+**원인**:
+- 이벤트 리스너 정리 부족
+- 타이머 정리 누락
+- 컴포넌트 언마운트 시 정리 작업 부족
+
+**해결 방법**:
+```typescript
+// useEffect 정리 함수 활용
+useEffect(() => {
+  const interval = setInterval(fetchNotifications, 30000);
+  
+  return () => clearInterval(interval); // 정리 함수
+}, []);
+
+// AbortController 정리
+useEffect(() => {
+  const controller = new AbortController();
+  
+  return () => controller.abort();
+}, []);
+```
+
+### ❌ 빌드 및 배포 오류
+
+**문제**: Vercel 배포 시 빌드 실패
+
+**원인**:
+- TypeScript 타입 오류
+- 환경변수 누락
+- 의존성 버전 충돌
+
+**해결 방법**:
+```bash
+# 로컬에서 빌드 테스트
+npm run build
+
+# TypeScript 타입 체크
+npx tsc --noEmit
+
+# 환경변수 확인
+vercel env ls
+```
+
+### ❌ CORS 및 네트워크 오류
+
+**문제**: API 호출 시 CORS 오류 또는 네트워크 타임아웃
+
+**원인**:
+- 잘못된 도메인 설정
+- 네트워크 연결 불안정
+- API 서버 응답 지연
+
+**해결 방법**:
+```typescript
+// 타임아웃 설정
+const response = await fetch(url, {
+  signal: AbortSignal.timeout(30000), // 30초 타임아웃
+});
+
+// 재시도 로직
+const retryFetch = async (url: string, options: RequestInit, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+};
+```
+
+### 🔍 문제 진단 도구
+
+#### 로그 확인
+```bash
+# 자동검색 스크립트 실행 로그
+node scripts/auto-search.js 2>&1 | tee auto-search.log
+
+# Vercel 배포 로그
+vercel logs --follow
+```
+
+#### 환경변수 확인
+```bash
+# 로컬 환경변수 확인
+cat .env.local
+
+# Vercel 환경변수 확인
+vercel env ls
+```
+
+#### 데이터베이스 상태 확인
+```sql
+-- 활성 연결 수 확인
+SELECT count(*) FROM pg_stat_activity;
+
+-- 테이블 크기 확인
+SELECT schemaname,tablename,pg_size_pretty(size) as size
+FROM (SELECT schemaname,tablename,pg_total_relation_size(schemaname||'.'||tablename) as size
+      FROM pg_tables WHERE schemaname = 'public') t
+ORDER BY size DESC;
+```
+
+### 📞 추가 도움
+
+문제가 계속 발생하는 경우:
+
+1. **GitHub Issues**: [이슈 리포팅](https://github.com/your-username/naver-ranking-checker/issues)
+2. **로그 파일**: 오류 발생 시 로그 파일과 함께 이슈 등록
+3. **환경 정보**: Node.js 버전, 운영체제, 브라우저 정보 포함
+4. **재현 단계**: 문제를 재현할 수 있는 구체적인 단계 제공
+
+---
+
+**💡 팁**: 문제 해결 시 다음 순서로 접근하세요:
+1. 환경변수 및 설정 확인
+2. 로그 파일 확인
+3. 네트워크 연결 상태 확인
+4. API 키 및 권한 확인
+5. 데이터베이스 연결 상태 확인
+
 ## 🔄 업데이트 및 유지보수
 
 ### 정기 작업
