@@ -281,7 +281,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
   const applyFilters = (schedules: any[]) => {
     if (!schedules) return [];
 
-    return schedules.filter(schedule => {
+    const filtered = schedules.filter(schedule => {
       // 검색어 필터
       if (filters.searchQuery && !schedule.search_query.toLowerCase().includes(filters.searchQuery.toLowerCase())) {
         return false;
@@ -304,6 +304,10 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
 
       return true;
     });
+
+    // 필터가 없을 때는 최대 30개만 표시 (성능 개선)
+    const hasActiveFilters = filters.searchQuery || filters.targetProduct || filters.targetMall || filters.targetBrand;
+    return hasActiveFilters ? filtered : filtered.slice(0, 30);
   };
 
   // 필터 적용
@@ -925,6 +929,7 @@ export default function AutoSearchDashboard({ onDataChange }: AutoSearchDashboar
                     className="inline-flex items-center"
                   >
                     {applyFilters(stats.scheduleRankings).length}개 스케줄 표시 중
+                    {!Object.values(filters).some(f => f) && stats.scheduleRankings.length > 30 && ` (전체 ${stats.scheduleRankings.length}개 중 최근 30개)`}
                     {Object.values(filters).some(f => f) && ` (전체 ${stats.scheduleRankings.length}개 중)`}
                   </motion.span>
                   {Object.values(filters).some(f => f) && (

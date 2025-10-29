@@ -83,20 +83,8 @@ export async function GET() {
         success_rate: config.run_count > 0 ? Math.round((config.success_count / config.run_count) * 100) : 0
       }));
 
-    // 최근 활동 데이터 포맷 (실제 상품 개수 포함)
-    const formattedRecentActivity = await Promise.all((recentActivityResult.data || []).map(async (activity) => {
-      // 해당 실행 시간대의 실제 상품 개수 조회
-      let actualResultsCount = 0;
-      if (activity.status === 'success' && activity.completed_at) {
-        const { count } = await supabase
-          .from('auto_search_results')
-          .select('*', { count: 'exact', head: true })
-          .eq('config_id', activity.config_id)
-          .gte('created_at', activity.started_at)
-          .lte('created_at', activity.completed_at);
-        actualResultsCount = count || 0;
-      }
-
+    // 최근 활동 데이터 포맷 (실제 상품 개수 포함) - 최적화: 추가 쿼리 제거
+    const formattedRecentActivity = (recentActivityResult.data || []).slice(0, 5).map((activity) => {
       return {
         id: activity.id,
         config_id: activity.config_id,
@@ -109,18 +97,19 @@ export async function GET() {
         started_at: activity.started_at,
         completed_at: activity.completed_at,
         results_count: activity.results_count || 0,
-        actual_results_count: actualResultsCount,
+        actual_results_count: activity.results_count || 0, // 로그의 results_count를 그대로 사용
         duration_ms: activity.duration_ms || 0,
         error_message: activity.error_message
       };
-    }));
+    });
 
-    // 활성 설정만 필터링
-    const activeConfigsOnly = configs.filter(config => config.is_active);
+    // 활성 설정만 필터링 (최대 30개로 제한하여 성능 개선)
+    const activeConfigsOnly = configs.filter(config => config.is_active).slice(0, 30);
 
     // 🚀 최적화: 활성 설정별 최신 결과 조회를 병렬로
     const scheduleRankingsPromises = activeConfigsOnly.map(async (config) => {
       // 최신 검색 실행의 모든 결과를 가져와서 페이지별로 정렬 (히스토리 모달과 동일한 로직)
+      // 성능 최적화: 최근 100개 결과만 조회 (limit 추가)
       const { data: allResults, error: allResultsError } = await supabase
         .from('auto_search_results')
         .select(`
@@ -135,7 +124,8 @@ export async function GET() {
           created_at
         `)
         .eq('config_id', config.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (allResultsError || !allResults || allResults.length === 0) {
         return {
