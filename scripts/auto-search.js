@@ -110,7 +110,7 @@ async function searchNaverShopping(query, options = {}, retryCount = 0) {
   }
 }
 
-// 자동 검색 실행 함수
+// 자동 검색 실행
 async function runAutoSearch(configId, apiKeyProfileId = null) {
   try {
     console.log(`🔍 설정 ${configId} 자동 검색 시작...`);
