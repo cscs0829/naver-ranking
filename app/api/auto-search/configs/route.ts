@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
         target_product_name,
         max_pages: max_pages || 10,
         profile_id: profile_id || null,
-        interval_hours: interval_hours ? parseFloat(interval_hours.toString()) : 1,
+        interval_hours: interval_hours ? parseFloat(interval_hours.toString()) : 6,
         description
       })
       .select('*')

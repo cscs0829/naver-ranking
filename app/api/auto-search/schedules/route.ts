@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     let nextRun = new Date(now);
     
-    // cron 표현식에 따른 다음 실행 시간 계산 (기본: 2시간 후)
+    // cron 표현식에 따른 다음 실행 시간 계산 (기본: 6시간 후)
     if (cron_expression === '0 */1 * * *') {
       nextRun.setHours(nextRun.getHours() + 1);
     } else if (cron_expression === '0 */2 * * *') {
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
       nextRun.setDate(1);
       nextRun.setHours(0, 0, 0, 0);
     } else {
-      // 기본값: 2시간 후
-      nextRun.setHours(nextRun.getHours() + 2);
+      // 기본값: 6시간 후
+      nextRun.setHours(nextRun.getHours() + 6);
     }
 
     const { data: schedule, error } = await supabase
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         target_mall_name,
         target_brand,
         target_product_name,
-        cron_expression: cron_expression || '0 */2 * * *',
+        cron_expression: cron_expression || '0 */6 * * *',
         next_run_at: nextRun.toISOString(),
         description
       })

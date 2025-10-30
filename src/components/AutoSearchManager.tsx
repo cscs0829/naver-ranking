@@ -86,7 +86,7 @@ export default function AutoSearchManager() {
     target_product_name: '',
     max_pages: 10,
     profile_id: '',
-    interval_hours: 1,
+    interval_hours: 6,
     description: ''
   });
 
