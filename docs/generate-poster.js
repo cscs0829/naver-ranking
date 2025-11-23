@@ -11,8 +11,8 @@ const fs = require('fs');
   
   await page.setContent(htmlContent, { waitUntil: 'networkidle' });
   
-  // 1920x1080 해상도로 스크린샷
-  await page.setViewportSize({ width: 1920, height: 1080 });
+  // 4:3 비율 (1600x1200) 해상도로 스크린샷
+  await page.setViewportSize({ width: 1600, height: 1200 });
   
   const outputPath = path.join(__dirname, 'poster.png');
   await page.screenshot({ 
