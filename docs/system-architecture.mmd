@@ -1,86 +1,65 @@
-graph TB
-    subgraph "Frontend (Next.js 14)"
-        A[사용자 인터페이스]
-        A1[순위 검색]
-        A2[키워드 분석]
-        A3[자동 검색 관리]
-        A4[대시보드]
-        A5[알림 시스템]
-        A --> A1
-        A --> A2
-        A --> A3
-        A --> A4
-        A --> A5
+graph LR
+    subgraph "사용자"
+        U[👤 사용자]
     end
     
-    subgraph "Backend (Next.js API Routes)"
-        B[API 서버]
+    subgraph "Frontend"
+        F[Next.js 14<br/>React + TypeScript]
+        F1[순위 검색]
+        F2[키워드 분석]
+        F3[자동 검색]
+        F4[대시보드]
+        F --> F1
+        F --> F2
+        F --> F3
+        F --> F4
+    end
+    
+    subgraph "Backend"
+        B[API Routes<br/>서버리스]
         B1[검색 API]
-        B2[키워드 분석 API]
-        B3[자동 검색 API]
-        B4[대시보드 API]
+        B2[분석 API]
+        B3[자동화 API]
         B --> B1
         B --> B2
         B --> B3
-        B --> B4
     end
     
-    subgraph "External APIs"
-        C1[네이버 쇼핑 API]
-        C2[네이버 데이터랩 API]
+    subgraph "External"
+        N1[네이버<br/>쇼핑 API]
+        N2[네이버<br/>데이터랩 API]
     end
     
-    subgraph "Database (Supabase)"
-        D[(PostgreSQL)]
-        D1[검색 결과]
-        D2[자동 검색 설정]
-        D3[실행 로그]
-        D4[알림]
-        D5[API 키 프로필]
-        D --> D1
-        D --> D2
-        D --> D3
-        D --> D4
-        D --> D5
+    subgraph "Database"
+        DB[(Supabase<br/>PostgreSQL)]
     end
     
     subgraph "Automation"
-        E[Node.js 스크립트]
-        E1[자동 검색 실행]
-        E2[로그 정리]
-        E --> E1
-        E --> E2
+        S[Node.js<br/>스크립트]
     end
     
-    A1 --> B1
-    A2 --> B2
-    A3 --> B3
-    A4 --> B4
-    A5 --> B4
+    U -->|요청| F
+    F1 -->|API 호출| B1
+    F2 -->|API 호출| B2
+    F3 -->|API 호출| B3
+    F4 -->|API 호출| B3
     
-    B1 --> C1
-    B2 --> C2
-    B3 --> C1
+    B1 -->|검색| N1
+    B2 -->|분석| N2
+    B3 -->|검색| N1
     
-    B1 --> D1
-    B2 --> D1
-    B3 --> D2
-    B3 --> D3
-    B3 --> D4
-    B4 --> D1
-    B4 --> D2
-    B4 --> D3
-    B4 --> D4
+    B1 -->|저장| DB
+    B2 -->|저장| DB
+    B3 -->|저장| DB
     
-    E1 --> C1
-    E1 --> D2
-    E1 --> D3
-    E1 --> D4
+    S -->|자동 실행| N1
+    S -->|결과 저장| DB
+    DB -->|실시간 업데이트| F
     
-    style A fill:#3b82f6,stroke:#1e40af,color:#fff
-    style B fill:#10b981,stroke:#059669,color:#fff
-    style C1 fill:#f59e0b,stroke:#d97706,color:#fff
-    style C2 fill:#f59e0b,stroke:#d97706,color:#fff
-    style D fill:#8b5cf6,stroke:#7c3aed,color:#fff
-    style E fill:#ef4444,stroke:#dc2626,color:#fff
-
+    style U fill:#3b82f6,stroke:#1e40af,color:#fff,stroke-width:3px
+    style F fill:#10b981,stroke:#059669,color:#fff,stroke-width:2px
+    style B fill:#f59e0b,stroke:#d97706,color:#fff,stroke-width:2px
+    style N1 fill:#ef4444,stroke:#dc2626,color:#fff,stroke-width:2px
+    style N2 fill:#ef4444,stroke:#dc2626,color:#fff,stroke-width:2px
+    style DB fill:#8b5cf6,stroke:#7c3aed,color:#fff,stroke-width:2px
+    style S fill:#ec4899,stroke:#db2777,color:#fff,stroke-width:2px
