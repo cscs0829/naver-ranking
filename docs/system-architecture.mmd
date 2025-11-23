@@ -1,0 +1,86 @@
+graph TB
+    subgraph "Frontend (Next.js 14)"
+        A[사용자 인터페이스]
+        A1[순위 검색]
+        A2[키워드 분석]
+        A3[자동 검색 관리]
+        A4[대시보드]
+        A5[알림 시스템]
+        A --> A1
+        A --> A2
+        A --> A3
+        A --> A4
+        A --> A5
+    end
+    
+    subgraph "Backend (Next.js API Routes)"
+        B[API 서버]
+        B1[검색 API]
+        B2[키워드 분석 API]
+        B3[자동 검색 API]
+        B4[대시보드 API]
+        B --> B1
+        B --> B2
+        B --> B3
+        B --> B4
+    end
+    
+    subgraph "External APIs"
+        C1[네이버 쇼핑 API]
+        C2[네이버 데이터랩 API]
+    end
+    
+    subgraph "Database (Supabase)"
+        D[(PostgreSQL)]
+        D1[검색 결과]
+        D2[자동 검색 설정]
+        D3[실행 로그]
+        D4[알림]
+        D5[API 키 프로필]
+        D --> D1
+        D --> D2
+        D --> D3
+        D --> D4
+        D --> D5
+    end
+    
+    subgraph "Automation"
+        E[Node.js 스크립트]
+        E1[자동 검색 실행]
+        E2[로그 정리]
+        E --> E1
+        E --> E2
+    end
+    
+    A1 --> B1
+    A2 --> B2
+    A3 --> B3
+    A4 --> B4
+    A5 --> B4
+    
+    B1 --> C1
+    B2 --> C2
+    B3 --> C1
+    
+    B1 --> D1
+    B2 --> D1
+    B3 --> D2
+    B3 --> D3
+    B3 --> D4
+    B4 --> D1
+    B4 --> D2
+    B4 --> D3
+    B4 --> D4
+    
+    E1 --> C1
+    E1 --> D2
+    E1 --> D3
+    E1 --> D4
+    
+    style A fill:#3b82f6,stroke:#1e40af,color:#fff
+    style B fill:#10b981,stroke:#059669,color:#fff
+    style C1 fill:#f59e0b,stroke:#d97706,color:#fff
+    style C2 fill:#f59e0b,stroke:#d97706,color:#fff
+    style D fill:#8b5cf6,stroke:#7c3aed,color:#fff
+    style E fill:#ef4444,stroke:#dc2626,color:#fff
+

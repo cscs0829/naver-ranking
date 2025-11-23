@@ -1,0 +1,26 @@
+sequenceDiagram
+    participant User as 사용자
+    participant Frontend as Next.js Frontend
+    participant API as API Routes
+    participant Naver as 네이버 API
+    participant DB as Supabase DB
+    participant Script as 자동화 스크립트
+    
+    User->>Frontend: 검색어 입력
+    Frontend->>API: 검색 요청
+    API->>Naver: 상품 검색 API 호출
+    Naver-->>API: 검색 결과 반환
+    API->>DB: 결과 저장
+    DB-->>API: 저장 완료
+    API-->>Frontend: 결과 반환
+    Frontend-->>User: 순위 표시
+    
+    Note over Script,DB: 자동 검색 스케줄링
+    Script->>DB: 활성 설정 조회
+    DB-->>Script: 설정 반환
+    Script->>Naver: 자동 검색 실행
+    Naver-->>Script: 결과 반환
+    Script->>DB: 결과 저장 및 알림 생성
+    DB-->>Frontend: 실시간 업데이트
+    Frontend-->>User: 알림 표시
+

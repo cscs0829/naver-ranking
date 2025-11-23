@@ -4,6 +4,14 @@
 
 네이버 쇼핑 API와 데이터랩 API를 활용하여 상품 순위 검색, 키워드 트렌드 분석, 자동화된 스케줄링을 제공하는 종합적인 마케팅 분석 도구입니다.
 
+### 대표 그림 (System Architecture)
+
+![시스템 아키텍처](./docs/system-architecture.png)
+
+### 주요 기능 흐름도
+
+![시퀀스 다이어그램](./docs/sequence-diagram.png)
+
 ## 프로젝트 정보
 
 ### 설명 (Description)
